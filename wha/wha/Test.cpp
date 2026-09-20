@@ -36,6 +36,26 @@ void imprimirPixelArtASCII(Pixel imagen[15][15]) {
     }
 }
 
+void imprimirMiniASCII(Pixel imagen[2][2]) {
+    char bloque = 219;
+
+    for (int i = 0; i < 2; ++i) {
+        for (int j = 0; j < 2; ++j) {
+            Pixel p = imagen[i][j];
+
+            // Si es transparente, movemos el cursor un espacio sin pintar bloque
+            if (p.transparente) {
+                std::cout << "\033[0m  "; // Restablece color y avanza 2 espacios
+            }
+            else {
+                std::cout << "\033[38;2;" << p.r << ";" << p.g << ";" << p.b << "m";
+                std::cout << bloque;
+            }
+        }
+        std::cout << "\033[0m" << std::endl;
+    }
+}
+
 int main() {
     activarANSI(); // Importante para que no salgan los símbolos <-[38;2;...
 
@@ -93,8 +113,16 @@ int main() {
     {{0, 0, 0, true}, {0, 0, 0, true}, {0, 0, 0, true}, {0, 0, 0, true}, {59, 81, 8, false}, {91, 55, 48, false}, {119, 92, 74, false}, {142, 110, 89, false}, {119, 92, 74, false}, {91, 55, 48, false}, {59, 81, 8, false}, {0, 0, 0, true}, {0, 0, 0, true}, {0, 0, 0, true}, {0, 0, 0, true}}
     };
 
-    std::cout << "--- RENDERIZADO 15x15 ASCII COLOR ---\n\n";
+    Pixel MiniCoco[2][2] = {
+        {{181, 198, 81, false},{181, 198, 81, false}},
+        {{114, 204, 186, false},{114, 204, 186, false}}
+    };
+
+    std::cout << "--- RENDERIZADO 15x30 ASCII COLOR ---\n\n";
     imprimirPixelArtASCII(pixelArt);
+
+    std::cout << "--- RENDERIZADO 2x2 ASCII COLOR ---\n\n";
+    imprimirMiniASCII(MiniCoco);
 
     std::cout << std::endl << std::endl << "Presiona Enter para cerrar el programa...";
     std::cin.get();
