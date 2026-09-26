@@ -11,7 +11,8 @@ protected:
 	char simbolo;
 public:
 	Personaje() {};
-	Personaje(int x, int y, std::string n, int v, char s) : x(x), y(y), nombre(n), vida(v), simbolo(s) {};
+	Personaje(int x, int y, std::string n, int v) : x(x), y(y), nombre(n), vida(v) {};
+	Personaje(int x, int y, std::string n, char s) : x(x), y(y), nombre(n), simbolo(s) {};
 	~Personaje() {};
 	//get obtener
 	int getX() { return this->x; }
