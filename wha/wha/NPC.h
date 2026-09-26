@@ -9,7 +9,7 @@ private:
 	bool esHostil;
 	std::string mensajeDialogo;
 public:
-	NPC(std::string rol, bool eH) : rolPerspectiva(rol), esHostil(eH) {};
+	NPC(int x, int y, std::string n, char s, std::string rol, bool eH) :Personaje(x, y, n, s), rolPerspectiva(rol), esHostil(eH) {};
 	~NPC() {};
 	//get
 	std::string getRolPerspectiva() { return this->rolPerspectiva; }

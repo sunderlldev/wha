@@ -11,7 +11,7 @@ private:
 	bool tieneCapaVuelo;
 	bool tieneSemillaPlata;
 public:
-	Protagonista(int x, int y, std::string n, int v, int p) {};
+	Protagonista(int x, int y, std::string n, int v, int p):Personaje(x, y, n, v), perspectiva(p) {};
 	~Protagonista() {};
 	//get
 	int getTintaPabla() { return this->tintaPlata; }
