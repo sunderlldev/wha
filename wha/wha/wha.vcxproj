@@ -120,6 +120,7 @@
     <ClInclude Include="Mapa.h" />
     <ClInclude Include="Nivel.h" />
     <ClInclude Include="NPC.h" />
+    <ClInclude Include="ObjetoMapa.h" />
     <ClInclude Include="Personaje.h" />
     <ClInclude Include="Protagonista.h" />
   </ItemGroup>

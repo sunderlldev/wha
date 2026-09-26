@@ -1,16 +1,27 @@
 #ifndef Juego_h
 #define Juego_h
 #include "Nivel.h"
+#include <vector>
 #include <iostream>
 
 class Juego {
 private:
 	bool ejecutando;
 	int nivelActual;
-	Nivel** ListaNivel[3];
+	std::vector<Nivel> listaNivel;
 public:
-	Juego() {};
-	~Juego() {};
+	Juego() : ejecutando(true), nivelActual(0) {
+		listaNivel.push_back(Nivel(1, "nivel 1")); // Nivel 1
+		listaNivel.push_back(Nivel(2, "nivel 2")); // Nivel 2
+		listaNivel.push_back(Nivel(3, "nivel 3")); // Nivel 3
+	}
+	Juego() = default;
+	~Juego() = default;
+	// Métodos para consultar niveles
+	Nivel& getNivelActualObj() {
+		return listaNivel[nivelActual];
+	}
+	size_t getCantNiveles() const { return listaNivel.size(); }
 	//get (obtener)
 	bool getEjeecutando() { return this->ejecutando; }
 	int getNivelActual() { return this->nivelActual; }

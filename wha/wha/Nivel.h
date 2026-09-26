@@ -8,6 +8,7 @@ private:
 	std::string nombreNivel;
 	bool completado;
 public:
+	Nivel() = default;
 	Nivel(int numeroN, std::string nombreN) : numeroNivel(numeroN), nombreNivel(nombreN) {};
 	~Nivel() {};
 	//get (obtener)

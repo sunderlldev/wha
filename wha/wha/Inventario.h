@@ -1,49 +1,37 @@
 #ifndef Inventario_h
 #define Inventario_h
 #include "ItemMagico.h"
-#include <malloc.h>
+#include <vector>
 #include <iostream>
-
-void getLongitud(ItemMagico** i) {
-	std::cout << "tamano de puntero: " << sizeof(i) << "\n";
-	std::cout << "Espacio reservado para un puntero: " << _msize(i) << "\n";
-	std::cout << "Tamano del arreglo: " << _msize(i) / sizeof(i);
-}
-
-
 
 class Inventario {
 private:
-	ItemMagico** listaItem;
-	int cantidadActual;
+	std::vector<ItemMagico*> listaItem;
 public:
-	Inventario() {
-		listaItem = nullptr;
-	};
-	~Inventario() {};
-	//get
-	int getCantidad() { return this->cantidadActual; }
-	//set
-	void getCantidad(int cantidad) { this->cantidadActual = cantidad; }
+	Inventario() = default;
+	~Inventario() = default;
 	//acciones
-	//obtener longitud del arreglo inventario
-	size_t cantItems() {
-		if (listaItem == nullptr) return 0;
-		return _msize(listaItem) / sizeof(ItemMagico*);
-	};
-	void agregarItem(ItemMagico* item) {
-		size_t cantidadActual = cantItems();
-		ItemMagico** temp = new ItemMagico*[cantidadActual + 1];
-		for (size_t i = 0; i < cantidadActual; i++)
-		{
-			temp[i] = listaItem[i];
-		}
-		temp[cantidadActual] = item;
-		delete[] listaItem;
-		listaItem = temp;
-	};
+	size_t cantItems() const {return listaItem.size();}//obtener cant de Items en el inventario que seria la maxima capacidad actual
+	size_t getCantidad() const {return listaItem.size();}
+	void agregarItem(ItemMagico* item) {listaItem.push_back(item);}
 	void usarItem(int indice, Protagonista prota) {};
-	void mostarInventario() {};
+	ItemMagico* getItem(size_t indice) {
+		if (indice < listaItem.size()) {
+			return listaItem[indice];
+		}
+		return nullptr;
+	}
+	void mostarInventario() {
+		if (listaItem.empty()) {
+			std::cout << "[El inventario está vacío]\n";
+			return;
+		}
+
+		std::cout << "[INVENTARIO]\n";
+		for (size_t i = 0; i < getCantidad(); i++) {
+			std::cout << " [" << i + 1 << "] " << listaItem[i]->getNombre() << "\n";
+		}
+	};
 };
 
 #endif // !Inventario_h

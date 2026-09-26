@@ -1,10 +1,12 @@
 #ifndef Mapa_h
 #define Mapa_h
 #include <iostream>
+#include <vector>
 
 class Mapa {
 private:
 	int filas, columnas;
+	std::vector<std::string> matrizMapita;
 public:
 	Mapa(int f, int c) : filas(f), columnas(c) {};
 	~Mapa() {};
