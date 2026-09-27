@@ -1,12 +1,12 @@
-#ifndef Rio_h
+﻿#ifndef Rio_h
 #define Rio_h
 #include "ObjetoMapa.h"
 
 class Rio : public ObjetoMapa {
 private:
-    char patronAgua;
+    std::string patronAgua;
 public:
-    Rio(int x, int y, int ancho, int alto, char patron = char(178))
+    Rio(int x, int y, int ancho, int alto, std::string patron = "▓")
         : ObjetoMapa(x, y, ancho, alto, true, rio), patronAgua(patron) {
     }
 
@@ -19,11 +19,12 @@ public:
                 if (destinoY >= 0 && destinoY < (int)matriz.size() &&
                     destinoX >= 0 && destinoX < (int)matriz[0].size()) {
 
-                    matriz[destinoY][destinoX] = patronAgua;
+                    // Copiamos el carácter de agua en la posición correspondiente
+                    matriz[destinoY][destinoX] = patronAgua[0];
                 }
             }
         }
-    };
+    }
 };
 #endif // !Rio_h
 
