@@ -6,6 +6,7 @@
 enum TipoObjeto {
     arbolPino,
     arbolFrondoso,
+    arbolGigante,
     habitacion,
     rio,
     camino,
@@ -16,7 +17,7 @@ class ObjetoMapa {
 protected:
     int x, y;
     int ancho, alto;
-    bool esSolido; // Indica si bloquea el paso (colisión)
+    bool esSolido;
     TipoObjeto tipo;
 
 public:
@@ -26,18 +27,15 @@ public:
 
     virtual ~ObjetoMapa() {}
 
-    // Evalúa si el jugador intenta entrar a un área sólida
     virtual bool colisionaCon(int px, int py) const {
         if (!esSolido) return false;
         return (px >= x && px < x + ancho && py >= y && py < y + alto);
     }
 
-    // Evalúa si el jugador está completamente dentro del área rectangular
     virtual bool estaDentro(int px, int py) const {
         return (px >= x && px < x + ancho && py >= y && py < y + alto);
     }
 
-    // Método virtual puro para que cada objeto dibuje sus caracteres específicos
     virtual void dibujarEnMatriz(std::vector<std::string>& matriz) = 0;
 
     // Getters

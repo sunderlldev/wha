@@ -1,4 +1,24 @@
-﻿/*
+﻿#include "Juego.h"
+
+int main() {
+    Juego ArbolDePlata;
+
+    ArbolDePlata.menuPrincipal();
+
+    while (ArbolDePlata.getEjecutando()) {
+        ArbolDePlata.actualizar();
+
+        if (ArbolDePlata.getNivelActualObj().verificarObjetivo()) {
+            ArbolDePlata.cambiarNivel();
+        }
+    }
+
+    std::cout << std::endl << std::endl << "Presiona Enter para cerrar el programa...";
+    std::cin.get();
+    return 0;
+}
+
+/*
 #include <iostream>
 #include <windows.h> // Para activar el color ANSI en Windows
 

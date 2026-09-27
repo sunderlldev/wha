@@ -114,6 +114,10 @@
     <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Arbol.h" />
+    <ClInclude Include="Camino.h" />
+    <ClInclude Include="Gato.h" />
+    <ClInclude Include="Habitacion.h" />
     <ClInclude Include="Inventario.h" />
     <ClInclude Include="ItemMagico.h" />
     <ClInclude Include="Juego.h" />
@@ -123,6 +127,7 @@
     <ClInclude Include="ObjetoMapa.h" />
     <ClInclude Include="Personaje.h" />
     <ClInclude Include="Protagonista.h" />
+    <ClInclude Include="Rio.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
