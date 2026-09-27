@@ -113,6 +113,16 @@
   <ItemGroup>
     <ClCompile Include="Test.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Inventario.h" />
+    <ClInclude Include="ItemMagico.h" />
+    <ClInclude Include="Juego.h" />
+    <ClInclude Include="Mapa.h" />
+    <ClInclude Include="Nivel.h" />
+    <ClInclude Include="NPC.h" />
+    <ClInclude Include="Personaje.h" />
+    <ClInclude Include="Protagonista.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
