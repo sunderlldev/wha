@@ -101,7 +101,7 @@ public:
 			break;
 		}
 	};
-	bool verificarObjetivo() {};
+	bool verificarObjetivo() { return false; };
 	void mostrarPrologo() {};
 	void mostrarMuerteArbolPlata() {};
 	void actualizar() {};
