@@ -139,6 +139,7 @@
     <ClInclude Include="Caja.h" />
     <ClInclude Include="GestorDialogos.h" />
     <ClInclude Include="GestorMisiones.h" />
+    <ClInclude Include="TorreAgott.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -12,23 +12,31 @@ private:
 	bool enDialogo;
 	int estadoDialogo;
 	std::string npcDialogoActual;
+	int respuestaInicialAgott;
 
 public:
-	GestorDialogos() : enDialogo(false), estadoDialogo(0), npcDialogoActual("") {}
+	GestorDialogos() : enDialogo(false), estadoDialogo(0), npcDialogoActual(""), respuestaInicialAgott(0) {}
 	~GestorDialogos() {}
 
 	bool getEnDialogo() const { return enDialogo; }
 	int getEstadoDialogo() const { return estadoDialogo; }
 	std::string getNpcDialogoActual() const { return npcDialogoActual; }
+	int getRespuestaInicialAgott() const { return respuestaInicialAgott; }
 
 	void setEnDialogo(bool ed) { enDialogo = ed; }
 	void setEstadoDialogo(int ed) { estadoDialogo = ed; }
 	void setNpcDialogoActual(const std::string& n) { npcDialogoActual = n; }
+	void setRespuestaInicialAgott(int r) { respuestaInicialAgott = r; }
 
 	void iniciarDialogo(const std::string& npc, int estadoInicial) {
 		enDialogo = true;
 		npcDialogoActual = npc;
 		estadoDialogo = estadoInicial;
+	}
+
+	void iniciarDialogoAgott() {
+		int estadoIni = (respuestaInicialAgott == 2) ? 220 : 210;
+		iniciarDialogo("Agott", estadoIni);
 	}
 
 	void terminarDialogo() {
@@ -240,6 +248,16 @@ public:
 			opciones.push_back("[1] Salir");
 			break;
 		}
+	}
+
+	void procesarOpcionDialogo(int opcion, Protagonista* protagonista,
+	                           NPC* qifrey, NPC* agott, NPC* richeh,
+	                           bool& dioVaraRicheh, bool libroEncontrado,
+	                           std::string& promptFlotante, std::string& objetivoActual,
+	                           int& puntosMisiones, bool& completado, bool& mostrarEstadisticasFin) {
+		procesarOpcionDialogo(opcion, protagonista, qifrey, agott, richeh, dioVaraRicheh, libroEncontrado,
+		                      this->respuestaInicialAgott, promptFlotante, objetivoActual, puntosMisiones,
+		                      completado, mostrarEstadisticasFin);
 	}
 
 	void procesarOpcionDialogo(int opcion, Protagonista* protagonista,

@@ -62,7 +62,7 @@ public:
 		}
 		if (y < (int)matriz.size() && x < (int)matriz[y].size()) {
 			char c = matriz[y][x];
-			if (c != ' ' && c != '.' && c != '=' && c != ':' && c != '#') {
+			if (c != ' ' && c != '.' && c != '=' && c != ':' && c != '#' && c != '*') {
 				return false;
 			}
 		}
