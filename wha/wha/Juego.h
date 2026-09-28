@@ -238,6 +238,8 @@ public:
 					std::vector<std::string> lineas, opciones;
 					nivel.obtenerDatosDialogo(hablante, rol, confianza, lineas, opciones);
 					pantalla.dibujarCuadroDialogo(hablante, rol, confianza, lineas, opciones);
+				} else {
+					pantalla.resetDialogoAnimado();
 				}
 
 				if (nivel.getEnModalPersonajes()) {

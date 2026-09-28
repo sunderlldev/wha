@@ -140,6 +140,7 @@
     <ClInclude Include="GestorDialogos.h" />
     <ClInclude Include="GestorMisiones.h" />
     <ClInclude Include="TorreAgott.h" />
+    <ClInclude Include="Animacion.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

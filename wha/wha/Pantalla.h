@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include "Animacion.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -17,6 +18,9 @@ private:
     int anchoJuego;
     int anchoPanel;
     std::vector<std::string> buffer;
+    std::string ultimoDialogoHablante;
+    std::string ultimoDialogoTexto;
+    std::string ultimoPromptTexto;
 
     std::string recortarOPad(const std::string& texto, int ancho) {
         if ((int)texto.length() >= ancho) {
@@ -36,11 +40,17 @@ private:
     }
 
 public:
-    Pantalla() : anchoTotal(120), altoTotal(40), anchoJuego(84), anchoPanel(35) {
+    Pantalla() : anchoTotal(120), altoTotal(40), anchoJuego(84), anchoPanel(35),
+                 ultimoDialogoHablante(""), ultimoDialogoTexto(""), ultimoPromptTexto("") {
         buffer = std::vector<std::string>(altoTotal, std::string(anchoTotal, ' '));
     }
 
     ~Pantalla() {}
+
+    void resetDialogoAnimado() {
+        ultimoDialogoHablante = "";
+        ultimoDialogoTexto = "";
+    }
 
     int getAnchoTotal() const { return anchoTotal; }
     int getAltoTotal() const { return altoTotal; }
@@ -51,6 +61,7 @@ public:
 #ifdef _WIN32
         system("mode con: cols=120 lines=40");
         system("title Witch Hat Atelier - Arbol de Plata");
+        system("cls");
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         if (hOut != INVALID_HANDLE_VALUE) {
             CONSOLE_CURSOR_INFO cursorInfo;
@@ -62,6 +73,7 @@ public:
 #else
         std::cout << "\033[?25l";
         std::cout << "\033[8;40;120t";
+        std::cout << "\033[2J\033[H";
 #endif
     }
 
@@ -113,7 +125,30 @@ public:
         int startX = (anchoJuego - anchoCaja) / 2;
         int startY = altoTotal - 4;
         dibujarCaja(startX, startY, anchoCaja, 3);
-        setTextoJuego(startX + 2, startY + 1, texto);
+
+        if (texto != ultimoPromptTexto && texto.find("Coco:") != std::string::npos) {
+            ultimoPromptTexto = texto;
+            for (size_t i = 0; i < texto.length(); i++) {
+                if (startX + 2 + (int)i < anchoJuego - 2) {
+                    setPixelJuego(startX + 2 + (int)i, startY + 1, texto[i]);
+                }
+                dibujar();
+                std::this_thread::sleep_for(std::chrono::milliseconds(18));
+            }
+        } else {
+            setTextoJuego(startX + 2, startY + 1, texto);
+            if (texto.find("Coco:") == std::string::npos) {
+                ultimoPromptTexto = texto;
+            }
+        }
+    }
+
+    void animarTexto(const std::string& texto, int velocidadMs = 25) {
+        Animacion::animarTexto(texto, velocidadMs);
+    }
+
+    void animarDialogo(const std::string& hablante, const std::string& texto, int velocidadMs = 25) {
+        Animacion::animarDialogo(hablante, texto, velocidadMs);
     }
 
     void dibujarCuadroDialogo(const std::string& hablante, const std::string& rol, int confianza,
@@ -139,24 +174,55 @@ public:
             buffer[y + 2][x + c] = '-';
         }
 
-        int filaActual = y + 3;
-        for (size_t i = 0; i < lineasTexto.size() && filaActual < y + 9; i++) {
-            setTextoJuego(x + 3, filaActual, lineasTexto[i]);
-            filaActual++;
+        std::string textoCompleto = "";
+        for (size_t i = 0; i < lineasTexto.size(); i++) {
+            textoCompleto += lineasTexto[i] + "\n";
         }
 
-        filaActual = y + 9;
+        bool esNuevo = (hablante != ultimoDialogoHablante || textoCompleto != ultimoDialogoTexto);
+
+        if (esNuevo) {
+            ultimoDialogoHablante = hablante;
+            ultimoDialogoTexto = textoCompleto;
+
+            for (int r = y + 3; r <= y + 8; r++) {
+                for (int c = 1; c < ancho - 1; c++) {
+                    buffer[r][x + c] = ' ';
+                }
+            }
+
+            int filaActual = y + 3;
+            for (size_t i = 0; i < lineasTexto.size() && filaActual < y + 9; i++) {
+                for (size_t c = 0; c < lineasTexto[i].length(); c++) {
+                    buffer[filaActual][x + 3 + (int)c] = lineasTexto[i][c];
+                    dibujar();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(18));
+                }
+                filaActual++;
+            }
+        } else {
+            int filaActual = y + 3;
+            for (size_t i = 0; i < lineasTexto.size() && filaActual < y + 9; i++) {
+                setTextoJuego(x + 3, filaActual, lineasTexto[i]);
+                filaActual++;
+            }
+        }
+
+        int filaDivisoria = y + 9;
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[filaActual][x + c] = '-';
+            buffer[filaDivisoria][x + c] = '-';
         }
-        filaActual++;
 
-        for (size_t i = 0; i < opciones.size() && filaActual < y + alto - 2; i++) {
-            setTextoJuego(x + 3, filaActual, opciones[i]);
-            filaActual++;
+        int filaOpciones = y + 10;
+        for (size_t i = 0; i < opciones.size() && filaOpciones < y + alto - 2; i++) {
+            setTextoJuego(x + 3, filaOpciones, opciones[i]);
+            filaOpciones++;
         }
 
         setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1, 2, 3] o pulsa ESC para salir");
+        if (esNuevo) {
+            dibujar();
+        }
     }
 
     void dibujarModalPersonajes(int seleccionado, const std::vector<std::string>& nombres,
@@ -455,7 +521,13 @@ public:
     }
 
     void dibujar() {
-        system("cls");
+#ifdef _WIN32
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        COORD pos = { 0, 0 };
+        SetConsoleCursorPosition(hOut, pos);
+#else
+        std::cout << "\033[H";
+#endif
         std::string frameCompleto = "";
         for (int f = 0; f < altoTotal; f++) {
             frameCompleto += buffer[f];
