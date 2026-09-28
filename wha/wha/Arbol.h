@@ -4,10 +4,8 @@
 
 class Arbol : public ObjetoMapa {
 private:
-    //la buena practica
     const std::vector<std::string>& arteAscii;
 
-    //diseño segune enum
     static const std::vector<std::string>& obtenerDiseno(TipoObjeto tipo) {
         static const std::vector<std::string> pino = {
             "   /\\  ",
@@ -42,7 +40,6 @@ private:
             "       {                  "
         };
 
-        // Retorna el diseño correspondiente según el valor del enum
         switch (tipo) {
         case arbolFrondoso:
             return frondoso;
@@ -62,17 +59,16 @@ public:
     }
 
     void dibujarEnMatriz(std::vector<std::string>& matriz) override {
-        for (size_t r = 0; r < arteAscii.size(); r++) {
-            for (size_t c = 0; c < arteAscii[r].size(); c++) {
+        for (int r = 0; r < (int)arteAscii.size(); r++) {
+            for (int c = 0; c < (int)arteAscii[r].size(); c++) {
                 int destinoY = y + r;
                 int destinoX = x + c;
 
-                // Verificación de límites de la matriz general
                 if (destinoY >= 0 && destinoY < (int)matriz.size() &&
                     destinoX >= 0 && destinoX < (int)matriz[0].size()) {
 
                     char caracter = arteAscii[r][c];
-                    if (caracter != ' ') { // Transparencia en espacios
+                    if (caracter != ' ') {
                         matriz[destinoY][destinoX] = caracter;
                     }
                 }
@@ -81,5 +77,4 @@ public:
     }
 };
 
-#endif // !Arbol_h
-
+#endif

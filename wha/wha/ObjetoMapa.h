@@ -10,7 +10,8 @@ enum TipoObjeto {
     habitacion,
     rio,
     camino,
-    gato
+    gato,
+    caja
 };
 
 class ObjetoMapa {
@@ -38,7 +39,6 @@ public:
 
     virtual void dibujarEnMatriz(std::vector<std::string>& matriz) = 0;
 
-    // Getters
     int getX() const { return x; }
     int getY() const { return y; }
     int getAncho() const { return ancho; }
@@ -46,5 +46,5 @@ public:
     bool getEsSolido() const { return esSolido; }
     TipoObjeto getTipo() const { return tipo; }
 };
-#endif // !ObjetoMapa_h
 
+#endif

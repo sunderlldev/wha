@@ -1,7 +1,6 @@
 #ifndef Personaje_h
 #define Personaje_h
 #include <iostream>
-#include "Sprite.h"
 
 class Personaje {
 protected:
@@ -9,47 +8,75 @@ protected:
     std::string nombre;
     int vida;
     int vidaMaxima;
-
-    // Matriz de píxeles del personaje (o un objeto Sprite)
-    std::vector<std::vector<PixelArt>> sprite;
+    int ancho;
+    int alto;
+    char frame1[2][2];
+    char frame2[2][2];
+    int frameActual;
+    int temporizadorAnimacion;
 
 public:
-    // Constructor por defecto
     Personaje()
-        : x(0), y(0), nombre("Sin Nombre"), vida(100), vidaMaxima(100) {
+        : x(0), y(0), nombre("Sin Nombre"), vida(3), vidaMaxima(3),
+          ancho(2), alto(2), frameActual(0), temporizadorAnimacion(0) {
+        frame1[0][0] = '('; frame1[0][1] = ')';
+        frame1[1][0] = '/'; frame1[1][1] = '\\';
+        frame2[0][0] = '('; frame2[0][1] = ')';
+        frame2[1][0] = '|'; frame2[1][1] = '|';
     }
 
-    // Constructor parametrizado
-    Personaje(int x, int y, std::string n, int v = 100)
-        : x(x), y(y), nombre(n), vida(v), vidaMaxima(v) {
+    Personaje(int x, int y, std::string n, int v = 3)
+        : x(x), y(y), nombre(n), vida(v), vidaMaxima(v),
+          ancho(2), alto(2), frameActual(0), temporizadorAnimacion(0) {
+        frame1[0][0] = '('; frame1[0][1] = ')';
+        frame1[1][0] = '/'; frame1[1][1] = '\\';
+        frame2[0][0] = '('; frame2[0][1] = ')';
+        frame2[1][0] = '|'; frame2[1][1] = '|';
     }
 
-    // Destructor VIRTUAL
     virtual ~Personaje() {}
 
-    // Getters
     int getX() const { return this->x; }
     int getY() const { return this->y; }
     std::string getNombre() const { return this->nombre; }
     int getVida() const { return this->vida; }
     int getVidaMaxima() const { return this->vidaMaxima; }
+    int getAncho() const { return this->ancho; }
+    int getAlto() const { return this->alto; }
+    int getFrameActual() const { return this->frameActual; }
+    int getAnchoSprite() const { return this->ancho; }
+    int getAltoSprite() const { return this->alto; }
 
-    int getAnchoSprite() const { return sprite.empty() ? 0 : (int)sprite[0].size(); }
-    int getAltoSprite() const { return (int)sprite.size(); }
+    char getCaracter(int fila, int col) const {
+        if (fila < 0 || fila >= 2 || col < 0 || col >= 2) return ' ';
+        if (frameActual == 0) return frame1[fila][col];
+        return frame2[fila][col];
+    }
 
-    // Setters
+    void actualizarAnimacion(int deltaMs) {
+        temporizadorAnimacion += deltaMs;
+        if (temporizadorAnimacion >= 500) {
+            temporizadorAnimacion = 0;
+            frameActual = (frameActual == 0) ? 1 : 0;
+        }
+    }
+
     void setX(int newX) { this->x = newX; }
     void setY(int newY) { this->y = newY; }
     void setNombre(const std::string& newNombre) { this->nombre = newNombre; }
     void setVida(int newVida) { this->vida = newVida; }
     void setVidaMaxima(int newVidaMaxima) { this->vidaMaxima = newVidaMaxima; }
 
-    // Asignar la matriz del Pixel Art
-    void setSprite(const std::vector<std::vector<PixelArt>>& nuevoSprite) {
-        this->sprite = nuevoSprite;
+    void setFrame1(char f00, char f01, char f10, char f11) {
+        frame1[0][0] = f00; frame1[0][1] = f01;
+        frame1[1][0] = f10; frame1[1][1] = f11;
     }
 
-    // Métodos de acción
+    void setFrame2(char f00, char f01, char f10, char f11) {
+        frame2[0][0] = f00; frame2[0][1] = f01;
+        frame2[1][0] = f10; frame2[1][1] = f11;
+    }
+
     virtual void mover() {}
     virtual void recibirDanio(int cantidad) {
         this->vida -= cantidad;
@@ -60,4 +87,4 @@ public:
     }
 };
 
-#endif // !Personaje_h
+#endif

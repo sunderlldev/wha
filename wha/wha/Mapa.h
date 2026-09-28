@@ -2,6 +2,7 @@
 #define Mapa_h
 #include <iostream>
 #include <vector>
+#include <string>
 #include "Arbol.h"
 #include "Habitacion.h"
 #include "Rio.h"
@@ -23,31 +24,51 @@ public:
 			delete obj;
 		}
 		objetos.clear();
-	};
-	//agregar entidades al mapa
+	}
+
 	void agregarObjeto(ObjetoMapa* nuevoObjeto) {
 		objetos.push_back(nuevoObjeto);
 		nuevoObjeto->dibujarEnMatriz(matriz);
 	}
-	//get
-	int getFilas() { return this->filas; }
-	int getColumnas() { return this->columnas; }
-	//set
+
+	int getFilas() const { return this->filas; }
+	int getColumnas() const { return this->columnas; }
+	const std::vector<std::string>& getMatriz() const { return this->matriz; }
+
 	void setFilas(int f) { this->filas = f; }
 	void setColumnas(int c) { this->columnas = c; }
-	//acciones
+
+	void cargarMatriz(const std::vector<std::string>& m) {
+		this->matriz = m;
+		this->filas = (int)m.size();
+		if (this->filas > 0) {
+			this->columnas = (int)m[0].size();
+		}
+	}
+
+	void setCaracter(int x, int y, char c) {
+		if (y >= 0 && y < filas && x >= 0 && x < columnas) {
+			matriz[y][x] = c;
+		}
+	}
+
 	bool esPosicionValida(int x, int y) {
-		//limites del mapa
 		if (x < 0 || x >= columnas || y < 0 || y >= filas) return false;
 
-		//colision
-		for (const auto& obj : objetos) {
-			if (obj->colisionaCon(x, y)) {
-				return false; //no pasa
+		for (size_t i = 0; i < objetos.size(); i++) {
+			if (objetos[i]->getTipo() != habitacion && objetos[i]->getTipo() != camino && objetos[i]->colisionaCon(x, y)) {
+				return false;
 			}
 		}
-		return true; //pasa
+		if (y < (int)matriz.size() && x < (int)matriz[y].size()) {
+			char c = matriz[y][x];
+			if (c != ' ' && c != '.' && c != '=' && c != ':' && c != '#') {
+				return false;
+			}
+		}
+		return true;
 	}
+
 	bool estaEnHabitacion(int px, int py) {
 		for (const auto& obj : objetos) {
 			if (obj->getTipo() == habitacion && obj->estaDentro(px, py)) {
@@ -56,9 +77,9 @@ public:
 		}
 		return false;
 	}
-	void actualizarNieblaVision(int px, int py, int radio) {};
-	void dibujarMapa() {};
+
+	void actualizarNieblaVision(int, int, int) {}
+	void dibujarMapa() {}
 };
 
-#endif // !Mapa_h
-
+#endif
