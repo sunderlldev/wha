@@ -13,6 +13,8 @@
 #include "Inventario.h"
 #include "Caja.h"
 #include "CuartoRicheh.h"
+#include "GestorDialogos.h"
+#include "GestorMisiones.h"
 #ifdef _WIN32
 #include <conio.h>
 #endif
@@ -44,29 +46,23 @@ private:
 	int pozoY;
 	bool primeraVezTorreAgott;
 	int respuestaInicialAgott;
-	std::string npcDialogoActual;
 	std::string mensajeTemporal;
 	int ticksMensajeTemporal;
 	std::vector<ItemMagico*> itemsSuelo;
 	clock_t tiempoInicio;
-	int puntosMisiones;
 	std::string promptFlotante;
-	bool enDialogo;
-	int estadoDialogo;
 	bool enModalPersonajes;
 	int seleccionModal;
-	bool enModalMisiones;
-	bool enDetalleMision;
-	int seleccionMision;
 	bool enModalInventario;
 	int seleccionInventario;
 	bool paredPiedraDestruida;
 	int idCuartoActual;
 	std::string cartelCuarto;
 	int ticksCartelCuarto;
-	std::string objetivoActual;
 	bool mostrarEstadisticasFin;
 	bool avanzaSiguienteNivel;
+	GestorDialogos* gestorDialogos;
+	GestorMisiones* gestorMisiones;
 
 	void limpiarItemsSuelo() {
 		for (size_t i = 0; i < itemsSuelo.size(); i++) {
@@ -94,15 +90,16 @@ public:
 		  dioVaraRicheh(false), transicionBajando(false), transicionSubiendo(false),
 		  indiceCajaLibro(-1), indiceCajaPozo(-1), libroEncontrado(false),
 		  pozoEncontrado(false), cajasMovidasContador(0), pozoX(-1), pozoY(-1),
-		  primeraVezTorreAgott(true), respuestaInicialAgott(0), npcDialogoActual(""),
+		  primeraVezTorreAgott(true), respuestaInicialAgott(0),
 		  mensajeTemporal(""), ticksMensajeTemporal(0),
-		  tiempoInicio(0), puntosMisiones(0), promptFlotante(""),
-		  enDialogo(false), estadoDialogo(0), enModalPersonajes(false),
-		  seleccionModal(0), enModalMisiones(false), enDetalleMision(false),
-		  seleccionMision(0), enModalInventario(false), seleccionInventario(0),
+		  tiempoInicio(0), promptFlotante(""),
+		  enModalPersonajes(false), seleccionModal(0),
+		  enModalInventario(false), seleccionInventario(0),
 		  paredPiedraDestruida(false), idCuartoActual(0), cartelCuarto(""), ticksCartelCuarto(0),
-		  objetivoActual("Hablar con Maestro Qifrey"),
-		  mostrarEstadisticasFin(false), avanzaSiguienteNivel(false) {}
+		  mostrarEstadisticasFin(false), avanzaSiguienteNivel(false) {
+		gestorDialogos = new GestorDialogos();
+		gestorMisiones = new GestorMisiones();
+	}
 
 	Nivel(int numeroN, std::string nombreN, int filasMapa, int columnasMapa)
 		: numeroNivel(numeroN), nombreNivel(nombreN), completado(false),
@@ -111,19 +108,19 @@ public:
 		  dioVaraRicheh(false), transicionBajando(false), transicionSubiendo(false),
 		  indiceCajaLibro(-1), indiceCajaPozo(-1), libroEncontrado(false),
 		  pozoEncontrado(false), cajasMovidasContador(0), pozoX(-1), pozoY(-1),
-		  primeraVezTorreAgott(true), respuestaInicialAgott(0), npcDialogoActual(""),
+		  primeraVezTorreAgott(true), respuestaInicialAgott(0),
 		  mensajeTemporal(""), ticksMensajeTemporal(0),
-		  tiempoInicio(0), puntosMisiones(0), promptFlotante(""),
-		  enDialogo(false), estadoDialogo(0), enModalPersonajes(false),
-		  seleccionModal(0), enModalMisiones(false), enDetalleMision(false),
-		  seleccionMision(0), enModalInventario(false), seleccionInventario(0),
+		  tiempoInicio(0), promptFlotante(""),
+		  enModalPersonajes(false), seleccionModal(0),
+		  enModalInventario(false), seleccionInventario(0),
 		  paredPiedraDestruida(false), idCuartoActual(0), cartelCuarto(""), ticksCartelCuarto(0),
-		  objetivoActual("Hablar con Maestro Qifrey"),
 		  mostrarEstadisticasFin(false), avanzaSiguienteNivel(false) {
 		this->mapa = new Mapa(filasMapa, columnasMapa);
+		this->gestorDialogos = new GestorDialogos();
+		this->gestorMisiones = new GestorMisiones();
 	}
 
-	~Nivel() {
+	virtual ~Nivel() {
 		if (this->mapa != nullptr) {
 			delete this->mapa;
 			this->mapa = nullptr;
@@ -148,6 +145,14 @@ public:
 			delete this->richeh;
 			this->richeh = nullptr;
 		}
+		if (this->gestorDialogos != nullptr) {
+			delete this->gestorDialogos;
+			this->gestorDialogos = nullptr;
+		}
+		if (this->gestorMisiones != nullptr) {
+			delete this->gestorMisiones;
+			this->gestorMisiones = nullptr;
+		}
 		limpiarItemsSuelo();
 		limpiarCajas();
 	}
@@ -156,13 +161,13 @@ public:
 		if (protagonista != nullptr) {
 			cocoPrevX = protagonista->getX();
 			cocoPrevY = protagonista->getY();
-			protagonista->setX(10);
+			protagonista->setX(8);
 			protagonista->setY(6);
 		}
 		enCuartoRicheh = true;
-		idCuartoActual = 6;
-		cartelCuarto = "[SOTANO DE RICHEH]";
-		ticksCartelCuarto = 75;
+		promptFlotante = "";
+		cartelCuarto = "[SOTANO SECRETO DE RICHEH]";
+		ticksCartelCuarto = 60;
 	}
 
 	void salirCuartoRicheh() {
@@ -171,7 +176,9 @@ public:
 			protagonista->setY(cocoPrevY);
 		}
 		enCuartoRicheh = false;
-		actualizarCuartoActual(protagonista->getX(), protagonista->getY());
+		promptFlotante = "";
+		cartelCuarto = "[TORRE DE AGOTT]";
+		ticksCartelCuarto = 60;
 	}
 
 	bool getEnCuartoRicheh() const { return this->enCuartoRicheh; }
@@ -184,13 +191,14 @@ public:
 	Protagonista* getProtagonista() { return this->protagonista; }
 	NPC* getQifrey() { return this->qifrey; }
 	NPC* getAgott() { return this->agott; }
-	const std::vector<Caja*>& getCajas() const { return this->cajas; }
+
 	bool getLibroEncontrado() const { return this->libroEncontrado; }
 	bool getPozoEncontrado() const { return this->pozoEncontrado; }
 	int getPozoX() const { return this->pozoX; }
 	int getPozoY() const { return this->pozoY; }
 	int getCajasMovidasContador() const { return this->cajasMovidasContador; }
-	const std::vector<ItemMagico*>& getItemsSuelo() const { return this->itemsSuelo; }
+	const std::vector<Caja*>& getCajas() const { return this->cajas; }
+
 	int getNumeroNivel() const { return this->numeroNivel; }
 	std::string getNombreNivel() const { return this->nombreNivel; }
 	bool getCompletado() const { return this->completado; }
@@ -200,53 +208,57 @@ public:
 		}
 		return this->mapa;
 	}
+	const std::vector<ItemMagico*>& getItemsSuelo() const { return this->itemsSuelo; }
 	const std::string& getPromptFlotante() const { return this->promptFlotante; }
-	bool getEnDialogo() const { return this->enDialogo; }
-	int getEstadoDialogo() const { return this->estadoDialogo; }
+
+	bool getEnDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEnDialogo() : false; }
+	int getEstadoDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEstadoDialogo() : 0; }
+	std::string getNpcDialogoActual() const { return (gestorDialogos != nullptr) ? gestorDialogos->getNpcDialogoActual() : ""; }
 	bool getEnModalPersonajes() const { return this->enModalPersonajes; }
 	int getSeleccionModal() const { return this->seleccionModal; }
-	bool getEnModalMisiones() const { return this->enModalMisiones; }
-	bool getEnDetalleMision() const { return this->enDetalleMision; }
-	int getSeleccionMision() const { return this->seleccionMision; }
+	bool getEnModalMisiones() const { return (gestorMisiones != nullptr) ? gestorMisiones->getEnModalMisiones() : false; }
+	bool getEnDetalleMision() const { return (gestorMisiones != nullptr) ? gestorMisiones->getEnDetalleMision() : false; }
+	int getSeleccionMision() const { return (gestorMisiones != nullptr) ? gestorMisiones->getSeleccionMision() : 0; }
 	bool getEnModalInventario() const { return this->enModalInventario; }
 	int getSeleccionInventario() const { return this->seleccionInventario; }
 	bool getParedPiedraDestruida() const { return this->paredPiedraDestruida; }
 	int getIdCuartoActual() const { return this->idCuartoActual; }
 	const std::string& getCartelCuarto() const { return this->cartelCuarto; }
-	const std::string& getObjetivoActual() const { return this->objetivoActual; }
+	std::string getObjetivoActual() const {
+		return (gestorMisiones != nullptr) ? gestorMisiones->getObjetivoActual() : "";
+	}
 	bool getMostrarEstadisticasFin() const { return this->mostrarEstadisticasFin; }
 	bool getAvanzaSiguienteNivel() const { return this->avanzaSiguienteNivel; }
 
 	void setNumeroNivel(int numero) { this->numeroNivel = numero; }
 	void setNombreNivel(std::string nombre) { this->nombreNivel = nombre; }
 	void setCompletado(bool estado) { this->completado = estado; }
-	void setEnDialogo(bool ed) { this->enDialogo = ed; }
-	void setEstadoDialogo(int ed) { this->estadoDialogo = ed; }
+	void setEnDialogo(bool ed) { if (gestorDialogos != nullptr) gestorDialogos->setEnDialogo(ed); }
+	void setEstadoDialogo(int ed) { if (gestorDialogos != nullptr) gestorDialogos->setEstadoDialogo(ed); }
+	void setNpcDialogoActual(const std::string& n) { if (gestorDialogos != nullptr) gestorDialogos->setNpcDialogoActual(n); }
 	void setEnModalPersonajes(bool emp) { this->enModalPersonajes = emp; }
-	void setEnModalMisiones(bool emm) { this->enModalMisiones = emm; }
-	void setEnDetalleMision(bool edm) { this->enDetalleMision = edm; }
-	void setSeleccionMision(int sm) { this->seleccionMision = sm; }
+	void setEnModalMisiones(bool emm) { if (gestorMisiones != nullptr) gestorMisiones->setEnModalMisiones(emm); }
+	void setEnDetalleMision(bool edm) { if (gestorMisiones != nullptr) gestorMisiones->setEnDetalleMision(edm); }
+	void setSeleccionMision(int sm) { if (gestorMisiones != nullptr) gestorMisiones->setSeleccionMision(sm); }
 	void setEnModalInventario(bool emi) { this->enModalInventario = emi; }
 	void setSeleccionInventario(int si) { this->seleccionInventario = si; }
 	void setParedPiedraDestruida(bool val) { this->paredPiedraDestruida = val; }
 	void setMostrarEstadisticasFin(bool val) { this->mostrarEstadisticasFin = val; }
 	void setAvanzaSiguienteNivel(bool val) { this->avanzaSiguienteNivel = val; }
+	void setObjetivoActual(const std::string& obj) { if (gestorMisiones != nullptr) gestorMisiones->setObjetivoActual(obj); }
 
 	int determinarCuarto(int px, int py) const {
-		if (px >= 38 && px <= 125 && py >= 152 && py <= 193) {
+		if (px >= 22 && px <= 55 && py >= 12 && py <= 28) {
 			return 1;
 		}
-		if (px >= 458 && px <= 575 && py >= 11 && py <= 49) {
+		if (px >= 460 && px <= 590 && py >= 25 && py <= 50) {
 			return 2;
 		}
-		if (px >= 465 && px <= 578 && py >= 63 && py <= 134) {
+		if (px >= 460 && px <= 590 && py >= 60 && py <= 140) {
 			return 3;
 		}
-		if (px >= 458 && px <= 580 && py >= 143 && py <= 186) {
+		if (px >= 460 && px <= 590 && py >= 150 && py <= 190) {
 			return 4;
-		}
-		if (px >= 38 && px <= 125 && py >= 10 && py <= 45) {
-			return 5;
 		}
 		return 0;
 	}
@@ -255,217 +267,173 @@ public:
 		int nuevoCuarto = determinarCuarto(px, py);
 		if (nuevoCuarto != idCuartoActual) {
 			idCuartoActual = nuevoCuarto;
-			if (idCuartoActual == 1) {
+			if (nuevoCuarto == 1) {
 				cartelCuarto = "[LA CHOZA DE HECHIZOS]";
-				ticksCartelCuarto = 75;
-			} else if (idCuartoActual == 2) {
-				cartelCuarto = "[EL ALMACEN]";
-				ticksCartelCuarto = 75;
-			} else if (idCuartoActual == 3) {
+				ticksCartelCuarto = 60;
+			} else if (nuevoCuarto == 2) {
+				cartelCuarto = "[EL ALMACEN ABANDONADO]";
+				ticksCartelCuarto = 60;
+			} else if (nuevoCuarto == 3) {
 				cartelCuarto = "[TORRE DE AGOTT]";
-				ticksCartelCuarto = 75;
+				ticksCartelCuarto = 60;
 				if (primeraVezTorreAgott) {
 					primeraVezTorreAgott = false;
-					enDialogo = true;
-					estadoDialogo = 200;
-					npcDialogoActual = "Agott";
-					if (agott != nullptr) {
-						agott->setYaHablo(true);
+					if (gestorDialogos != nullptr) {
+						gestorDialogos->iniciarDialogo("Agott", 200);
 					}
 				}
-			} else if (idCuartoActual == 4) {
+			} else if (nuevoCuarto == 4) {
 				cartelCuarto = "[BOSQUE DE PLATA]";
-				ticksCartelCuarto = 75;
-			} else if (idCuartoActual == 5) {
-				cartelCuarto = "[HABITACION DE COCO]";
-				ticksCartelCuarto = 75;
+				ticksCartelCuarto = 60;
 			} else {
-				ticksCartelCuarto = 0;
 				cartelCuarto = "";
+				ticksCartelCuarto = 0;
 			}
 		}
 	}
 
 	void inciarNivel() {
-		if (this->mapa == nullptr) return;
 		this->tiempoInicio = clock();
-		this->puntosMisiones = 0;
-		this->enDialogo = false;
-		this->estadoDialogo = 0;
+		this->completado = false;
+		if (gestorDialogos != nullptr) gestorDialogos->terminarDialogo();
+		if (gestorMisiones != nullptr) {
+			gestorMisiones->setPuntosMisiones(0);
+			gestorMisiones->setEnModalMisiones(false);
+			gestorMisiones->setEnDetalleMision(false);
+			gestorMisiones->setSeleccionMision(0);
+		}
 		this->enModalPersonajes = false;
 		this->seleccionModal = 0;
-		this->enModalMisiones = false;
-		this->enDetalleMision = false;
-		this->seleccionMision = 0;
 		this->enModalInventario = false;
 		this->seleccionInventario = 0;
-		this->paredPiedraDestruida = false;
+		this->mostrarEstadisticasFin = false;
+		this->avanzaSiguienteNivel = false;
 		this->idCuartoActual = 0;
 		this->cartelCuarto = "";
 		this->ticksCartelCuarto = 0;
-		this->promptFlotante = "";
-		this->mostrarEstadisticasFin = false;
-		this->avanzaSiguienteNivel = false;
-		this->completado = false;
-		this->primeraVezTorreAgott = true;
-		this->respuestaInicialAgott = 0;
-		this->libroEncontrado = false;
-		this->pozoEncontrado = false;
-		this->cajasMovidasContador = 0;
-		this->pozoX = -1;
-		this->pozoY = -1;
-		this->npcDialogoActual = "";
-		this->mensajeTemporal = "";
-		this->ticksMensajeTemporal = 0;
+		this->paredPiedraDestruida = false;
 		this->enCuartoRicheh = false;
 		this->dioVaraRicheh = false;
 		this->transicionBajando = false;
 		this->transicionSubiendo = false;
+		this->cajasMovidasContador = 0;
+		this->libroEncontrado = false;
+		this->pozoEncontrado = false;
+		this->pozoX = -1;
+		this->pozoY = -1;
+		this->primeraVezTorreAgott = true;
+		this->respuestaInicialAgott = 0;
+		this->mensajeTemporal = "";
+		this->ticksMensajeTemporal = 0;
 
-		limpiarItemsSuelo();
-		limpiarCajas();
-
-		if (this->protagonista != nullptr) {
-			delete this->protagonista;
-			this->protagonista = nullptr;
-		}
-		if (this->qifrey != nullptr) {
-			delete this->qifrey;
-			this->qifrey = nullptr;
-		}
-		if (this->agott != nullptr) {
-			delete this->agott;
-			this->agott = nullptr;
-		}
-		if (this->richeh != nullptr) {
-			delete this->richeh;
-			this->richeh = nullptr;
-		}
-		if (this->mapaRicheh != nullptr) {
-			delete this->mapaRicheh;
-			this->mapaRicheh = nullptr;
+		if (mapaRicheh == nullptr) {
+			mapaRicheh = new Mapa(35, 120);
+			std::vector<std::string> mRicheh;
+			CuartoRicheh::cargarMatriz(mRicheh);
+			mapaRicheh->cargarMatriz(mRicheh);
 		}
 
-		if (this->numeroNivel == 1) {
-			std::vector<std::string> matrizNivel1;
-			MapaNivel1::cargarMatriz(matrizNivel1);
-			this->mapa->cargarMatriz(matrizNivel1);
+		if (numeroNivel == 1) {
+			if (mapa == nullptr) {
+				mapa = new Mapa(200, 600);
+			}
+			std::vector<std::string> matrizCargada;
+			MapaNivel1::cargarMatriz(matrizCargada);
+			mapa->cargarMatriz(matrizCargada);
 
-			this->mapaRicheh = new Mapa(25, 82);
-			std::vector<std::string> matrizRicheh;
-			CuartoRicheh::cargarMatriz(matrizRicheh);
-			this->mapaRicheh->cargarMatriz(matrizRicheh);
-
-			for (int wy = 27; wy <= 35; wy++) {
-				this->mapa->setCaracter(459, wy, '%');
-				this->mapa->setCaracter(460, wy, '%');
+			if (protagonista == nullptr) {
+				protagonista = new Protagonista(38, 20, "Coco", 3, 1);
+			} else {
+				protagonista->setX(38);
+				protagonista->setY(20);
+				protagonista->setVida(3);
+				protagonista->setVidaMaxima(3);
 			}
 
-			this->protagonista = new Protagonista(50, 20, "Coco", 3, 1);
-			this->qifrey = new NPC(78, 162, "Qifrey", 'Q', "Maestro Hechicero", false);
-			this->agott = new NPC(515, 68, "Agott", 'A', "Aprendiz de Maga", false);
-			this->agott->setConfianza(2);
-			this->richeh = new NPC(55, 18, "Richeh", 'R', "Aprendiz de Maga", false);
+			if (qifrey == nullptr) {
+				qifrey = new NPC(38, 17, "Qifrey", "Maestro Hechicero", false);
+			} else {
+				qifrey->setX(38);
+				qifrey->setY(17);
+				qifrey->setConfianza(0);
+				qifrey->setYaHablo(false);
+				qifrey->setDioTinta(false);
+				qifrey->setCrafteoCapa(false);
+			}
 
-			itemsSuelo.push_back(new ItemMagico(485, 20, "Tela", "Pieza de tela especial apta para tejer encantamientos.", "Material de Crafteo", false));
+			if (agott == nullptr) {
+				agott = new NPC(524, 66, "Agott", "Aprendiz de Maga", false);
+			} else {
+				agott->setX(524);
+				agott->setY(66);
+				agott->setConfianza(1);
+				agott->setYaHablo(false);
+			}
 
-			int intentos = 0;
-			while (cajas.size() < 18 && intentos < 2000) {
-				intentos++;
-				int bx = 472 + (rand() % (560 - 472 + 1));
-				int by = 76 + (rand() % (122 - 76 + 1));
-				bool solapa = false;
-				for (size_t i = 0; i < cajas.size(); i++) {
-					if (abs(bx - cajas[i]->getX()) < 4 && abs(by - cajas[i]->getY()) < 4) {
-						solapa = true;
-						break;
+			if (richeh == nullptr) {
+				richeh = new NPC(22, 10, "Richeh", "Aprendiz de Maga", false);
+			} else {
+				richeh->setX(22);
+				richeh->setY(10);
+				richeh->setConfianza(1);
+				richeh->setYaHablo(false);
+			}
+
+			limpiarItemsSuelo();
+			itemsSuelo.push_back(new ItemMagico(505, 34, "Tela", "Trozo de tela arcana resistente y ligera para confeccionar vestiduras.", "Material Magico", false));
+
+			limpiarCajas();
+			srand(12345);
+			int numCajas = 18;
+			std::vector<std::pair<int, int>> posicionesUsadas;
+
+			for (int i = 0; i < numCajas; i++) {
+				int bx = 0;
+				int by = 0;
+				bool posValida = false;
+				int intentos = 0;
+
+				while (!posValida && intentos < 100) {
+					intentos++;
+					bx = 472 + (rand() % (560 - 472 + 1));
+					by = 76 + (rand() % (122 - 76 + 1));
+
+					posValida = true;
+					for (size_t k = 0; k < posicionesUsadas.size(); k++) {
+						if (abs(bx - posicionesUsadas[k].first) < 4 && abs(by - posicionesUsadas[k].second) < 4) {
+							posValida = false;
+							break;
+						}
 					}
 				}
-				if (abs(bx - 515) < 5 && abs(by - 68) < 5) {
-					solapa = true;
-				}
-				if (!solapa) {
-					cajas.push_back(new Caja(bx, by));
+
+				if (posValida) {
+					posicionesUsadas.push_back(std::make_pair(bx, by));
+					Caja* c = new Caja(bx, by);
+					cajas.push_back(c);
 				}
 			}
+
 			if (cajas.size() >= 2) {
-				indiceCajaLibro = rand() % cajas.size();
-				indiceCajaPozo = (indiceCajaLibro + 1 + (rand() % (cajas.size() - 1))) % cajas.size();
+				indiceCajaLibro = 5 % cajas.size();
+				indiceCajaPozo = 12 % cajas.size();
+				if (indiceCajaPozo == indiceCajaLibro) {
+					indiceCajaPozo = (indiceCajaPozo + 1) % cajas.size();
+				}
 			}
 
-			actualizarCuartoActual(50, 20);
-			this->objetivoActual = "Hablar con Maestro Qifrey";
-		} else if (this->numeroNivel == 2) {
-			std::vector<std::string> matrizNivel2;
-			MapaNivel1::cargarMatriz(matrizNivel2);
-			this->mapa->cargarMatriz(matrizNivel2);
-
-			this->protagonista = new Protagonista(50, 20, "Tartah", 3, 2);
-			this->qifrey = new NPC(78, 162, "Qifrey", 'Q', "Maestro Hechicero", false);
-			this->objetivoActual = "Tierras Prohibidas - Fase 2";
-		} else {
-			std::vector<std::string> matrizNivel3;
-			MapaNivel1::cargarMatriz(matrizNivel3);
-			this->mapa->cargarMatriz(matrizNivel3);
-
-			this->protagonista = new Protagonista(50, 20, "Coustas", 3, 3);
-			this->qifrey = new NPC(78, 162, "Qifrey", 'Q', "Maestro Hechicero", false);
-			this->objetivoActual = "Gran Arbol de Plata - Fase 3";
-		}
-	}
-
-	void obtenerDatosMisiones(std::vector<std::string>& titulos,
-	                          std::vector<std::string>& descripciones,
-	                          std::vector<std::string>& estados,
-	                          std::vector<bool>& desbloqueadas) {
-		titulos.clear();
-		descripciones.clear();
-		estados.clear();
-		desbloqueadas.clear();
-
-		Inventario* inv = (protagonista != nullptr) ? protagonista->getInventario() : nullptr;
-		bool habloConQifrey = (qifrey != nullptr && (qifrey->getDioTinta() || qifrey->getCrafteoCapa() || estadoDialogo > 1));
-		bool tieneTela = (inv != nullptr && inv->tieneItem("Tela"));
-		bool tieneTinta = (inv != nullptr && inv->tieneItem("Tinta magica"));
-		bool tieneLibro = (inv != nullptr && inv->tieneItem("Libro de hechizos"));
-		bool crafteoCapa = (qifrey != nullptr && qifrey->getCrafteoCapa());
-		bool tieneMateriales = (tieneTela && tieneTinta && tieneLibro) || crafteoCapa;
-
-		titulos.push_back("Hablar con Qifrey");
-		descripciones.push_back("Encuentra al Maestro Qifrey en el atelier y dialoga con el sobre el crafteo de la Capa Magica.");
-		desbloqueadas.push_back(true);
-		if (habloConQifrey) {
-			estados.push_back("COMPLETADA");
-		} else {
-			estados.push_back("EN PROGRESO");
-		}
-
-		titulos.push_back("Conseguir Materiales");
-		descripciones.push_back("Recolecta en el atelier los 3 materiales indispensables: Tela, Libro de hechizos y Tinta magica.");
-		if (habloConQifrey) {
-			desbloqueadas.push_back(true);
-			if (tieneMateriales) {
-				estados.push_back("COMPLETADA");
-			} else {
-				estados.push_back("EN PROGRESO");
+			if (gestorMisiones != nullptr) {
+				gestorMisiones->setObjetivoActual("Hablar con Maestro Qifrey");
 			}
-		} else {
-			desbloqueadas.push_back(false);
-			estados.push_back("BLOQUEADA");
-		}
-
-		titulos.push_back("Craftear Capa Magica");
-		descripciones.push_back("Regresa con Maestro Qifrey y entrega los materiales para confeccionar la legendaria Capa Magica.");
-		if (tieneMateriales) {
-			desbloqueadas.push_back(true);
-			if (crafteoCapa) {
-				estados.push_back("COMPLETADA");
-			} else {
-				estados.push_back("EN PROGRESO");
+			actualizarCuartoActual(protagonista->getX(), protagonista->getY());
+		} else if (numeroNivel == 2) {
+			if (gestorMisiones != nullptr) {
+				gestorMisiones->setObjetivoActual("Tierras Prohibidas - Fase 2");
 			}
-		} else {
-			desbloqueadas.push_back(false);
-			estados.push_back("BLOQUEADA");
+		} else if (numeroNivel == 3) {
+			if (gestorMisiones != nullptr) {
+				gestorMisiones->setObjetivoActual("Gran Arbol de Plata - Fase 3");
+			}
 		}
 	}
 
@@ -475,396 +443,61 @@ public:
 	}
 
 	int getBonoTiempo() const {
-		int seg = getSegundosTranscurridos();
-		if (seg <= 60) return 50;
-		if (seg <= 120) return 30;
-		if (seg <= 180) return 20;
-		if (seg <= 240) return 10;
-		return 5;
+		return (gestorMisiones != nullptr) ? gestorMisiones->getBonoTiempo(getSegundosTranscurridos()) : 0;
 	}
 
 	int getPuntajeTotalNivel() const {
-		return puntosMisiones + getBonoTiempo();
+		return (gestorMisiones != nullptr) ? gestorMisiones->getPuntajeTotalNivel(getSegundosTranscurridos()) : 0;
 	}
 
 	void sumarPuntosMision(int p) {
-		this->puntosMisiones += p;
+		if (gestorMisiones != nullptr) gestorMisiones->sumarPuntosMision(p);
 	}
 
 	int getPuntosMisiones() const {
-		return this->puntosMisiones;
+		return (gestorMisiones != nullptr) ? gestorMisiones->getPuntosMisiones() : 0;
 	}
 
 	bool verificarObjetivo() {
 		return this->avanzaSiguienteNivel;
 	}
 
+	void obtenerDatosMisiones(std::vector<std::string>& titulos,
+	                          std::vector<std::string>& descripciones,
+	                          std::vector<std::string>& estados,
+	                          std::vector<bool>& desbloqueadas) {
+		if (gestorMisiones != nullptr) {
+			int ed = (gestorDialogos != nullptr) ? gestorDialogos->getEstadoDialogo() : 0;
+			gestorMisiones->obtenerDatosMisiones(protagonista, qifrey, ed, titulos, descripciones, estados, desbloqueadas);
+		}
+	}
+
 	void obtenerDatosDialogo(std::string& hablante, std::string& rol, int& confianza,
 	                         std::vector<std::string>& lineas,
 	                         std::vector<std::string>& opciones) {
-		if (estadoDialogo >= 300) {
-			hablante = (richeh != nullptr) ? richeh->getNombre() : "Richeh";
-			rol = (richeh != nullptr) ? richeh->getRolPerspectiva() : "Aprendiz de Maga";
-			confianza = (richeh != nullptr) ? richeh->getConfianza() : 0;
-		} else if (estadoDialogo >= 200) {
-			hablante = (agott != nullptr) ? agott->getNombre() : "Agott";
-			rol = (agott != nullptr) ? agott->getRolPerspectiva() : "Aprendiz de Maga";
-			confianza = (agott != nullptr) ? agott->getConfianza() : 0;
-		} else {
-			hablante = (qifrey != nullptr) ? qifrey->getNombre() : "Qifrey";
-			rol = (qifrey != nullptr) ? qifrey->getRolPerspectiva() : "Maestro Hechicero";
-			confianza = (qifrey != nullptr) ? qifrey->getConfianza() : 0;
-		}
-		lineas.clear();
-		opciones.clear();
-
-		Inventario* inv = (protagonista != nullptr) ? protagonista->getInventario() : nullptr;
-
-		switch (estadoDialogo) {
-		case 1:
-			lineas.push_back("\"Hola, Coco. Que necesitas en el taller hoy?\"");
-			opciones.push_back("[1] Maestro Qifrey, podrias ayudarme a craftear la Capa Magica?");
-			opciones.push_back("[2] Solo venia a explorar el taller y ver tus libros.");
-			opciones.push_back("[3] Maestro, necesito materiales especiales para mis practicas.");
-			break;
-
-		case 10:
-			if (inv != nullptr) {
-				bool tieneTela = inv->tieneItem("Tela");
-				bool tieneTinta = inv->tieneItem("Tinta magica");
-				bool tieneLibro = inv->tieneItem("Libro de hechizos");
-				int total = (tieneTela ? 1 : 0) + (tieneTinta ? 1 : 0) + (tieneLibro ? 1 : 0);
-
-				if (total == 0) {
-					lineas.push_back("\"Para la Capa Magica necesito 3 items: Tela, Tinta magica y Libro.\"");
-					lineas.push_back("\"Aun no tienes ninguno. Busca en el atelier y el almacen abandonado!\"");
-					opciones.push_back("[1] Esta bien, ire a buscarlos por el atelier.");
-				} else {
-					lineas.push_back("\"Te faltan materiales para craftear la Capa Magica.\"");
-					std::string faltantes = "Aun necesitas encontrar: ";
-					if (!tieneTela) faltantes += "[Tela] ";
-					if (!tieneTinta) faltantes += "[Tinta magica] ";
-					if (!tieneLibro) faltantes += "[Libro de hechizos] ";
-					lineas.push_back(faltantes);
-					lineas.push_back("\"Vuelve cuando tengas los 3 ingredientes completos!\"");
-					opciones.push_back("[1] Entendido, buscare lo que falta.");
-				}
-			}
-			break;
-
-		case 11:
-			lineas.push_back("\"Esta bien, te hare la capa!\"");
-			lineas.push_back("");
-			lineas.push_back("Crafteando capa magica...");
-			lineas.push_back("");
-			lineas.push_back("\"Aqui esta, te dare esta capa pero ojo... usalo responsablemente!\"");
-			opciones.push_back("[1] Entendido!");
-			break;
-
-		case 12:
-			lineas.push_back("[CRAFTEO EXITOSO: Capa magica obtenida]");
-			lineas.push_back("Se consumieron: Tela, Tinta magica y Libro de hechizos.");
-			lineas.push_back("La Capa Magica ha sido equipada y agregada a tu inventario.");
-			opciones.push_back("[1] Muchas gracias Maestro Qifrey!");
-			break;
-
-		case 15:
-			lineas.push_back("\"Te queda excelente la Capa Magica, Coco.\"");
-			lineas.push_back("\"Recuerda usar tus alas de aprendiz con sabiduria y responsabilidad.\"");
-			opciones.push_back("[1] Gracias Maestro Qifrey!");
-			break;
-
-		case 20:
-			lineas.push_back("\"Eres bienvenida en el taller siempre, Coco.\"");
-			lineas.push_back("\"Cuidate de las corrientes del gran rio y cruza siempre por los puentes.\"");
-			opciones.push_back("[1] Gracias por el consejo, Maestro.");
-			break;
-
-		case 30:
-			lineas.push_back("\"Las practicas de hechiceria requieren precision y paciencia.\"");
-			lineas.push_back("\"Que tipo de material magico estas buscando exactamente?\"");
-			opciones.push_back("[1] Busco una tinta que reaccione al flujo magico del pergamino.");
-			opciones.push_back("[2] Cualquier material basico me servira para practicar.");
-			break;
-
-		case 31:
-			lineas.push_back("\"La tinta magica de plata es muy delicada y poderosa.\"");
-			lineas.push_back("\"Sabras usarla con cuidado y verdadero respeto al atelier?\"");
-			opciones.push_back("[1] Prometo seguir todas las reglas del atelier y ser responsable.");
-			opciones.push_back("[2] Intentare tener cuidado, aunque a veces me cuesta.");
-			break;
-
-		case 32:
-			lineas.push_back("\"Bien dicho, Coco. Veo determinacion y honestidad en tus ojos.\"");
-			lineas.push_back("\"Te doy este item: Tinta magica.\"");
-			opciones.push_back("[1] Muchas gracias Qifrey, me servira de mucho!");
-			break;
-
-		case 33:
-			lineas.push_back("[HAS OBTENIDO: Tinta magica]");
-			lineas.push_back("Se ha agregado a tu inventario.");
-			lineas.push_back("Tu vinculo y confianza con Maestro Qifrey han aumentado!");
-			opciones.push_back("[1] Continuar explorando");
-			break;
-
-		case 34:
-			lineas.push_back("\"Ya te he entregado la Tinta magica, Coco.\"");
-			lineas.push_back("\"Revisa tu mochila y dale buen uso en tus pergaminos.\"");
-			opciones.push_back("[1] Entendido Maestro.");
-			break;
-
-		case 99:
-			lineas.push_back("[INVENTARIO LLENO: Capacidad maxima 3 items alcanzada]");
-			lineas.push_back("No puedes recibir mas items en este momento.");
-			opciones.push_back("[1] Volver");
-			break;
-
-		case 200:
-			lineas.push_back("\"Vaya vaya... miren a quien tenemos aqui.\"");
-			opciones.push_back("[1] Siguiente");
-			break;
-
-		case 201:
-			lineas.push_back("\"A la joven y pequena Coco, porque entraste a mi torre?\"");
-			opciones.push_back("[1] Necesito encontrar un libro");
-			opciones.push_back("[2] A ti que te importa, Agott?");
-			break;
-
-		case 202:
-			lineas.push_back("\"Puedes encontrarlo en este resto de cajas si quieres, al final... solo son basura\"");
-			opciones.push_back("[1] Entendido");
-			break;
-
-		case 203:
-			lineas.push_back("\"Largate de aqui!\"");
-			opciones.push_back("[1] Ya me voy...");
-			break;
-
-		case 210:
-			lineas.push_back("\"Que paso ahora, nina?\"");
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				opciones.push_back("[1] Solo pasaba por aqui, ya encontre el libro, Agott.");
-			} else {
-				opciones.push_back("[1] Sigo buscando el libro, necesito ayuda...");
-			}
-			break;
-
-		case 211:
-			lineas.push_back("\"No esperaba que lo encuentres en esta basura jaja.\"");
-			opciones.push_back("[1] Continuar");
-			break;
-
-		case 212:
-			lineas.push_back("\"Sabia que no eras util para eso JAJAJA, prueba empujando las cajas.\"");
-			opciones.push_back("[1] Gracias por nada...");
-			break;
-
-		case 220:
-			lineas.push_back("\"Porque sigues aqui, Coco?? No eres bienvenida.\"");
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				opciones.push_back("[1] Nada, solo queria burlarme de tu cara.");
-			} else {
-				opciones.push_back("[1] Sigo buscando algo, deja de molestar!");
-			}
-			break;
-
-		case 221:
-			lineas.push_back("\"Estupida nina!\"");
-			opciones.push_back("[1] Salir");
-			break;
-
-		case 222:
-			lineas.push_back("\"Que demonios estas buscando??\"");
-			opciones.push_back("[1] QUE- TE- IMPORTA!!!!");
-			break;
-
-		case 223:
-			lineas.push_back("\"...\"");
-			opciones.push_back("[1] Salir");
-			break;
-
-		case 300:
-			if (!dioVaraRicheh) {
-				lineas.push_back("\"Hola Coco... Que sorpresa verte por aqui abajo.\"");
-				lineas.push_back("\"Toma mi vieja vara magica. Con ella podras\"");
-				lineas.push_back("\"derribar muros de piedra lanzando fuego.\"");
-				opciones.push_back("[1] Muchas gracias Richeh!");
-			} else {
-				lineas.push_back("\"Usa la vara magica con sabiduria, Coco.\"");
-				lineas.push_back("\"Recuerda que el fuego magico responde a tu voluntad.\"");
-				opciones.push_back("[1] Entendido Richeh!");
-			}
-			break;
-
-		default:
-			lineas.push_back("\"Continua tu aprendizaje con dedicacion, Coco.\"");
-			opciones.push_back("[1] Salir");
-			break;
+		if (gestorDialogos != nullptr) {
+			gestorDialogos->obtenerDatosDialogo(protagonista, qifrey, agott, richeh, dioVaraRicheh, libroEncontrado,
+			                                    hablante, rol, confianza, lineas, opciones);
 		}
 	}
 
 	void procesarOpcionDialogo(int opcion) {
-		Inventario* inv = (protagonista != nullptr) ? protagonista->getInventario() : nullptr;
-
-		if (estadoDialogo == 1) {
-			if (opcion == 1) {
-				if (qifrey != nullptr && qifrey->getCrafteoCapa()) {
-					estadoDialogo = 15;
-				} else if (inv != nullptr) {
-					bool tieneTela = inv->tieneItem("Tela");
-					bool tieneTinta = inv->tieneItem("Tinta magica");
-					bool tieneLibro = inv->tieneItem("Libro de hechizos");
-					if (tieneTela && tieneTinta && tieneLibro) {
-						estadoDialogo = 11;
-					} else {
-						estadoDialogo = 10;
-					}
-				}
-			} else if (opcion == 2) {
-				estadoDialogo = 20;
-			} else if (opcion == 3) {
-				if (qifrey != nullptr && qifrey->getDioTinta()) {
-					estadoDialogo = 34;
-				} else {
-					estadoDialogo = 30;
-				}
-			}
-		} else if (estadoDialogo == 10) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 11) {
-			if (opcion == 1) {
-				if (inv != nullptr) {
-					inv->removerItem("Tela");
-					inv->removerItem("Tinta magica");
-					inv->removerItem("Libro de hechizos");
-					inv->agregarItem(new ItemMagico(0, 0, "Capa magica", "Capa magica que otorga la habilidad de planear por los cielos.", "Equipamiento Magico", true));
-				}
-				if (protagonista != nullptr) {
-					protagonista->setTieneCapaVuelo(true);
-				}
-				if (qifrey != nullptr) {
-					qifrey->setCrafteoCapa(true);
-					qifrey->setConfianza(2);
-				}
-				sumarPuntosMision(100);
-				this->objetivoActual = "Capa Magica crafteada! Mision Cumplida";
-				estadoDialogo = 12;
-			}
-		} else if (estadoDialogo == 12) {
-			if (opcion == 1) {
-				enDialogo = false;
-				estadoDialogo = 0;
-				completado = true;
-				mostrarEstadisticasFin = true;
-			}
-		} else if (estadoDialogo == 15 || estadoDialogo == 20) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 30) {
-			if (opcion == 1) {
-				estadoDialogo = 31;
-			} else {
-				enDialogo = false;
-				estadoDialogo = 0;
-			}
-		} else if (estadoDialogo == 31) {
-			if (opcion == 1) {
-				estadoDialogo = 32;
-			} else {
-				enDialogo = false;
-				estadoDialogo = 0;
-			}
-		} else if (estadoDialogo == 32) {
-			if (opcion == 1) {
-				if (inv != nullptr) {
-					if (inv->tieneItem("Tinta magica")) {
-						estadoDialogo = 34;
-					} else if (inv->agregarItem(new ItemMagico(0, 0, "Tinta magica", "Tinta de plata otorgada por Qifrey para trazar sellos.", "Consumible Magico", true))) {
-						if (qifrey != nullptr) {
-							qifrey->setDioTinta(true);
-							if (qifrey->getConfianza() < 1) qifrey->setConfianza(1);
-						}
-						sumarPuntosMision(50);
-						this->objetivoActual = "Buscar Tela y Libro de hechizos";
-						estadoDialogo = 33;
-					} else {
-						estadoDialogo = 99;
-					}
-				}
-			}
-		} else if (estadoDialogo == 33 || estadoDialogo == 34 || estadoDialogo == 99) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 200) {
-			estadoDialogo = 201;
-		} else if (estadoDialogo == 201) {
-			if (opcion == 1) {
-				respuestaInicialAgott = 1;
-				estadoDialogo = 202;
-			} else if (opcion == 2) {
-				respuestaInicialAgott = 2;
-				if (agott != nullptr && agott->getConfianza() > 0) {
-					agott->setConfianza(agott->getConfianza() - 1);
-				}
-				estadoDialogo = 203;
-			}
-		} else if (estadoDialogo == 202 || estadoDialogo == 203) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 210) {
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				estadoDialogo = 211;
-			} else {
-				estadoDialogo = 212;
-			}
-		} else if (estadoDialogo == 211 || estadoDialogo == 212) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 220) {
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				if (agott != nullptr && agott->getConfianza() > 0) {
-					agott->setConfianza(agott->getConfianza() - 1);
-				}
-				estadoDialogo = 221;
-			} else {
-				estadoDialogo = 222;
-			}
-		} else if (estadoDialogo == 221) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 222) {
-			if (agott != nullptr && agott->getConfianza() > 0) {
-				agott->setConfianza(agott->getConfianza() - 1);
-			}
-			estadoDialogo = 223;
-		} else if (estadoDialogo == 223) {
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else if (estadoDialogo == 300) {
-			if (!dioVaraRicheh) {
-				dioVaraRicheh = true;
-				if (inv != nullptr && !inv->tieneItem("Vara magica")) {
-					inv->agregarItem(new ItemMagico(0, 0, "Vara magica", "Vara de la infancia de Richeh con la que practicaba de pequena. Lanza bolas de fuego magico para destruir obstaculos de piedra.", "Herramienta Magica", true));
-					sumarPuntosMision(25);
-					promptFlotante = "[Recogiste: Vara magica]";
-				}
-				if (richeh != nullptr) {
-					richeh->setYaHablo(true);
-					richeh->setConfianza(2);
-				}
-			}
-			enDialogo = false;
-			estadoDialogo = 0;
-		} else {
-			enDialogo = false;
-			estadoDialogo = 0;
+		if (gestorDialogos != nullptr && gestorMisiones != nullptr) {
+			std::string obj = gestorMisiones->getObjetivoActual();
+			int pts = gestorMisiones->getPuntosMisiones();
+			gestorDialogos->procesarOpcionDialogo(opcion, protagonista, qifrey, agott, richeh,
+			                                      dioVaraRicheh, libroEncontrado, respuestaInicialAgott,
+			                                      promptFlotante, obj, pts, completado, mostrarEstadisticasFin);
+			gestorMisiones->setObjetivoActual(obj);
+			gestorMisiones->setPuntosMisiones(pts);
 		}
 	}
 
 	void actualizarProximidad() {
 		if (protagonista == nullptr) return;
-		if (enModalPersonajes || enModalMisiones || enModalInventario || enDialogo || mostrarEstadisticasFin) {
+		bool ed = (gestorDialogos != nullptr && gestorDialogos->getEnDialogo());
+		bool emm = (gestorMisiones != nullptr && gestorMisiones->getEnModalMisiones());
+		if (enModalPersonajes || emm || enModalInventario || ed || mostrarEstadisticasFin) {
 			promptFlotante = "";
 			return;
 		}
@@ -951,34 +584,49 @@ public:
 	}
 
 	bool actualizar() {
-		if (this->protagonista == nullptr) return false;
 		bool huboCambio = false;
 
-		int framePrevio = this->protagonista->getFrameActual();
-		this->protagonista->actualizarAnimacion(30);
-		if (this->qifrey != nullptr) {
-			this->qifrey->actualizarAnimacion(30);
-		}
-		if (this->agott != nullptr) {
-			this->agott->actualizarAnimacion(30);
-		}
-		if (this->richeh != nullptr) {
-			this->richeh->actualizarAnimacion(30);
-		}
-		if (this->protagonista->getFrameActual() != framePrevio) {
-			huboCambio = true;
+		if (this->protagonista != nullptr) {
+			int framePrevio = this->protagonista->getFrameActual();
+			this->protagonista->actualizarAnimacion(30);
+			if (this->qifrey != nullptr) {
+				this->qifrey->actualizarAnimacion(30);
+			}
+			if (this->agott != nullptr) {
+				this->agott->actualizarAnimacion(30);
+			}
+			if (this->richeh != nullptr) {
+				this->richeh->actualizarAnimacion(30);
+			}
+			if (this->protagonista->getFrameActual() != framePrevio) {
+				huboCambio = true;
+			}
 		}
 
 		if (ticksCartelCuarto > 0) {
 			ticksCartelCuarto--;
+			if (ticksCartelCuarto == 0) {
+				cartelCuarto = "";
+				actualizarProximidad();
+				huboCambio = true;
+			}
 		}
+
 		if (ticksMensajeTemporal > 0) {
 			ticksMensajeTemporal--;
+			if (ticksMensajeTemporal == 0) {
+				mensajeTemporal = "";
+				actualizarProximidad();
+				huboCambio = true;
+			}
 		}
 
 #ifdef _WIN32
 		if (_kbhit()) {
 			int tecla = _getch();
+			if (tecla == 0 || tecla == 224) {
+				tecla = _getch();
+			}
 
 			if (mostrarEstadisticasFin) {
 				if (tecla == '1' || tecla == 13) {
@@ -1010,41 +658,42 @@ public:
 				return huboCambio;
 			}
 
-			if (enModalMisiones) {
-				if (!enDetalleMision) {
+			if (gestorMisiones != nullptr && gestorMisiones->getEnModalMisiones()) {
+				if (!gestorMisiones->getEnDetalleMision()) {
+					int sm = gestorMisiones->getSeleccionMision();
 					if (tecla == 'w' || tecla == 'W') {
-						if (seleccionMision > 0) {
-							seleccionMision--;
+						if (sm > 0) {
+							gestorMisiones->setSeleccionMision(sm - 1);
 							huboCambio = true;
 						}
 					} else if (tecla == 's' || tecla == 'S') {
-						if (seleccionMision < 2) {
-							seleccionMision++;
+						if (sm < 2) {
+							gestorMisiones->setSeleccionMision(sm + 1);
 							huboCambio = true;
 						}
 					} else if (tecla == '1') {
-						seleccionMision = 0;
-						enDetalleMision = true;
+						gestorMisiones->setSeleccionMision(0);
+						gestorMisiones->setEnDetalleMision(true);
 						huboCambio = true;
 					} else if (tecla == '2') {
-						seleccionMision = 1;
-						enDetalleMision = true;
+						gestorMisiones->setSeleccionMision(1);
+						gestorMisiones->setEnDetalleMision(true);
 						huboCambio = true;
 					} else if (tecla == '3') {
-						seleccionMision = 2;
-						enDetalleMision = true;
+						gestorMisiones->setSeleccionMision(2);
+						gestorMisiones->setEnDetalleMision(true);
 						huboCambio = true;
 					} else if (tecla == 13) {
-						enDetalleMision = true;
+						gestorMisiones->setEnDetalleMision(true);
 						huboCambio = true;
 					} else if (tecla == 'm' || tecla == 'M' || tecla == 27) {
-						enModalMisiones = false;
-						enDetalleMision = false;
+						gestorMisiones->setEnModalMisiones(false);
+						gestorMisiones->setEnDetalleMision(false);
 						huboCambio = true;
 					}
 				} else {
 					if (tecla == 13 || tecla == 27 || tecla == 'm' || tecla == 'M') {
-						enDetalleMision = false;
+						gestorMisiones->setEnDetalleMision(false);
 						huboCambio = true;
 					}
 				}
@@ -1081,7 +730,7 @@ public:
 				return huboCambio;
 			}
 
-			if (enDialogo) {
+			if (gestorDialogos != nullptr && gestorDialogos->getEnDialogo()) {
 				if (tecla == '1') {
 					procesarOpcionDialogo(1);
 					huboCambio = true;
@@ -1095,8 +744,7 @@ public:
 					procesarOpcionDialogo(1);
 					huboCambio = true;
 				} else if (tecla == 27) {
-					enDialogo = false;
-					estadoDialogo = 0;
+					gestorDialogos->terminarDialogo();
 					huboCambio = true;
 				}
 				actualizarProximidad();
@@ -1111,9 +759,11 @@ public:
 			}
 
 			if (tecla == 'm' || tecla == 'M') {
-				enModalMisiones = true;
-				enDetalleMision = false;
-				seleccionMision = 0;
+				if (gestorMisiones != nullptr) {
+					gestorMisiones->setEnModalMisiones(true);
+					gestorMisiones->setEnDetalleMision(false);
+					gestorMisiones->setSeleccionMision(0);
+				}
 				huboCambio = true;
 				return huboCambio;
 			}
@@ -1143,9 +793,9 @@ public:
 						int rx = richeh->getX();
 						int ry = richeh->getY();
 						if (px + 1 >= rx - 2 && px <= rx + 3 && py + 1 >= ry - 2 && py <= ry + 3) {
-							enDialogo = true;
-							npcDialogoActual = "Richeh";
-							estadoDialogo = 300;
+							if (gestorDialogos != nullptr) {
+								gestorDialogos->iniciarDialogo("Richeh", 300);
+							}
 							huboCambio = true;
 							return huboCambio;
 						}
@@ -1162,8 +812,8 @@ public:
 				if (dx != 0 || dy != 0) {
 					int nx = protagonista->getX() + dx;
 					int ny = protagonista->getY() + dy;
-					bool colision = false;
 					if (mapaRicheh != nullptr) {
+						bool colision = false;
 						for (int r = 0; r < 2; r++) {
 							for (int c = 0; c < 2; c++) {
 								if (!mapaRicheh->esPosicionValida(nx + c, ny + r)) {
@@ -1173,18 +823,18 @@ public:
 							}
 							if (colision) break;
 						}
-					}
-					if (!colision && richeh != nullptr) {
-						int rx = richeh->getX();
-						int ry = richeh->getY();
-						if (nx + 1 >= rx && nx <= rx + 1 && ny + 1 >= ry && ny <= ry + 1) {
-							colision = true;
+						if (!colision && richeh != nullptr) {
+							int rx = richeh->getX();
+							int ry = richeh->getY();
+							if (nx + 1 >= rx && nx <= rx + 1 && ny + 1 >= ry && ny <= ry + 1) {
+								colision = true;
+							}
 						}
-					}
-					if (!colision) {
-						protagonista->setX(nx);
-						protagonista->setY(ny);
-						huboCambio = true;
+						if (!colision) {
+							protagonista->setX(nx);
+							protagonista->setY(ny);
+							huboCambio = true;
+						}
 					}
 				}
 				actualizarProximidad();
@@ -1227,9 +877,9 @@ public:
 					int qx = qifrey->getX();
 					int qy = qifrey->getY();
 					if (px + 1 >= qx - 2 && px <= qx + 3 && py + 1 >= qy - 2 && py <= qy + 3) {
-						enDialogo = true;
-						npcDialogoActual = "Qifrey";
-						estadoDialogo = 1;
+						if (gestorDialogos != nullptr) {
+							gestorDialogos->iniciarDialogo("Qifrey", 1);
+						}
 						huboCambio = true;
 						return huboCambio;
 					}
@@ -1239,12 +889,9 @@ public:
 					int ax = agott->getX();
 					int ay = agott->getY();
 					if (px + 1 >= ax - 2 && px <= ax + 3 && py + 1 >= ay - 2 && py <= ay + 3) {
-						enDialogo = true;
-						npcDialogoActual = "Agott";
-						if (respuestaInicialAgott == 2) {
-							estadoDialogo = 220;
-						} else {
-							estadoDialogo = 210;
+						if (gestorDialogos != nullptr) {
+							int estadoIni = (respuestaInicialAgott == 2) ? 220 : 210;
+							gestorDialogos->iniciarDialogo("Agott", estadoIni);
 						}
 						huboCambio = true;
 						return huboCambio;
