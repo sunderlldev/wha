@@ -115,7 +115,7 @@ public:
 	}
 
 	bool estaCercaDelPozo(int px, int py) const {
-		return (px + 4 >= 7 && px <= 13 && py + 3 >= 3 && py <= 9);
+		return (abs(px - 9) <= 4 && abs(py - 5) <= 4);
 	}
 };
 

@@ -93,7 +93,7 @@ public:
 
 	bool estaCercaDelPozo(int px, int py) const {
 		if (!pozoEncontrado) return false;
-		return (px + 4 >= pozoX - 2 && px <= pozoX + 3 && py + 3 >= pozoY - 2 && py <= pozoY + 3);
+		return (abs(px - pozoX) <= 4 && abs(py - pozoY) <= 4);
 	}
 
 	int detectarColisionCaja(int nx, int ny) const {
@@ -101,7 +101,7 @@ public:
 			if (cajas[i] != nullptr) {
 				int bx = cajas[i]->getX();
 				int by = cajas[i]->getY();
-				if (nx + 1 < bx + 3 && nx + 3 >= bx && ny + 1 < by + 3 && ny + 3 >= by) {
+				if (nx < bx + 3 && nx + 5 > bx && ny < by + 3 && ny + 4 > by) {
 					return (int)i;
 				}
 			}
