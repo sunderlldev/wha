@@ -100,8 +100,8 @@ public:
 		if (prota != nullptr) {
 			cocoPrevX = prota->getX();
 			cocoPrevY = prota->getY();
-			prota->setX(9);
-			prota->setY(7);
+			prota->setX(8);
+			prota->setY(8);
 		}
 		activo = true;
 	}
@@ -115,7 +115,7 @@ public:
 	}
 
 	bool estaCercaDelPozo(int px, int py) const {
-		return (abs(px - 9) <= 3 && abs(py - 6) <= 3);
+		return (px + 4 >= 7 && px <= 13 && py + 3 >= 3 && py <= 9);
 	}
 };
 

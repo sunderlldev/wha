@@ -5,11 +5,30 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <thread>
+#include <chrono>
 #include "Animacion.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#define RESET "\033[0m"
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN "\033[36m"
+#define WHITE "\033[37m"
+#define BRIGHT_BLACK "\033[90m"
+#define BRIGHT_RED "\033[91m"
+#define BRIGHT_GREEN "\033[92m"
+#define BRIGHT_YELLOW "\033[93m"
+#define BRIGHT_BLUE "\033[94m"
+#define BRIGHT_MAGENTA "\033[95m"
+#define BRIGHT_CYAN "\033[96m"
+#define BRIGHT_WHITE "\033[97m"
 
 class Pantalla {
 private:
@@ -18,6 +37,7 @@ private:
     int anchoJuego;
     int anchoPanel;
     std::vector<std::string> buffer;
+    std::vector<std::vector<int>> bufferColor;
     std::string ultimoDialogoHablante;
     std::string ultimoDialogoTexto;
     std::string ultimoPromptTexto;
@@ -39,10 +59,25 @@ private:
         return res + "|";
     }
 
+    const char* obtenerCodigoColor(int color) const {
+        switch (color) {
+            case 1: return BRIGHT_WHITE;
+            case 2: return BRIGHT_GREEN;
+            case 3: return BRIGHT_CYAN;
+            case 4: return BRIGHT_YELLOW;
+            case 5: return BRIGHT_MAGENTA;
+            case 6: return BRIGHT_BLUE;
+            case 7: return BRIGHT_RED;
+            case 8: return BRIGHT_BLACK;
+            default: return RESET;
+        }
+    }
+
 public:
     Pantalla() : anchoTotal(120), altoTotal(40), anchoJuego(84), anchoPanel(35),
                  ultimoDialogoHablante(""), ultimoDialogoTexto(""), ultimoPromptTexto("") {
         buffer = std::vector<std::string>(altoTotal, std::string(anchoTotal, ' '));
+        bufferColor = std::vector<std::vector<int>>(altoTotal, std::vector<int>(anchoTotal, 0));
     }
 
     ~Pantalla() {}
@@ -69,6 +104,11 @@ public:
                 cursorInfo.bVisible = FALSE;
                 SetConsoleCursorInfo(hOut, &cursorInfo);
             }
+            DWORD dwMode = 0;
+            if (GetConsoleMode(hOut, &dwMode)) {
+                dwMode |= 0x0004;
+                SetConsoleMode(hOut, dwMode);
+            }
         }
 #else
         std::cout << "\033[?25l";
@@ -81,26 +121,31 @@ public:
         for (int f = 0; f < altoTotal; f++) {
             buffer[f] = std::string(anchoTotal, ' ');
             buffer[f][anchoJuego] = '|';
+            for (int c = 0; c < anchoTotal; c++) {
+                bufferColor[f][c] = (c == anchoJuego) ? 8 : 0;
+            }
         }
     }
 
-    void setPixelJuego(int x, int y, char c) {
+    void setPixelJuego(int x, int y, char c, int color = 0) {
         if (x >= 0 && x < anchoJuego && y >= 0 && y < altoTotal) {
             buffer[y][x] = c;
+            bufferColor[y][x] = color;
         }
     }
 
-    void setTextoJuego(int x, int y, const std::string& texto) {
+    void setTextoJuego(int x, int y, const std::string& texto, int color = 0) {
         if (y < 0 || y >= altoTotal) return;
         for (int i = 0; i < (int)texto.length(); i++) {
             int posX = x + i;
             if (posX >= 0 && posX < anchoJuego) {
                 buffer[y][posX] = texto[i];
+                bufferColor[y][posX] = color;
             }
         }
     }
 
-    void dibujarCaja(int x, int y, int ancho, int alto) {
+    void dibujarCaja(int x, int y, int ancho, int alto, int colorBorde = 8) {
         if (x < 0 || y < 0 || x + ancho > anchoJuego || y + alto > altoTotal) return;
         for (int r = 0; r < alto; r++) {
             for (int c = 0; c < ancho; c++) {
@@ -110,10 +155,13 @@ public:
                     } else {
                         buffer[y + r][x + c] = '-';
                     }
+                    bufferColor[y + r][x + c] = colorBorde;
                 } else if (c == 0 || c == ancho - 1) {
                     buffer[y + r][x + c] = '|';
+                    bufferColor[y + r][x + c] = colorBorde;
                 } else {
                     buffer[y + r][x + c] = ' ';
+                    bufferColor[y + r][x + c] = 0;
                 }
             }
         }
@@ -124,19 +172,19 @@ public:
         if (anchoCaja > anchoJuego - 4) anchoCaja = anchoJuego - 4;
         int startX = (anchoJuego - anchoCaja) / 2;
         int startY = altoTotal - 4;
-        dibujarCaja(startX, startY, anchoCaja, 3);
+        dibujarCaja(startX, startY, anchoCaja, 3, 4);
 
         if (texto != ultimoPromptTexto && texto.find("Coco:") != std::string::npos) {
             ultimoPromptTexto = texto;
             for (size_t i = 0; i < texto.length(); i++) {
                 if (startX + 2 + (int)i < anchoJuego - 2) {
-                    setPixelJuego(startX + 2 + (int)i, startY + 1, texto[i]);
+                    setPixelJuego(startX + 2 + (int)i, startY + 1, texto[i], 1);
                 }
                 dibujar();
                 std::this_thread::sleep_for(std::chrono::milliseconds(18));
             }
         } else {
-            setTextoJuego(startX + 2, startY + 1, texto);
+            setTextoJuego(startX + 2, startY + 1, texto, 1);
             if (texto.find("Coco:") == std::string::npos) {
                 ultimoPromptTexto = texto;
             }
@@ -158,20 +206,21 @@ public:
         int y = 21;
         int ancho = 80;
         int alto = 18;
-        dibujarCaja(x, y, ancho, alto);
+        dibujarCaja(x, y, ancho, alto, 8);
 
         std::string encabezado = " " + hablante;
         if (!rol.empty()) encabezado += " - " + rol;
-        setTextoJuego(x + 2, y + 1, encabezado);
+        setTextoJuego(x + 2, y + 1, encabezado, 4);
 
         std::string confStr = "Confianza: ";
         if (confianza == 0) confStr += "[0: Sin confianza]";
         else if (confianza == 1) confStr += "[1: Neutral]";
         else confStr += "[2: Confianza plena]";
-        setTextoJuego(x + ancho - (int)confStr.length() - 2, y + 1, confStr);
+        setTextoJuego(x + ancho - (int)confStr.length() - 2, y + 1, confStr, 3);
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 2][x + c] = '-';
+            bufferColor[y + 2][x + c] = 8;
         }
 
         std::string textoCompleto = "";
@@ -188,6 +237,7 @@ public:
             for (int r = y + 3; r <= y + 8; r++) {
                 for (int c = 1; c < ancho - 1; c++) {
                     buffer[r][x + c] = ' ';
+                    bufferColor[r][x + c] = 0;
                 }
             }
 
@@ -195,6 +245,7 @@ public:
             for (size_t i = 0; i < lineasTexto.size() && filaActual < y + 9; i++) {
                 for (size_t c = 0; c < lineasTexto[i].length(); c++) {
                     buffer[filaActual][x + 3 + (int)c] = lineasTexto[i][c];
+                    bufferColor[filaActual][x + 3 + (int)c] = 1;
                     dibujar();
                     std::this_thread::sleep_for(std::chrono::milliseconds(18));
                 }
@@ -203,7 +254,7 @@ public:
         } else {
             int filaActual = y + 3;
             for (size_t i = 0; i < lineasTexto.size() && filaActual < y + 9; i++) {
-                setTextoJuego(x + 3, filaActual, lineasTexto[i]);
+                setTextoJuego(x + 3, filaActual, lineasTexto[i], 1);
                 filaActual++;
             }
         }
@@ -211,15 +262,16 @@ public:
         int filaDivisoria = y + 9;
         for (int c = 1; c < ancho - 1; c++) {
             buffer[filaDivisoria][x + c] = '-';
+            bufferColor[filaDivisoria][x + c] = 8;
         }
 
         int filaOpciones = y + 10;
         for (size_t i = 0; i < opciones.size() && filaOpciones < y + alto - 2; i++) {
-            setTextoJuego(x + 3, filaOpciones, opciones[i]);
+            setTextoJuego(x + 3, filaOpciones, opciones[i], 3);
             filaOpciones++;
         }
 
-        setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1, 2, 3] o pulsa ESC para salir");
+        setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1, 2, 3] o pulsa ESC para salir", 4);
         if (esNuevo) {
             dibujar();
         }
@@ -486,6 +538,19 @@ public:
         for (int f = 0; f < altoTotal; f++) {
             for (int c = 0; c < anchoPanel; c++) {
                 buffer[f][colInicioPanel + c] = lineasPanel[f][c];
+                if (f == 0 || f == 3 || f == 7 || f == 9 || f == 23 || f == altoTotal - 1 || c == anchoPanel - 1) {
+                    bufferColor[f][colInicioPanel + c] = 8;
+                } else if (f == 1) {
+                    bufferColor[f][colInicioPanel + c] = 3;
+                } else if (f == 2) {
+                    bufferColor[f][colInicioPanel + c] = 4;
+                } else if (f == 6) {
+                    bufferColor[f][colInicioPanel + c] = 7;
+                } else if (f == 8) {
+                    bufferColor[f][colInicioPanel + c] = 4;
+                } else {
+                    bufferColor[f][colInicioPanel + c] = 1;
+                }
             }
         }
     }
@@ -498,6 +563,7 @@ public:
         if (fila >= 0 && fila < altoTotal) {
             for (size_t i = 0; i < texto.length() && col + (int)i < anchoTotal; i++) {
                 buffer[fila][col + i] = texto[i];
+                bufferColor[fila][col + i] = 4;
             }
         }
     }
@@ -512,9 +578,24 @@ public:
             for (int xPantalla = 0; xPantalla < anchoJuego; xPantalla++) {
                 int xMundo = camaraX + xPantalla;
                 if (yMundo >= 0 && yMundo < filasMapa && xMundo >= 0 && xMundo < columnasMapa) {
-                    buffer[yPantalla][xPantalla] = matrizMapa[yMundo][xMundo];
+                    char ch = matrizMapa[yMundo][xMundo];
+                    buffer[yPantalla][xPantalla] = ch;
+                    if (ch == '~') {
+                        bufferColor[yPantalla][xPantalla] = 3;
+                    } else if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
+                        bufferColor[yPantalla][xPantalla] = 2;
+                    } else if (ch == '.' || ch == ':' || ch == '=') {
+                        bufferColor[yPantalla][xPantalla] = 4;
+                    } else if (ch == '+' || ch == '-' || ch == '|') {
+                        bufferColor[yPantalla][xPantalla] = 8;
+                    } else if (ch == '*') {
+                        bufferColor[yPantalla][xPantalla] = 4;
+                    } else {
+                        bufferColor[yPantalla][xPantalla] = 0;
+                    }
                 } else {
                     buffer[yPantalla][xPantalla] = ' ';
+                    bufferColor[yPantalla][xPantalla] = 0;
                 }
             }
         }
@@ -529,12 +610,21 @@ public:
         std::cout << "\033[H";
 #endif
         std::string frameCompleto = "";
+        int colorActual = -1;
         for (int f = 0; f < altoTotal; f++) {
-            frameCompleto += buffer[f];
+            for (int c = 0; c < anchoTotal; c++) {
+                int col = bufferColor[f][c];
+                if (col != colorActual) {
+                    frameCompleto += obtenerCodigoColor(col);
+                    colorActual = col;
+                }
+                frameCompleto += buffer[f][c];
+            }
             if (f < altoTotal - 1) {
                 frameCompleto += "\n";
             }
         }
+        frameCompleto += RESET;
         std::cout << frameCompleto;
         std::cout.flush();
     }

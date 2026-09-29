@@ -233,7 +233,7 @@ public:
 	void setObjetivoActual(const std::string& obj) { if (gestorMisiones != nullptr) gestorMisiones->setObjetivoActual(obj); }
 
 	int determinarCuarto(int px, int py) const {
-		if (px >= 22 && px <= 55 && py >= 12 && py <= 28) return 1;
+		if (px >= 22 && px <= 85 && py >= 10 && py <= 45) return 1;
 		if (px >= 460 && px <= 590 && py >= 25 && py <= 50) return 2;
 		if (px >= 460 && px <= 590 && py >= 60 && py <= 140) return 3;
 		if (px >= 460 && px <= 590 && py >= 150 && py <= 190) return 4;
@@ -297,19 +297,19 @@ public:
 			mapa->cargarMatriz(matrizCargada);
 
 			if (protagonista == nullptr) {
-				protagonista = new Protagonista(38, 20, "Coco", 3, 1);
+				protagonista = new Protagonista(45, 20, "Coco", 3, 1);
 			} else {
-				protagonista->setX(38);
+				protagonista->setX(45);
 				protagonista->setY(20);
 				protagonista->setVida(3);
 				protagonista->setVidaMaxima(3);
 			}
 
 			if (qifrey == nullptr) {
-				qifrey = new NPC(38, 17, "Qifrey", "Maestro Hechicero", false);
+				qifrey = new NPC(45, 38, "Qifrey", "Maestro Hechicero", false);
 			} else {
-				qifrey->setX(38);
-				qifrey->setY(17);
+				qifrey->setX(45);
+				qifrey->setY(38);
 				qifrey->setConfianza(0);
 				qifrey->setYaHablo(false);
 				qifrey->setDioTinta(false);
@@ -441,7 +441,7 @@ public:
 			if (richeh != nullptr) {
 				int rx = richeh->getX();
 				int ry = richeh->getY();
-				if (px + 1 >= rx - 2 && px <= rx + 3 && py + 1 >= ry - 2 && py <= ry + 3) {
+				if (px + 4 >= rx - 2 && px <= rx + 3 && py + 3 >= ry - 2 && py <= ry + 3) {
 					promptFlotante = "[ENTER] Hablar con Richeh";
 					return;
 				}
@@ -463,7 +463,7 @@ public:
 		if (qifrey != nullptr) {
 			int qx = qifrey->getX();
 			int qy = qifrey->getY();
-			if (px + 1 >= qx - 2 && px <= qx + 3 && py + 1 >= qy - 2 && py <= qy + 3) {
+			if (px + 4 >= qx - 2 && px <= qx + 3 && py + 3 >= qy - 2 && py <= qy + 3) {
 				promptFlotante = "[ENTER] Interactuar con Qifrey";
 				return;
 			}
@@ -472,7 +472,7 @@ public:
 		if (agott != nullptr) {
 			int ax = agott->getX();
 			int ay = agott->getY();
-			if (px + 1 >= ax - 2 && px <= ax + 3 && py + 1 >= ay - 2 && py <= ay + 3) {
+			if (px + 4 >= ax - 2 && px <= ax + 3 && py + 3 >= ay - 2 && py <= ay + 3) {
 				promptFlotante = "[ENTER] Hablar con Agott";
 				return;
 			}
@@ -487,7 +487,7 @@ public:
 			if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
 				int ix = itemsSuelo[i]->getX();
 				int iy = itemsSuelo[i]->getY();
-				if (abs(px - ix) <= 2 && abs(py - iy) <= 2) {
+				if (abs(px + 2 - ix) <= 3 && abs(py + 2 - iy) <= 3) {
 					promptFlotante = "[ENTER] Recoger: " + itemsSuelo[i]->getNombre();
 					return;
 				}
@@ -696,7 +696,7 @@ public:
 					if (richeh != nullptr) {
 						int rx = richeh->getX();
 						int ry = richeh->getY();
-						if (px + 1 >= rx - 2 && px <= rx + 3 && py + 1 >= ry - 2 && py <= ry + 3) {
+						if (px + 4 >= rx - 2 && px <= rx + 3 && py + 3 >= ry - 2 && py <= ry + 3) {
 							if (gestorDialogos != nullptr) {
 								gestorDialogos->iniciarDialogo("Richeh", 300);
 							}
@@ -719,20 +719,24 @@ public:
 					Mapa* mapaR = (cuartoRicheh != nullptr) ? cuartoRicheh->getMapa() : nullptr;
 					if (mapaR != nullptr) {
 						bool colision = false;
-						for (int r = 0; r < 2; r++) {
-							for (int c = 0; c < 2; c++) {
-								if (!mapaR->esPosicionValida(nx + c, ny + r)) {
-									colision = true;
-									break;
+						if (nx < 0 || nx + 4 >= mapaR->getColumnas() || ny < 0 || ny + 3 >= mapaR->getFilas()) {
+							colision = true;
+						} else {
+							for (int r = 1; r < 4; r++) {
+								for (int c = 1; c < 4; c++) {
+									if (!mapaR->esPosicionValida(nx + c, ny + r)) {
+										colision = true;
+										break;
+									}
 								}
+								if (colision) break;
 							}
-							if (colision) break;
 						}
 						NPC* richeh = getRicheh();
 						if (!colision && richeh != nullptr) {
 							int rx = richeh->getX();
 							int ry = richeh->getY();
-							if (nx + 1 >= rx && nx <= rx + 1 && ny + 1 >= ry && ny <= ry + 1) {
+							if (nx + 1 < rx + 2 && nx + 3 >= rx && ny + 1 < ry + 2 && ny + 3 >= ry) {
 								colision = true;
 							}
 						}
@@ -767,8 +771,9 @@ public:
 						paredPiedraDestruida = true;
 						if (mapa != nullptr) {
 							for (int wy = 27; wy <= 35; wy++) {
-								mapa->setCaracter(459, wy, ' ');
-								mapa->setCaracter(460, wy, ' ');
+								for (int wx = 458; wx <= 461; wx++) {
+									mapa->setCaracter(wx, wy, ' ');
+								}
 							}
 						}
 						promptFlotante = "[Lanzaste bola de fuego! Pared de piedra destruida]";
@@ -780,7 +785,7 @@ public:
 				if (qifrey != nullptr) {
 					int qx = qifrey->getX();
 					int qy = qifrey->getY();
-					if (px + 1 >= qx - 2 && px <= qx + 3 && py + 1 >= qy - 2 && py <= qy + 3) {
+					if (px + 4 >= qx - 2 && px <= qx + 3 && py + 3 >= qy - 2 && py <= qy + 3) {
 						if (gestorDialogos != nullptr) {
 							gestorDialogos->iniciarDialogo("Qifrey", 1);
 						}
@@ -792,7 +797,7 @@ public:
 				if (agott != nullptr) {
 					int ax = agott->getX();
 					int ay = agott->getY();
-					if (px + 1 >= ax - 2 && px <= ax + 3 && py + 1 >= ay - 2 && py <= ay + 3) {
+					if (px + 4 >= ax - 2 && px <= ax + 3 && py + 3 >= ay - 2 && py <= ay + 3) {
 						if (gestorDialogos != nullptr) {
 							gestorDialogos->iniciarDialogoAgott();
 						}
@@ -805,7 +810,7 @@ public:
 					if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
 						int ix = itemsSuelo[i]->getX();
 						int iy = itemsSuelo[i]->getY();
-						if (abs(px - ix) <= 2 && abs(py - iy) <= 2) {
+						if (abs(px + 2 - ix) <= 3 && abs(py + 2 - iy) <= 3) {
 							Inventario* inv = protagonista->getInventario();
 							if (inv != nullptr) {
 								if (inv->agregarItem(new ItemMagico(0, 0, itemsSuelo[i]->getNombre(), itemsSuelo[i]->getDescripcion(), itemsSuelo[i]->getTipoItem(), true))) {
@@ -847,20 +852,24 @@ public:
 					}
 				} else if (mapa != nullptr) {
 					bool colision = false;
-					for (int r = 0; r < 2; r++) {
-						for (int c = 0; c < 2; c++) {
-							if (!mapa->esPosicionValida(nx + c, ny + r)) {
-								colision = true;
-								break;
+					if (nx < 0 || nx + 4 >= mapa->getColumnas() || ny < 0 || ny + 3 >= mapa->getFilas()) {
+						colision = true;
+					} else {
+						for (int r = 1; r < 4; r++) {
+							for (int c = 1; c < 4; c++) {
+								if (!mapa->esPosicionValida(nx + c, ny + r)) {
+									colision = true;
+									break;
+								}
 							}
+							if (colision) break;
 						}
-						if (colision) break;
 					}
 
 					if (!colision && qifrey != nullptr) {
 						int qx = qifrey->getX();
 						int qy = qifrey->getY();
-						if (nx + 1 >= qx && nx <= qx + 1 && ny + 1 >= qy && ny <= qy + 1) {
+						if (nx + 1 < qx + 2 && nx + 3 >= qx && ny + 1 < qy + 2 && ny + 3 >= qy) {
 							colision = true;
 						}
 					}
@@ -868,7 +877,7 @@ public:
 					if (!colision && agott != nullptr) {
 						int ax = agott->getX();
 						int ay = agott->getY();
-						if (nx + 1 >= ax && nx <= ax + 1 && ny + 1 >= ay && ny <= ay + 1) {
+						if (nx + 1 < ax + 2 && nx + 3 >= ax && ny + 1 < ay + 2 && ny + 3 >= ay) {
 							colision = true;
 						}
 					}

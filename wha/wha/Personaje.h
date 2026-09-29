@@ -10,8 +10,8 @@ protected:
     int vidaMaxima;
     int ancho;
     int alto;
-    char frame1[2][2];
-    char frame2[2][2];
+    char frame1[4][5];
+    char frame2[4][5];
     int frameActual;
     int temporizadorAnimacion;
 
@@ -19,6 +19,12 @@ public:
     Personaje()
         : x(0), y(0), nombre("Sin Nombre"), vida(3), vidaMaxima(3),
           ancho(2), alto(2), frameActual(0), temporizadorAnimacion(0) {
+        for (int r = 0; r < 4; r++) {
+            for (int c = 0; c < 5; c++) {
+                frame1[r][c] = ' ';
+                frame2[r][c] = ' ';
+            }
+        }
         frame1[0][0] = '('; frame1[0][1] = ')';
         frame1[1][0] = '/'; frame1[1][1] = '\\';
         frame2[0][0] = '('; frame2[0][1] = ')';
@@ -28,6 +34,12 @@ public:
     Personaje(int x, int y, std::string n, int v = 3)
         : x(x), y(y), nombre(n), vida(v), vidaMaxima(v),
           ancho(2), alto(2), frameActual(0), temporizadorAnimacion(0) {
+        for (int r = 0; r < 4; r++) {
+            for (int c = 0; c < 5; c++) {
+                frame1[r][c] = ' ';
+                frame2[r][c] = ' ';
+            }
+        }
         frame1[0][0] = '('; frame1[0][1] = ')';
         frame1[1][0] = '/'; frame1[1][1] = '\\';
         frame2[0][0] = '('; frame2[0][1] = ')';
@@ -48,7 +60,7 @@ public:
     int getAltoSprite() const { return this->alto; }
 
     char getCaracter(int fila, int col) const {
-        if (fila < 0 || fila >= 2 || col < 0 || col >= 2) return ' ';
+        if (fila < 0 || fila >= this->alto || col < 0 || col >= this->ancho) return ' ';
         if (frameActual == 0) return frame1[fila][col];
         return frame2[fila][col];
     }

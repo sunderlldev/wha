@@ -145,7 +145,7 @@ public:
 					for (int r = 0; r < 2; r++) {
 						for (int c = 0; c < 2; c++) {
 							if (pox + c >= 0 && pox + c < pantalla.getAnchoJuego() && poy + r >= 0 && poy + r < pantalla.getAltoTotal()) {
-								pantalla.setPixelJuego(pox + c, poy + r, (char)190);
+								pantalla.setPixelJuego(pox + c, poy + r, (char)190, 8);
 							}
 						}
 					}
@@ -158,7 +158,7 @@ public:
 							int ix = suelo[i]->getX() - camX;
 							int iy = suelo[i]->getY() - camY;
 							if (ix >= 0 && ix < pantalla.getAnchoJuego() && iy >= 0 && iy < pantalla.getAltoTotal()) {
-								pantalla.setPixelJuego(ix, iy, '*');
+								pantalla.setPixelJuego(ix, iy, '*', 4);
 							}
 						}
 					}
@@ -171,7 +171,7 @@ public:
 							for (int r = 0; r < 3; r++) {
 								for (int c = 0; c < 3; c++) {
 									if (cx + c >= 0 && cx + c < pantalla.getAnchoJuego() && cy + r >= 0 && cy + r < pantalla.getAltoTotal()) {
-										pantalla.setPixelJuego(cx + c, cy + r, cajas[i]->getCaracter(r, c));
+										pantalla.setPixelJuego(cx + c, cy + r, cajas[i]->getCaracter(r, c), 4);
 									}
 								}
 							}
@@ -182,10 +182,13 @@ public:
 					if (q != nullptr) {
 						int qx = q->getX() - camX;
 						int qy = q->getY() - camY;
-						for (int r = 0; r < 2; r++) {
-							for (int c = 0; c < 2; c++) {
+						for (int r = 0; r < q->getAlto(); r++) {
+							for (int c = 0; c < q->getAncho(); c++) {
 								if (qx + c >= 0 && qx + c < pantalla.getAnchoJuego() && qy + r >= 0 && qy + r < pantalla.getAltoTotal()) {
-									pantalla.setPixelJuego(qx + c, qy + r, q->getCaracter(r, c));
+									char ch = q->getCaracter(r, c);
+									if (ch != ' ') {
+										pantalla.setPixelJuego(qx + c, qy + r, ch, 3);
+									}
 								}
 							}
 						}
@@ -195,10 +198,13 @@ public:
 					if (a != nullptr) {
 						int ax = a->getX() - camX;
 						int ay = a->getY() - camY;
-						for (int r = 0; r < 2; r++) {
-							for (int c = 0; c < 2; c++) {
+						for (int r = 0; r < a->getAlto(); r++) {
+							for (int c = 0; c < a->getAncho(); c++) {
 								if (ax + c >= 0 && ax + c < pantalla.getAnchoJuego() && ay + r >= 0 && ay + r < pantalla.getAltoTotal()) {
-									pantalla.setPixelJuego(ax + c, ay + r, a->getCaracter(r, c));
+									char ch = a->getCaracter(r, c);
+									if (ch != ' ') {
+										pantalla.setPixelJuego(ax + c, ay + r, ch, 5);
+									}
 								}
 							}
 						}
@@ -208,10 +214,13 @@ public:
 					if (r != nullptr) {
 						int rx = r->getX() - camX;
 						int ry = r->getY() - camY;
-						for (int row = 0; row < 2; row++) {
-							for (int col = 0; col < 2; col++) {
+						for (int row = 0; row < r->getAlto(); row++) {
+							for (int col = 0; col < r->getAncho(); col++) {
 								if (rx + col >= 0 && rx + col < pantalla.getAnchoJuego() && ry + row >= 0 && ry + row < pantalla.getAltoTotal()) {
-									pantalla.setPixelJuego(rx + col, ry + row, r->getCaracter(row, col));
+									char ch = r->getCaracter(row, col);
+									if (ch != ' ') {
+										pantalla.setPixelJuego(rx + col, ry + row, ch, 4);
+									}
 								}
 							}
 						}
@@ -220,10 +229,14 @@ public:
 
 				int pantallaX = px - camX;
 				int pantallaY = py - camY;
-				for (int r = 0; r < 2; r++) {
-					for (int c = 0; c < 2; c++) {
+				for (int r = 0; r < prota->getAlto(); r++) {
+					for (int c = 0; c < prota->getAncho(); c++) {
 						if (pantallaX + c >= 0 && pantallaX + c < pantalla.getAnchoJuego() && pantallaY + r >= 0 && pantallaY + r < pantalla.getAltoTotal()) {
-							pantalla.setPixelJuego(pantallaX + c, pantallaY + r, prota->getCaracter(r, c));
+							char ch = prota->getCaracter(r, c);
+							if (ch != ' ') {
+								int colCoco = (r == 2) ? 1 : 6;
+								pantalla.setPixelJuego(pantallaX + c, pantallaY + r, ch, colCoco);
+							}
 						}
 					}
 				}
