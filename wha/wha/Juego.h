@@ -1,6 +1,9 @@
 #ifndef Juego_h
 #define Juego_h
 #include "Nivel.h"
+#include "Nivel1.h"
+#include "Nivel2.h"
+#include "Nivel3.h"
 #include "Pantalla.h"
 #include <vector>
 #include <string>
@@ -23,9 +26,9 @@ private:
 public:
 	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1) {
 		pantalla.configurarConsola();
-		listaNivel.push_back(new Nivel(1, "Atelier de Qifrey", 200, 600));
-		listaNivel.push_back(new Nivel(2, "Tierras Prohibidas", 200, 600));
-		listaNivel.push_back(new Nivel(3, "Gran Arbol de Plata", 200, 600));
+		listaNivel.push_back(new Nivel1());
+		listaNivel.push_back(new Nivel2());
+		listaNivel.push_back(new Nivel3());
 		listaNivel[nivelActual]->inciarNivel();
 	}
 
@@ -134,7 +137,7 @@ public:
 				if (camY < 0) camY = 0;
 
 				pantalla.limpiarBuffer();
-				pantalla.copiarViewport(mapa->getMatriz(), camX, camY);
+				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, segActual);
 
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
 					int pox = nivel.getPozoX() - camX;

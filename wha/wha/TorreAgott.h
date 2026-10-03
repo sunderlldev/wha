@@ -52,7 +52,7 @@ public:
 		pozoX = -1;
 		pozoY = -1;
 
-		srand(12345);
+		srand(time(0));
 		int numCajas = 18;
 		std::vector<std::pair<int, int>> posicionesUsadas;
 
@@ -64,12 +64,18 @@ public:
 
 			while (!posValida && intentos < 100) {
 				intentos++;
-				bx = 472 + (rand() % (560 - 472 + 1));
-				by = 76 + (rand() % (122 - 76 + 1));
+				bx = 405 + (rand() % (480 - 405 + 1));
+				by = 75 + (rand() % (120 - 75 + 1));
 
 				posValida = true;
+				if (abs(bx - 440) < 8 && abs(by - 66) < 6) {
+					posValida = false;
+				}
+				if (bx < 405 && by >= 96 && by <= 110) {
+					posValida = false;
+				}
 				for (size_t k = 0; k < posicionesUsadas.size(); k++) {
-					if (abs(bx - posicionesUsadas[k].first) < 4 && abs(by - posicionesUsadas[k].second) < 4) {
+					if (abs(bx - posicionesUsadas[k].first) < 5 && abs(by - posicionesUsadas[k].second) < 4) {
 						posValida = false;
 						break;
 					}
@@ -118,7 +124,7 @@ public:
 		int nby = cajas[indiceCaja]->getY() + dy;
 		bool puedeMover = true;
 
-		if (nbx < 465 || nbx + 4 > 578 || nby < 64 || nby + 3 > 134) {
+		if (nbx < 388 || nbx + 4 > 497 || nby < 65 || nby + 3 > 129) {
 			puedeMover = false;
 		}
 

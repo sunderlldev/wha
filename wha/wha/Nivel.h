@@ -6,7 +6,6 @@
 #include <ctime>
 #include <cstdlib>
 #include "Mapa.h"
-#include "MapaNivel1.h"
 #include "Protagonista.h"
 #include "NPC.h"
 #include "ItemMagico.h"
@@ -22,7 +21,7 @@
 #endif
 
 class Nivel {
-private:
+protected:
 	int numeroNivel;
 	std::string nombreNivel;
 	bool completado;
@@ -211,152 +210,34 @@ public:
 	void setSeleccionInventario(int si) { this->seleccionModal = si; }
 	void setObjetivoActual(const std::string& obj) { if (gestorMisiones != nullptr) gestorMisiones->setObjetivoActual(obj); }
 
-	int determinarCuarto(int px, int py) const {
-		if (px >= 22 && px <= 85 && py >= 10 && py <= 45) return 1;
-		if (px >= 460 && px <= 590 && py >= 25 && py <= 50) return 2;
-		if (px >= 460 && px <= 590 && py >= 60 && py <= 140) return 3;
-		if (px >= 460 && px <= 590 && py >= 150 && py <= 190) return 4;
-		if (px >= 22 && px <= 115 && py >= 155 && py <= 195) return 5;
+	virtual int determinarCuarto(int px, int py) const {
+		(void)px;
+		(void)py;
 		return 0;
 	}
 
-	void actualizarCuartoActual(int px, int py) {
-		int nuevoCuarto = determinarCuarto(px, py);
-		if (nuevoCuarto != idCuartoActual) {
-			idCuartoActual = nuevoCuarto;
-			if (nuevoCuarto == 1) {
-				mostrarMensajeTemporal("[LA CHOZA DE HECHIZOS]", 60);
-			} else if (nuevoCuarto == 2) {
-				mostrarMensajeTemporal("[EL ALMACEN ABANDONADO]", 60);
-			} else if (nuevoCuarto == 3) {
-				mostrarMensajeTemporal("[TORRE DE AGOTT]", 60);
-				if (agott != nullptr && !agott->getYaHablo()) {
-					agott->setYaHablo(true);
-					if (gestorDialogos != nullptr) {
-						gestorDialogos->iniciarDialogo("Agott", 200);
-					}
-				}
-			} else if (nuevoCuarto == 4) {
-				mostrarMensajeTemporal("[BOSQUE DE PLATA]", 60);
-			} else if (nuevoCuarto == 5) {
-				mostrarMensajeTemporal("[DESPACHO DE QIFREY]", 60);
-			} else {
-				mensajeTemporal = "";
-				ticksMensajeTemporal = 0;
-			}
-		}
+	virtual void actualizarCuartoActual(int px, int py) {
+		(void)px;
+		(void)py;
 	}
 
-	void inciarNivel() {
-		this->tiempoInicio = clock();
-		this->tiempoFin = 0;
-		this->completado = false;
-		if (gestorDialogos != nullptr) gestorDialogos->terminarDialogo();
-		if (gestorMisiones != nullptr) {
-			gestorMisiones->setPuntosMisiones(0);
-			gestorMisiones->setEnModalMisiones(false);
-			gestorMisiones->setEnDetalleMision(false);
-			gestorMisiones->setSeleccionMision(0);
-		}
-		this->modalActivo = 0;
-		this->seleccionModal = 0;
-		this->mostrarEstadisticasFin = false;
-		this->idCuartoActual = 0;
-		this->mensajeTemporal = "";
-		this->ticksMensajeTemporal = 0;
-		this->paredPiedraDestruida = false;
-
-		if (cuartoRicheh != nullptr) {
-			cuartoRicheh->reiniciar();
-		}
-
-		if (numeroNivel == 1) {
-			if (mapa == nullptr) {
-				mapa = new Mapa(200, 600);
-			}
-			std::vector<std::string> matrizCargada;
-			MapaNivel1::cargarMatriz(matrizCargada);
-			mapa->cargarMatriz(matrizCargada);
-
-			if (protagonista == nullptr) {
-				protagonista = new Protagonista(45, 20, "Coco", 3, 1);
-			} else {
-				protagonista->setX(45);
-				protagonista->setY(20);
-				protagonista->setVida(3);
-				protagonista->setVidaMaxima(3);
-			}
-
-			if (qifrey == nullptr) {
-				qifrey = new NPC(45, 175, "Qifrey", "Maestro Hechicero");
-			} else {
-				qifrey->setX(45);
-				qifrey->setY(175);
-				qifrey->setConfianza(0);
-				qifrey->setYaHablo(false);
-				qifrey->setDioTinta(false);
-				qifrey->setCrafteoCapa(false);
-			}
-
-			if (agott == nullptr) {
-				agott = new NPC(524, 66, "Agott", "Aprendiz de Maga");
-			} else {
-				agott->setX(524);
-				agott->setY(66);
-				agott->setConfianza(1);
-				agott->setYaHablo(false);
-			}
-
-			limpiarItemsSuelo();
-			itemsSuelo.push_back(new ItemMagico(505, 34, "Tela", "Trozo de tela arcana resistente y ligera para confeccionar vestiduras.", "Material Magico", false));
-			itemsSuelo.push_back(new ItemMagico(540, 34, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacen antiguo.", "Objeto de Coleccion", false));
-			itemsSuelo.push_back(new ItemMagico(95, 170, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran rio.", "Objeto de Coleccion", false));
-
-			limpiarLetreros();
-			letreros.push_back(new Letrero(50, 24, "Letrero: [CHOZA DE TRAZOS] Dibuja runas con pasion y cuida tus pergaminos."));
-			letreros.push_back(new Letrero(448, 30, "Letrero: ALMACEN ABANDONADO. Peligro: Derrumbe. Usa magia ignea."));
-			letreros.push_back(new Letrero(510, 66, "Letrero: TORRE DE AGOTT. Prohibido el paso sin autorizacion de Agott."));
-			letreros.push_back(new Letrero(55, 172, "Letrero: DESPACHO DE QIFREY. Maestro del atelier y protector del agua."));
-
-			for (size_t i = 0; i < letreros.size(); i++) {
-				if (letreros[i] != nullptr && mapa != nullptr) {
-					int lx = letreros[i]->getX();
-					int ly = letreros[i]->getY();
-					mapa->setCaracter(lx, ly, '[');
-					mapa->setCaracter(lx + 1, ly, '!');
-					mapa->setCaracter(lx + 2, ly, ']');
-					mapa->setCaracter(lx, ly + 1, ' ');
-					mapa->setCaracter(lx + 1, ly + 1, '|');
-					mapa->setCaracter(lx + 2, ly + 1, ' ');
-				}
-			}
-
-			if (torreAgott != nullptr) {
-				torreAgott->reiniciar();
-			}
-
-			if (!paredPiedraDestruida && mapa != nullptr) {
-				for (int wy = 27; wy <= 35; wy++) {
-					for (int wx = 457; wx <= 462; wx++) {
-						mapa->setCaracter(wx, wy, 'O');
-					}
-				}
-			}
-
-			if (gestorMisiones != nullptr) {
-				gestorMisiones->setObjetivoActual("Hablar con Maestro Qifrey");
-			}
-			actualizarCuartoActual(protagonista->getX(), protagonista->getY());
-		} else if (numeroNivel == 2) {
-			if (gestorMisiones != nullptr) {
-				gestorMisiones->setObjetivoActual("Tierras Prohibidas - Fase 2");
-			}
-		} else if (numeroNivel == 3) {
-			if (gestorMisiones != nullptr) {
-				gestorMisiones->setObjetivoActual("Gran Arbol de Plata - Fase 3");
-			}
-		}
+	virtual bool verificarProximidadEspecial(int px, int py, int pw, int ph) {
+		(void)px;
+		(void)py;
+		(void)pw;
+		(void)ph;
+		return false;
 	}
+
+	virtual bool procesarInteraccionEspecial(int px, int py, int pw, int ph) {
+		(void)px;
+		(void)py;
+		(void)pw;
+		(void)ph;
+		return false;
+	}
+
+	virtual void inciarNivel() = 0;
 
 	int getSegundosTranscurridos() const {
 		if (tiempoInicio == 0) return 0;
@@ -468,19 +349,12 @@ public:
 			return;
 		}
 
-		if (!paredPiedraDestruida && px >= 445 && px <= 463 && py >= 25 && py <= 37) {
-			Inventario* inv = protagonista->getInventario();
-			bool tieneVara = (inv != nullptr && inv->tieneItem("Vara magica"));
-			if (tieneVara) {
-				promptFlotante = "[ENTER] Usar Vara magica para derribar pared";
-			} else {
-				promptFlotante = "Coco: Este lugar parece estar bloqueado, puedo derribarlo pero necesito magia...";
-			}
-			return;
-		}
-
 		int pw = protagonista->getAncho();
 		int ph = protagonista->getAlto();
+
+		if (verificarProximidadEspecial(px, py, pw, ph)) {
+			return;
+		}
 
 		if (qifrey != nullptr) {
 			int qx = qifrey->getX();
@@ -536,7 +410,7 @@ public:
 				int lh = letreros[i]->getAlto();
 				int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
 				int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
-				if (distX <= 2 && distY <= 2) {
+				if (distX <= 3 && distY <= 3) {
 					promptFlotante = "[E / ENTER] Leer letrero";
 					return;
 				}
@@ -827,9 +701,11 @@ public:
 						int lh = letreros[i]->getAlto();
 						int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
 						int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
-						if (distX <= 2 && distY <= 2) {
+						if (distX <= 3 && distY <= 3) {
 							mensajeTemporal = letreros[i]->getTexto();
 							ticksMensajeTemporal = 100;
+							promptFlotante = mensajeTemporal;
+							actualizarProximidad();
 							huboCambio = true;
 							return huboCambio;
 						}
@@ -843,22 +719,9 @@ public:
 				int pw = protagonista->getAncho();
 				int ph = protagonista->getAlto();
 
-				if (!paredPiedraDestruida && px >= 445 && px <= 463 && py >= 25 && py <= 37) {
-					Inventario* inv = protagonista->getInventario();
-					if (inv != nullptr && inv->tieneItem("Vara magica")) {
-						paredPiedraDestruida = true;
-						if (mapa != nullptr) {
-							for (int wy = 27; wy <= 35; wy++) {
-								for (int wx = 457; wx <= 462; wx++) {
-									mapa->setCaracter(wx, wy, ' ');
-								}
-							}
-						}
-						inv->removerItem("Vara magica");
-						promptFlotante = "[Lanzaste bola de fuego! Pared destruida (Vara consumida)]";
-						huboCambio = true;
-						return huboCambio;
-					}
+				if (procesarInteraccionEspecial(px, py, pw, ph)) {
+					huboCambio = true;
+					return huboCambio;
 				}
 
 				if (qifrey != nullptr) {
@@ -928,9 +791,11 @@ public:
 						int lh = letreros[i]->getAlto();
 						int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
 						int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
-						if (distX <= 2 && distY <= 2) {
+						if (distX <= 3 && distY <= 3) {
 							mensajeTemporal = letreros[i]->getTexto();
 							ticksMensajeTemporal = 100;
+							promptFlotante = mensajeTemporal;
+							actualizarProximidad();
 							huboCambio = true;
 							return huboCambio;
 						}
