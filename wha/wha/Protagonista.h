@@ -9,12 +9,11 @@ class Protagonista : public Personaje {
 private:
 	int perspectiva;
 	bool tieneCapaVuelo;
-	bool tieneSemillaPlata;
 	Inventario* inventario;
 public:
 	Protagonista(int x, int y, std::string n, int v = 3, int p = 1)
-		: Personaje(x, y, n, v), perspectiva(p), tieneCapaVuelo(false), tieneSemillaPlata(false) {
-		inventario = new Inventario(4);
+		: Personaje(x, y, n, v), perspectiva(p), tieneCapaVuelo(false) {
+		inventario = new Inventario(6);
 		ancho = 5;
 		alto = 4;
 
@@ -38,16 +37,10 @@ public:
 
 	int getPerspectiva() const { return this->perspectiva; }
 	bool getTieneCapaVuelo() const { return this->tieneCapaVuelo; }
-	bool getTieneSemillaPlata() const { return this->tieneSemillaPlata; }
 	Inventario* getInventario() { return this->inventario; }
 
 	void setPerspectiva(int p) { this->perspectiva = p; }
 	void setTieneCapaVuelo(bool cv) { this->tieneCapaVuelo = cv; }
-	void setTieneSemillaPlata(bool sp) { this->tieneSemillaPlata = sp; }
-
-	void usarHabilidadPerspectiva() {}
-	void tomarDesicionEtica() {}
-	void interactuar(NPC*) {}
 };
 
 #endif

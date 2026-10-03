@@ -14,10 +14,6 @@ int main() {
 
     while (ArbolDePlata.getEjecutando()) {
         ArbolDePlata.actualizar();
-
-        if (ArbolDePlata.getNivelActualObj().verificarObjetivo()) {
-            ArbolDePlata.cambiarNivel();
-        }
     }
 
     std::cout << std::endl << std::endl << "Presiona Enter para cerrar el programa...";

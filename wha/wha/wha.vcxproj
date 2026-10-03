@@ -141,6 +141,7 @@
     <ClInclude Include="GestorMisiones.h" />
     <ClInclude Include="TorreAgott.h" />
     <ClInclude Include="Animacion.h" />
+    <ClInclude Include="Letrero.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

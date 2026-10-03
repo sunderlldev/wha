@@ -26,8 +26,8 @@ public:
 		matriz.push_back("|                                                                                |");
 		matriz.push_back("|     +------+                              +------------------------------+     |");
 		matriz.push_back("|     |      |                              |                              |     |");
-		matriz.push_back("|     |  **  |                              |                              |     |");
-		matriz.push_back("|     |  **  |                              |                              |     |");
+		matriz.push_back("|     |  %%  |                              |                              |     |");
+		matriz.push_back("|     |  %%  |                              |                              |     |");
 		matriz.push_back("|     |      |                              |                              |     |");
 		matriz.push_back("|     +      +------------------------------+                              |     |");
 		matriz.push_back("|     |                                                                    |     |");
@@ -56,7 +56,7 @@ public:
 		std::vector<std::string> m;
 		cargarMatriz(m);
 		mapa->cargarMatriz(m);
-		richeh = new NPC(22, 10, "Richeh", "Aprendiz de Maga", false);
+		richeh = new NPC(22, 10, "Richeh", "Aprendiz de Maga");
 		richeh->setConfianza(1);
 		richeh->setYaHablo(false);
 	}

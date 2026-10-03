@@ -101,7 +101,7 @@ public:
 			if (cajas[i] != nullptr) {
 				int bx = cajas[i]->getX();
 				int by = cajas[i]->getY();
-				if (nx < bx + 3 && nx + 5 > bx && ny < by + 3 && ny + 4 > by) {
+				if (nx < bx + 4 && nx + 5 > bx && ny < by + 3 && ny + 4 > by) {
 					return (int)i;
 				}
 			}
@@ -118,13 +118,13 @@ public:
 		int nby = cajas[indiceCaja]->getY() + dy;
 		bool puedeMover = true;
 
-		if (nbx < 465 || nbx + 3 > 578 || nby < 64 || nby + 3 > 134) {
+		if (nbx < 465 || nbx + 4 > 578 || nby < 64 || nby + 3 > 134) {
 			puedeMover = false;
 		}
 
 		if (puedeMover && mapa != nullptr) {
 			for (int r = 0; r < 3; r++) {
-				for (int c = 0; c < 3; c++) {
+				for (int c = 0; c < 4; c++) {
 					if (!mapa->esPosicionValida(nbx + c, nby + r)) {
 						puedeMover = false;
 						break;
@@ -139,7 +139,7 @@ public:
 				if ((int)j != indiceCaja && cajas[j] != nullptr) {
 					int jbx = cajas[j]->getX();
 					int jby = cajas[j]->getY();
-					if (nbx < jbx + 3 && nbx + 3 > jbx && nby < jby + 3 && nby + 3 > jby) {
+					if (nbx < jbx + 4 && nbx + 4 > jbx && nby < jby + 3 && nby + 3 > jby) {
 						puedeMover = false;
 						break;
 					}
@@ -150,13 +150,19 @@ public:
 		if (puedeMover && agott != nullptr) {
 			int ax = agott->getX();
 			int ay = agott->getY();
-			if (nbx < ax + 2 && nbx + 3 > ax && nby < ay + 2 && nby + 3 > ay) {
+			if (nbx < ax + agott->getAncho() && nbx + 4 > ax && nby < ay + agott->getAlto() && nby + 3 > ay) {
 				puedeMover = false;
 			}
 		}
 
 		if (puedeMover && pozoEncontrado) {
-			if (nbx < pozoX + 3 && nbx + 3 > pozoX && nby < pozoY + 3 && nby + 3 > pozoY) {
+			bool solapadoPrevio = (cajas[indiceCaja]->getX() < pozoX + 2 &&
+			                       cajas[indiceCaja]->getX() + 4 > pozoX &&
+			                       cajas[indiceCaja]->getY() < pozoY + 2 &&
+			                       cajas[indiceCaja]->getY() + 3 > pozoY);
+			bool solapadoNuevo = (nbx < pozoX + 2 && nbx + 4 > pozoX &&
+			                      nby < pozoY + 2 && nby + 3 > pozoY);
+			if (!solapadoPrevio && solapadoNuevo) {
 				puedeMover = false;
 			}
 		}
@@ -166,7 +172,7 @@ public:
 				if ((int)j != indiceCaja && cajas[j] != nullptr) {
 					int jbx = cajas[j]->getX();
 					int jby = cajas[j]->getY();
-					if (jugadorNx < jbx + 3 && jugadorNx + 2 > jbx && jugadorNy < jby + 3 && jugadorNy + 2 > jby) {
+					if (jugadorNx < jbx + 4 && jugadorNx + 5 > jbx && jugadorNy < jby + 3 && jugadorNy + 4 > jby) {
 						puedeMover = false;
 						break;
 					}
@@ -185,19 +191,19 @@ public:
 					int origY = cajas[indiceCaja]->getOrigY();
 					itemsSuelo.push_back(new ItemMagico(origX + 1, origY + 1, "Libro de hechizos", "Tomo antiguo con instrucciones de trazos arcanos.", "Grimorio Magico", false));
 					if (cajasMovidasContador == 1) {
-						mensajeTemporal = "Coco: \\\"Pff, a la primera!\\\"";
+						mensajeTemporal = "Coco: Pff, a la primera!";
 					} else if (cajasMovidasContador == 2) {
-						mensajeTemporal = "Coco: \\\"Bueno, no costo tanto encontrarlo!\\\"";
+						mensajeTemporal = "Coco: Bueno, no costo tanto encontrarlo!";
 					} else {
-						mensajeTemporal = "Coco: \\\"Por fin, lo encontre!\\\"";
+						mensajeTemporal = "Coco: Por fin, lo encontre!";
 					}
-					ticksMensajeTemporal = 75;
+					ticksMensajeTemporal = 100;
 				} else if (indiceCaja == indiceCajaPozo && !pozoEncontrado) {
 					pozoEncontrado = true;
 					pozoX = cajas[indiceCaja]->getOrigX();
 					pozoY = cajas[indiceCaja]->getOrigY();
-					mensajeTemporal = "Coco: \\\"Un pozo con escaleras?? Quien puede esconderse aqui?\\\"";
-					ticksMensajeTemporal = 75;
+					mensajeTemporal = "Coco: Un pozo con escaleras?? Quien puede esconderse aqui?";
+					ticksMensajeTemporal = 100;
 				}
 			}
 

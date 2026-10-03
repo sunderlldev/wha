@@ -16,6 +16,7 @@
 #include "GestorDialogos.h"
 #include "GestorMisiones.h"
 #include "TorreAgott.h"
+#include "Letrero.h"
 #ifdef _WIN32
 #include <conio.h>
 #endif
@@ -31,6 +32,7 @@ private:
 	NPC* qifrey;
 	NPC* agott;
 	std::vector<ItemMagico*> itemsSuelo;
+	std::vector<Letrero*> letreros;
 	bool paredPiedraDestruida;
 	int idCuartoActual;
 	std::string promptFlotante;
@@ -54,20 +56,16 @@ private:
 		itemsSuelo.clear();
 	}
 
-public:
-	Nivel()
-		: numeroNivel(1), nombreNivel("Atelier de Qifrey"), completado(false),
-		  mostrarEstadisticasFin(false), mapa(nullptr), protagonista(nullptr),
-		  qifrey(nullptr), agott(nullptr), paredPiedraDestruida(false),
-		  idCuartoActual(0), promptFlotante(""), mensajeTemporal(""),
-		  ticksMensajeTemporal(0), tiempoInicio(0), tiempoFin(0),
-		  modalActivo(0), seleccionModal(0) {
-		cuartoRicheh = new CuartoRicheh();
-		torreAgott = new TorreAgott();
-		gestorDialogos = new GestorDialogos();
-		gestorMisiones = new GestorMisiones();
+	void limpiarLetreros() {
+		for (size_t i = 0; i < letreros.size(); i++) {
+			if (letreros[i] != nullptr) {
+				delete letreros[i];
+			}
+		}
+		letreros.clear();
 	}
 
+public:
 	Nivel(int numeroN, std::string nombreN, int filasMapa, int columnasMapa)
 		: numeroNivel(numeroN), nombreNivel(nombreN), completado(false),
 		  mostrarEstadisticasFin(false), mapa(nullptr), protagonista(nullptr),
@@ -116,6 +114,7 @@ public:
 			this->gestorMisiones = nullptr;
 		}
 		limpiarItemsSuelo();
+		limpiarLetreros();
 	}
 
 	void mostrarMensajeTemporal(const std::string& msg, int ticks) {
@@ -187,49 +186,29 @@ public:
 	bool getEnDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEnDialogo() : false; }
 	int getEstadoDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEstadoDialogo() : 0; }
 	std::string getNpcDialogoActual() const { return (gestorDialogos != nullptr) ? gestorDialogos->getNpcDialogoActual() : ""; }
+	int getModalActivo() const { return this->modalActivo; }
 	bool getEnModalPersonajes() const { return this->modalActivo == 1; }
+	bool getEnModalInventario() const { return this->modalActivo == 2; }
+	bool getEnModalMisiones() const { return this->modalActivo == 3; }
 	int getSeleccionModal() const { return this->seleccionModal; }
-	bool getEnModalMisiones() const { return (gestorMisiones != nullptr) ? gestorMisiones->getEnModalMisiones() : false; }
 	bool getEnDetalleMision() const { return (gestorMisiones != nullptr) ? gestorMisiones->getEnDetalleMision() : false; }
 	int getSeleccionMision() const { return (gestorMisiones != nullptr) ? gestorMisiones->getSeleccionMision() : 0; }
-	bool getEnModalInventario() const { return this->modalActivo == 2; }
 	int getSeleccionInventario() const { return this->seleccionModal; }
-	bool getParedPiedraDestruida() const { return this->paredPiedraDestruida; }
-	int getIdCuartoActual() const { return this->idCuartoActual; }
-	const std::string& getCartelCuarto() const { return this->mensajeTemporal; }
 	std::string getObjetivoActual() const {
 		return (gestorMisiones != nullptr) ? gestorMisiones->getObjetivoActual() : "";
 	}
 	bool getMostrarEstadisticasFin() const { return this->mostrarEstadisticasFin; }
-	bool getAvanzaSiguienteNivel() const { return this->completado && !this->mostrarEstadisticasFin; }
 
-	void setNumeroNivel(int numero) { this->numeroNivel = numero; }
-	void setNombreNivel(std::string nombre) { this->nombreNivel = nombre; }
-	void setCompletado(bool estado) {
-		this->completado = estado;
-		if (estado && tiempoFin == 0) {
-			tiempoFin = clock();
-		}
-	}
+	void setModalActivo(int m) { this->modalActivo = m; }
 	void setEnDialogo(bool ed) { if (gestorDialogos != nullptr) gestorDialogos->setEnDialogo(ed); }
 	void setEstadoDialogo(int ed) { if (gestorDialogos != nullptr) gestorDialogos->setEstadoDialogo(ed); }
 	void setNpcDialogoActual(const std::string& n) { if (gestorDialogos != nullptr) gestorDialogos->setNpcDialogoActual(n); }
 	void setEnModalPersonajes(bool emp) { this->modalActivo = emp ? 1 : 0; }
-	void setEnModalMisiones(bool emm) { if (gestorMisiones != nullptr) gestorMisiones->setEnModalMisiones(emm); }
+	void setEnModalMisiones(bool emm) { this->modalActivo = emm ? 3 : 0; if (gestorMisiones != nullptr) gestorMisiones->setEnModalMisiones(emm); }
 	void setEnDetalleMision(bool edm) { if (gestorMisiones != nullptr) gestorMisiones->setEnDetalleMision(edm); }
 	void setSeleccionMision(int sm) { if (gestorMisiones != nullptr) gestorMisiones->setSeleccionMision(sm); }
 	void setEnModalInventario(bool emi) { this->modalActivo = emi ? 2 : 0; }
 	void setSeleccionInventario(int si) { this->seleccionModal = si; }
-	void setParedPiedraDestruida(bool val) { this->paredPiedraDestruida = val; }
-	void setMostrarEstadisticasFin(bool val) {
-		this->mostrarEstadisticasFin = val;
-		if (val && tiempoFin == 0) {
-			tiempoFin = clock();
-		}
-	}
-	void setAvanzaSiguienteNivel(bool val) {
-		this->completado = val;
-	}
 	void setObjetivoActual(const std::string& obj) { if (gestorMisiones != nullptr) gestorMisiones->setObjetivoActual(obj); }
 
 	int determinarCuarto(int px, int py) const {
@@ -237,6 +216,7 @@ public:
 		if (px >= 460 && px <= 590 && py >= 25 && py <= 50) return 2;
 		if (px >= 460 && px <= 590 && py >= 60 && py <= 140) return 3;
 		if (px >= 460 && px <= 590 && py >= 150 && py <= 190) return 4;
+		if (px >= 22 && px <= 115 && py >= 155 && py <= 195) return 5;
 		return 0;
 	}
 
@@ -258,6 +238,8 @@ public:
 				}
 			} else if (nuevoCuarto == 4) {
 				mostrarMensajeTemporal("[BOSQUE DE PLATA]", 60);
+			} else if (nuevoCuarto == 5) {
+				mostrarMensajeTemporal("[DESPACHO DE QIFREY]", 60);
 			} else {
 				mensajeTemporal = "";
 				ticksMensajeTemporal = 0;
@@ -306,10 +288,10 @@ public:
 			}
 
 			if (qifrey == nullptr) {
-				qifrey = new NPC(45, 38, "Qifrey", "Maestro Hechicero", false);
+				qifrey = new NPC(45, 175, "Qifrey", "Maestro Hechicero");
 			} else {
 				qifrey->setX(45);
-				qifrey->setY(38);
+				qifrey->setY(175);
 				qifrey->setConfianza(0);
 				qifrey->setYaHablo(false);
 				qifrey->setDioTinta(false);
@@ -317,7 +299,7 @@ public:
 			}
 
 			if (agott == nullptr) {
-				agott = new NPC(524, 66, "Agott", "Aprendiz de Maga", false);
+				agott = new NPC(524, 66, "Agott", "Aprendiz de Maga");
 			} else {
 				agott->setX(524);
 				agott->setY(66);
@@ -327,9 +309,38 @@ public:
 
 			limpiarItemsSuelo();
 			itemsSuelo.push_back(new ItemMagico(505, 34, "Tela", "Trozo de tela arcana resistente y ligera para confeccionar vestiduras.", "Material Magico", false));
+			itemsSuelo.push_back(new ItemMagico(540, 34, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacen antiguo.", "Objeto de Coleccion", false));
+			itemsSuelo.push_back(new ItemMagico(95, 170, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran rio.", "Objeto de Coleccion", false));
+
+			limpiarLetreros();
+			letreros.push_back(new Letrero(50, 24, "Letrero: [CHOZA DE TRAZOS] Dibuja runas con pasion y cuida tus pergaminos."));
+			letreros.push_back(new Letrero(448, 30, "Letrero: ALMACEN ABANDONADO. Peligro: Derrumbe. Usa magia ignea."));
+			letreros.push_back(new Letrero(510, 66, "Letrero: TORRE DE AGOTT. Prohibido el paso sin autorizacion de Agott."));
+			letreros.push_back(new Letrero(55, 172, "Letrero: DESPACHO DE QIFREY. Maestro del atelier y protector del agua."));
+
+			for (size_t i = 0; i < letreros.size(); i++) {
+				if (letreros[i] != nullptr && mapa != nullptr) {
+					int lx = letreros[i]->getX();
+					int ly = letreros[i]->getY();
+					mapa->setCaracter(lx, ly, '[');
+					mapa->setCaracter(lx + 1, ly, '!');
+					mapa->setCaracter(lx + 2, ly, ']');
+					mapa->setCaracter(lx, ly + 1, ' ');
+					mapa->setCaracter(lx + 1, ly + 1, '|');
+					mapa->setCaracter(lx + 2, ly + 1, ' ');
+				}
+			}
 
 			if (torreAgott != nullptr) {
 				torreAgott->reiniciar();
+			}
+
+			if (!paredPiedraDestruida && mapa != nullptr) {
+				for (int wy = 27; wy <= 35; wy++) {
+					for (int wx = 457; wx <= 462; wx++) {
+						mapa->setCaracter(wx, wy, 'O');
+					}
+				}
 			}
 
 			if (gestorMisiones != nullptr) {
@@ -415,9 +426,11 @@ public:
 
 	void actualizarProximidad() {
 		if (protagonista == nullptr) return;
+		if ((mostrarEstadisticasFin || completado) && tiempoFin == 0) {
+			tiempoFin = clock();
+		}
 		bool ed = (gestorDialogos != nullptr && gestorDialogos->getEnDialogo());
-		bool emm = (gestorMisiones != nullptr && gestorMisiones->getEnModalMisiones());
-		if (modalActivo != 0 || emm || ed || mostrarEstadisticasFin) {
+		if (modalActivo != 0 || ed || mostrarEstadisticasFin) {
 			promptFlotante = "";
 			return;
 		}
@@ -439,7 +452,15 @@ public:
 			}
 			NPC* richeh = getRicheh();
 			if (richeh != nullptr) {
-				if (abs(px - richeh->getX()) <= 4 && abs(py - richeh->getY()) <= 4) {
+				int pw = protagonista->getAncho();
+				int ph = protagonista->getAlto();
+				int rx = richeh->getX();
+				int ry = richeh->getY();
+				int rw = richeh->getAncho();
+				int rh = richeh->getAlto();
+				int distX = (px + pw <= rx) ? (rx - (px + pw)) : ((rx + rw <= px) ? (px - (rx + rw)) : 0);
+				int distY = (py + ph <= ry) ? (ry - (py + ph)) : ((ry + rh <= py) ? (py - (ry + rh)) : 0);
+				if (distX <= 2 && distY <= 2) {
 					promptFlotante = "[ENTER] Hablar con Richeh";
 					return;
 				}
@@ -453,20 +474,35 @@ public:
 			if (tieneVara) {
 				promptFlotante = "[ENTER] Usar Vara magica para derribar pared";
 			} else {
-				promptFlotante = "Coco: \"Este lugar parece estar bloqueado, puedo derribarlo pero necesito magia...\"";
+				promptFlotante = "Coco: Este lugar parece estar bloqueado, puedo derribarlo pero necesito magia...";
 			}
 			return;
 		}
 
+		int pw = protagonista->getAncho();
+		int ph = protagonista->getAlto();
+
 		if (qifrey != nullptr) {
-			if (abs(px - qifrey->getX()) <= 4 && abs(py - qifrey->getY()) <= 4) {
+			int qx = qifrey->getX();
+			int qy = qifrey->getY();
+			int qw = qifrey->getAncho();
+			int qh = qifrey->getAlto();
+			int distX = (px + pw <= qx) ? (qx - (px + pw)) : ((qx + qw <= px) ? (px - (qx + qw)) : 0);
+			int distY = (py + ph <= qy) ? (qy - (py + ph)) : ((qy + qh <= py) ? (py - (qy + qh)) : 0);
+			if (distX <= 2 && distY <= 2) {
 				promptFlotante = "[ENTER] Interactuar con Qifrey";
 				return;
 			}
 		}
 
 		if (agott != nullptr) {
-			if (abs(px - agott->getX()) <= 4 && abs(py - agott->getY()) <= 4) {
+			int ax = agott->getX();
+			int ay = agott->getY();
+			int aw = agott->getAncho();
+			int ah = agott->getAlto();
+			int distX = (px + pw <= ax) ? (ax - (px + pw)) : ((ax + aw <= px) ? (px - (ax + aw)) : 0);
+			int distY = (py + ph <= ay) ? (ay - (py + ph)) : ((ay + ah <= py) ? (py - (ay + ah)) : 0);
+			if (distX <= 2 && distY <= 2) {
 				promptFlotante = "[ENTER] Hablar con Agott";
 				return;
 			}
@@ -481,8 +517,27 @@ public:
 			if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
 				int ix = itemsSuelo[i]->getX();
 				int iy = itemsSuelo[i]->getY();
-				if (abs(px - ix) <= 4 && abs(py - iy) <= 4) {
+				int iw = itemsSuelo[i]->getAncho();
+				int ih = itemsSuelo[i]->getAlto();
+				int distX = (px + pw <= ix) ? (ix - (px + pw)) : ((ix + iw <= px) ? (px - (ix + iw)) : 0);
+				int distY = (py + ph <= iy) ? (iy - (py + ph)) : ((iy + ih <= py) ? (py - (iy + ih)) : 0);
+				if (distX <= 2 && distY <= 2) {
 					promptFlotante = "[ENTER] Recoger: " + itemsSuelo[i]->getNombre();
+					return;
+				}
+			}
+		}
+
+		for (size_t i = 0; i < letreros.size(); i++) {
+			if (letreros[i] != nullptr) {
+				int lx = letreros[i]->getX();
+				int ly = letreros[i]->getY();
+				int lw = letreros[i]->getAncho();
+				int lh = letreros[i]->getAlto();
+				int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
+				int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
+				if (distX <= 2 && distY <= 2) {
+					promptFlotante = "[E / ENTER] Leer letrero";
 					return;
 				}
 			}
@@ -555,43 +610,50 @@ public:
 				return huboCambio;
 			}
 
-			if (gestorMisiones != nullptr && gestorMisiones->getEnModalMisiones()) {
-				if (!gestorMisiones->getEnDetalleMision()) {
-					int sm = gestorMisiones->getSeleccionMision();
-					if (tecla == 'w' || tecla == 'W') {
-						if (sm > 0) {
-							gestorMisiones->setSeleccionMision(sm - 1);
+			if (modalActivo == 3) {
+				if (gestorMisiones != nullptr) {
+					if (!gestorMisiones->getEnDetalleMision()) {
+						int sm = gestorMisiones->getSeleccionMision();
+						if (tecla == 'w' || tecla == 'W') {
+							if (sm > 0) {
+								gestorMisiones->setSeleccionMision(sm - 1);
+								huboCambio = true;
+							}
+						} else if (tecla == 's' || tecla == 'S') {
+							if (sm < 3) {
+								gestorMisiones->setSeleccionMision(sm + 1);
+								huboCambio = true;
+							}
+						} else if (tecla == '1') {
+							gestorMisiones->setSeleccionMision(0);
+							gestorMisiones->setEnDetalleMision(true);
+							huboCambio = true;
+						} else if (tecla == '2') {
+							gestorMisiones->setSeleccionMision(1);
+							gestorMisiones->setEnDetalleMision(true);
+							huboCambio = true;
+						} else if (tecla == '3') {
+							gestorMisiones->setSeleccionMision(2);
+							gestorMisiones->setEnDetalleMision(true);
+							huboCambio = true;
+						} else if (tecla == '4') {
+							gestorMisiones->setSeleccionMision(3);
+							gestorMisiones->setEnDetalleMision(true);
+							huboCambio = true;
+						} else if (tecla == 13) {
+							gestorMisiones->setEnDetalleMision(true);
+							huboCambio = true;
+						} else if (tecla == 'm' || tecla == 'M' || tecla == 27) {
+							modalActivo = 0;
+							gestorMisiones->setEnModalMisiones(false);
+							gestorMisiones->setEnDetalleMision(false);
 							huboCambio = true;
 						}
-					} else if (tecla == 's' || tecla == 'S') {
-						if (sm < 2) {
-							gestorMisiones->setSeleccionMision(sm + 1);
+					} else {
+						if (tecla == 13 || tecla == 27 || tecla == 'm' || tecla == 'M') {
+							gestorMisiones->setEnDetalleMision(false);
 							huboCambio = true;
 						}
-					} else if (tecla == '1') {
-						gestorMisiones->setSeleccionMision(0);
-						gestorMisiones->setEnDetalleMision(true);
-						huboCambio = true;
-					} else if (tecla == '2') {
-						gestorMisiones->setSeleccionMision(1);
-						gestorMisiones->setEnDetalleMision(true);
-						huboCambio = true;
-					} else if (tecla == '3') {
-						gestorMisiones->setSeleccionMision(2);
-						gestorMisiones->setEnDetalleMision(true);
-						huboCambio = true;
-					} else if (tecla == 13) {
-						gestorMisiones->setEnDetalleMision(true);
-						huboCambio = true;
-					} else if (tecla == 'm' || tecla == 'M' || tecla == 27) {
-						gestorMisiones->setEnModalMisiones(false);
-						gestorMisiones->setEnDetalleMision(false);
-						huboCambio = true;
-					}
-				} else {
-					if (tecla == 13 || tecla == 27 || tecla == 'm' || tecla == 'M') {
-						gestorMisiones->setEnDetalleMision(false);
-						huboCambio = true;
 					}
 				}
 				return huboCambio;
@@ -604,21 +666,12 @@ public:
 						huboCambio = true;
 					}
 				} else if (tecla == 's' || tecla == 'S') {
-					if (seleccionModal < 3) {
+					if (seleccionModal < 5) {
 						seleccionModal++;
 						huboCambio = true;
 					}
-				} else if (tecla == '1') {
-					seleccionModal = 0;
-					huboCambio = true;
-				} else if (tecla == '2') {
-					seleccionModal = 1;
-					huboCambio = true;
-				} else if (tecla == '3') {
-					seleccionModal = 2;
-					huboCambio = true;
-				} else if (tecla == '4') {
-					seleccionModal = 3;
+				} else if (tecla >= '1' && tecla <= '6') {
+					seleccionModal = tecla - '1';
 					huboCambio = true;
 				} else if (tecla == 'i' || tecla == 'I' || tecla == 27 || tecla == 13) {
 					modalActivo = 0;
@@ -636,6 +689,9 @@ public:
 					huboCambio = true;
 				} else if (tecla == '3') {
 					procesarOpcionDialogo(3);
+					huboCambio = true;
+				} else if (tecla == '4') {
+					procesarOpcionDialogo(4);
 					huboCambio = true;
 				} else if (tecla == 13) {
 					procesarOpcionDialogo(1);
@@ -656,6 +712,7 @@ public:
 			}
 
 			if (tecla == 'm' || tecla == 'M') {
+				modalActivo = 3;
 				if (gestorMisiones != nullptr) {
 					gestorMisiones->setEnModalMisiones(true);
 					gestorMisiones->setEnDetalleMision(false);
@@ -683,12 +740,20 @@ public:
 					}
 				}
 
-				if (tecla == 13) {
+				if (tecla == 13 || tecla == 'e' || tecla == 'E') {
 					int px = protagonista->getX();
 					int py = protagonista->getY();
+					int pw = protagonista->getAncho();
+					int ph = protagonista->getAlto();
 					NPC* richeh = getRicheh();
 					if (richeh != nullptr) {
-						if (abs(px - richeh->getX()) <= 4 && abs(py - richeh->getY()) <= 4) {
+						int rx = richeh->getX();
+						int ry = richeh->getY();
+						int rw = richeh->getAncho();
+						int rh = richeh->getAlto();
+						int distX = (px + pw <= rx) ? (rx - (px + pw)) : ((rx + rw <= px) ? (px - (rx + rw)) : 0);
+						int distY = (py + ph <= ry) ? (ry - (py + ph)) : ((ry + rh <= py) ? (py - (ry + rh)) : 0);
+						if (distX <= 2 && distY <= 2) {
 							if (gestorDialogos != nullptr) {
 								gestorDialogos->iniciarDialogo("Richeh", 300);
 							}
@@ -706,33 +771,37 @@ public:
 				else if (tecla == 'd' || tecla == 'D') dx = 1;
 
 				if (dx != 0 || dy != 0) {
-					int nx = protagonista->getX() + dx;
-					int ny = protagonista->getY() + dy;
-					Mapa* mapaR = (cuartoRicheh != nullptr) ? cuartoRicheh->getMapa() : nullptr;
-					if (mapaR != nullptr) {
-						bool colision = false;
-						for (int r = 0; r < protagonista->getAlto(); r++) {
-							for (int c = 0; c < protagonista->getAncho(); c++) {
-								if (!mapaR->esPosicionValida(nx + c, ny + r)) {
+					for (int paso = 0; paso < 2; paso++) {
+						int nx = protagonista->getX() + dx;
+						int ny = protagonista->getY() + dy;
+						Mapa* mapaR = (cuartoRicheh != nullptr) ? cuartoRicheh->getMapa() : nullptr;
+						if (mapaR != nullptr) {
+							bool colision = false;
+							for (int r = 0; r < protagonista->getAlto(); r++) {
+								for (int c = 0; c < protagonista->getAncho(); c++) {
+									if (!mapaR->esPosicionValida(nx + c, ny + r)) {
+										colision = true;
+										break;
+									}
+								}
+								if (colision) break;
+							}
+							NPC* richeh = getRicheh();
+							if (!colision && richeh != nullptr) {
+								int rx = richeh->getX();
+								int ry = richeh->getY();
+								if (nx < rx + richeh->getAncho() && nx + protagonista->getAncho() > rx &&
+								    ny < ry + richeh->getAlto() && ny + protagonista->getAlto() > ry) {
 									colision = true;
-									break;
 								}
 							}
-							if (colision) break;
-						}
-						NPC* richeh = getRicheh();
-						if (!colision && richeh != nullptr) {
-							int rx = richeh->getX();
-							int ry = richeh->getY();
-							if (nx < rx + richeh->getAncho() && nx + protagonista->getAncho() > rx &&
-							    ny < ry + richeh->getAlto() && ny + protagonista->getAlto() > ry) {
-								colision = true;
+							if (!colision) {
+								protagonista->setX(nx);
+								protagonista->setY(ny);
+								huboCambio = true;
+							} else {
+								break;
 							}
-						}
-						if (!colision) {
-							protagonista->setX(nx);
-							protagonista->setY(ny);
-							huboCambio = true;
 						}
 					}
 				}
@@ -743,16 +812,36 @@ public:
 			if (tecla == 'e' || tecla == 'E') {
 				int px = protagonista->getX();
 				int py = protagonista->getY();
+				int pw = protagonista->getAncho();
+				int ph = protagonista->getAlto();
 				if (torreAgott != nullptr && torreAgott->estaCercaDelPozo(px, py)) {
 					setTransicionBajando(true);
 					huboCambio = true;
 					return huboCambio;
+				}
+				for (size_t i = 0; i < letreros.size(); i++) {
+					if (letreros[i] != nullptr) {
+						int lx = letreros[i]->getX();
+						int ly = letreros[i]->getY();
+						int lw = letreros[i]->getAncho();
+						int lh = letreros[i]->getAlto();
+						int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
+						int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
+						if (distX <= 2 && distY <= 2) {
+							mensajeTemporal = letreros[i]->getTexto();
+							ticksMensajeTemporal = 100;
+							huboCambio = true;
+							return huboCambio;
+						}
+					}
 				}
 			}
 
 			if (tecla == 13) {
 				int px = protagonista->getX();
 				int py = protagonista->getY();
+				int pw = protagonista->getAncho();
+				int ph = protagonista->getAlto();
 
 				if (!paredPiedraDestruida && px >= 445 && px <= 463 && py >= 25 && py <= 37) {
 					Inventario* inv = protagonista->getInventario();
@@ -760,12 +849,13 @@ public:
 						paredPiedraDestruida = true;
 						if (mapa != nullptr) {
 							for (int wy = 27; wy <= 35; wy++) {
-								for (int wx = 458; wx <= 461; wx++) {
+								for (int wx = 457; wx <= 462; wx++) {
 									mapa->setCaracter(wx, wy, ' ');
 								}
 							}
 						}
-						promptFlotante = "[Lanzaste bola de fuego! Pared de piedra destruida]";
+						inv->removerItem("Vara magica");
+						promptFlotante = "[Lanzaste bola de fuego! Pared destruida (Vara consumida)]";
 						huboCambio = true;
 						return huboCambio;
 					}
@@ -774,7 +864,11 @@ public:
 				if (qifrey != nullptr) {
 					int qx = qifrey->getX();
 					int qy = qifrey->getY();
-					if (abs(px - qx) <= 4 && abs(py - qy) <= 4) {
+					int qw = qifrey->getAncho();
+					int qh = qifrey->getAlto();
+					int distX = (px + pw <= qx) ? (qx - (px + pw)) : ((qx + qw <= px) ? (px - (qx + qw)) : 0);
+					int distY = (py + ph <= qy) ? (qy - (py + ph)) : ((qy + qh <= py) ? (py - (qy + qh)) : 0);
+					if (distX <= 2 && distY <= 2) {
 						if (gestorDialogos != nullptr) {
 							gestorDialogos->iniciarDialogo("Qifrey", 1);
 						}
@@ -786,7 +880,11 @@ public:
 				if (agott != nullptr) {
 					int ax = agott->getX();
 					int ay = agott->getY();
-					if (abs(px - ax) <= 4 && abs(py - ay) <= 4) {
+					int aw = agott->getAncho();
+					int ah = agott->getAlto();
+					int distX = (px + pw <= ax) ? (ax - (px + pw)) : ((ax + aw <= px) ? (px - (ax + aw)) : 0);
+					int distY = (py + ph <= ay) ? (ay - (py + ph)) : ((ay + ah <= py) ? (py - (ay + ah)) : 0);
+					if (distX <= 2 && distY <= 2) {
 						if (gestorDialogos != nullptr) {
 							gestorDialogos->iniciarDialogoAgott();
 						}
@@ -799,7 +897,11 @@ public:
 					if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
 						int ix = itemsSuelo[i]->getX();
 						int iy = itemsSuelo[i]->getY();
-						if (abs(px - ix) <= 4 && abs(py - iy) <= 4) {
+						int iw = itemsSuelo[i]->getAncho();
+						int ih = itemsSuelo[i]->getAlto();
+						int distX = (px + pw <= ix) ? (ix - (px + pw)) : ((ix + iw <= px) ? (px - (ix + iw)) : 0);
+						int distY = (py + ph <= iy) ? (iy - (py + ph)) : ((iy + ih <= py) ? (py - (iy + ih)) : 0);
+						if (distX <= 2 && distY <= 2) {
 							Inventario* inv = protagonista->getInventario();
 							if (inv != nullptr) {
 								if (inv->agregarItem(new ItemMagico(0, 0, itemsSuelo[i]->getNombre(), itemsSuelo[i]->getDescripcion(), itemsSuelo[i]->getTipoItem(), true))) {
@@ -809,11 +911,28 @@ public:
 									huboCambio = true;
 									return huboCambio;
 								} else {
-									promptFlotante = "[Mochila llena: Max 4 items!]";
+									promptFlotante = "[Mochila llena: Max 6 items!]";
 									huboCambio = true;
 									return huboCambio;
 								}
 							}
+						}
+					}
+				}
+
+				for (size_t i = 0; i < letreros.size(); i++) {
+					if (letreros[i] != nullptr) {
+						int lx = letreros[i]->getX();
+						int ly = letreros[i]->getY();
+						int lw = letreros[i]->getAncho();
+						int lh = letreros[i]->getAlto();
+						int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
+						int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
+						if (distX <= 2 && distY <= 2) {
+							mensajeTemporal = letreros[i]->getTexto();
+							ticksMensajeTemporal = 100;
+							huboCambio = true;
+							return huboCambio;
 						}
 					}
 				}
@@ -827,54 +946,60 @@ public:
 			else if (tecla == 'd' || tecla == 'D') dx = 1;
 
 			if (dx != 0 || dy != 0) {
-				int nx = protagonista->getX() + dx;
-				int ny = protagonista->getY() + dy;
+				for (int paso = 0; paso < 2; paso++) {
+					int nx = protagonista->getX() + dx;
+					int ny = protagonista->getY() + dy;
 
-				int cajaEmpujada = (torreAgott != nullptr) ? torreAgott->detectarColisionCaja(nx, ny) : -1;
+					int cajaEmpujada = (torreAgott != nullptr) ? torreAgott->detectarColisionCaja(nx, ny) : -1;
 
-				if (cajaEmpujada != -1 && torreAgott != nullptr) {
-					if (torreAgott->intentarEmpujarCaja(cajaEmpujada, dx, dy, nx, ny, mapa, agott, itemsSuelo, mensajeTemporal, ticksMensajeTemporal)) {
-						protagonista->setX(nx);
-						protagonista->setY(ny);
-						actualizarCuartoActual(nx, ny);
-						huboCambio = true;
-					}
-				} else if (mapa != nullptr) {
-					bool colision = false;
-					for (int r = 0; r < protagonista->getAlto(); r++) {
-						for (int c = 0; c < protagonista->getAncho(); c++) {
-							if (!mapa->esPosicionValida(nx + c, ny + r)) {
-								colision = true;
-								break;
-							}
-						}
-						if (colision) break;
-					}
-
-					if (!colision && qifrey != nullptr) {
-						int qx = qifrey->getX();
-						int qy = qifrey->getY();
-						if (nx < qx + qifrey->getAncho() && nx + protagonista->getAncho() > qx &&
-						    ny < qy + qifrey->getAlto() && ny + protagonista->getAlto() > qy) {
-							colision = true;
-						}
-					}
-
-					if (!colision && agott != nullptr) {
-						int ax = agott->getX();
-						int ay = agott->getY();
-						if (nx < ax + agott->getAncho() && nx + protagonista->getAncho() > ax &&
-						    ny < ay + agott->getAlto() && ny + protagonista->getAlto() > ay) {
-							colision = true;
-						}
-					}
-
-					if (!colision) {
-						if (nx != protagonista->getX() || ny != protagonista->getY()) {
+					if (cajaEmpujada != -1 && torreAgott != nullptr) {
+						if (torreAgott->intentarEmpujarCaja(cajaEmpujada, dx, dy, nx, ny, mapa, agott, itemsSuelo, mensajeTemporal, ticksMensajeTemporal)) {
 							protagonista->setX(nx);
 							protagonista->setY(ny);
 							actualizarCuartoActual(nx, ny);
 							huboCambio = true;
+						} else {
+							break;
+						}
+					} else if (mapa != nullptr) {
+						bool colision = false;
+						for (int r = 0; r < protagonista->getAlto(); r++) {
+							for (int c = 0; c < protagonista->getAncho(); c++) {
+								if (!mapa->esPosicionValida(nx + c, ny + r)) {
+									colision = true;
+									break;
+								}
+							}
+							if (colision) break;
+						}
+
+						if (!colision && qifrey != nullptr) {
+							int qx = qifrey->getX();
+							int qy = qifrey->getY();
+							if (nx < qx + qifrey->getAncho() && nx + protagonista->getAncho() > qx &&
+							    ny < qy + qifrey->getAlto() && ny + protagonista->getAlto() > qy) {
+								colision = true;
+							}
+						}
+
+						if (!colision && agott != nullptr) {
+							int ax = agott->getX();
+							int ay = agott->getY();
+							if (nx < ax + agott->getAncho() && nx + protagonista->getAncho() > ax &&
+							    ny < ay + agott->getAlto() && ny + protagonista->getAlto() > ay) {
+								colision = true;
+							}
+						}
+
+						if (!colision) {
+							if (nx != protagonista->getX() || ny != protagonista->getY()) {
+								protagonista->setX(nx);
+								protagonista->setY(ny);
+								actualizarCuartoActual(nx, ny);
+								huboCambio = true;
+							}
+						} else {
+							break;
 						}
 					}
 				}

@@ -11,7 +11,8 @@ enum TipoObjeto {
     rio,
     camino,
     gato,
-    caja
+    caja,
+    letrero
 };
 
 class ObjetoMapa {

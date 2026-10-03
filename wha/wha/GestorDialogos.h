@@ -69,10 +69,13 @@ public:
 
 		switch (estadoDialogo) {
 		case 1:
-			lineas.push_back("\"Hola, Coco. Que necesitas en el taller hoy?\"");
+			lineas.push_back("Hola, Coco. Que necesitas en el taller hoy?");
 			opciones.push_back("[1] Maestro Qifrey, podrias ayudarme a craftear la Capa Magica?");
 			opciones.push_back("[2] Solo venia a explorar el taller y ver tus libros.");
 			opciones.push_back("[3] Maestro, necesito materiales especiales para mis practicas.");
+			if (inv != nullptr && (inv->tieneItem("Frasco de Tinta") || inv->tieneItem("Tinta de Viento"))) {
+				opciones.push_back("[4] Maestro, encontre una tinta especial explorando el taller!");
+			}
 			break;
 
 		case 10:
@@ -83,28 +86,28 @@ public:
 				int total = (tieneTela ? 1 : 0) + (tieneTinta ? 1 : 0) + (tieneLibro ? 1 : 0);
 
 				if (total == 0) {
-					lineas.push_back("\"Para la Capa Magica necesito 3 items: Tela, Tinta magica y Libro.\"");
-					lineas.push_back("\"Aun no tienes ninguno. Busca en el atelier y el almacen abandonado!\"");
+					lineas.push_back("Para la Capa Magica necesito 3 items: Tela, Tinta magica y Libro.");
+					lineas.push_back("Aun no tienes ninguno.\nBusca en el taller y el almacen abandonado!");
 					opciones.push_back("[1] Esta bien, ire a buscarlos por el atelier.");
 				} else {
-					lineas.push_back("\"Te faltan materiales para craftear la Capa Magica.\"");
+					lineas.push_back("Te faltan materiales para craftear la Capa Magica.");
 					std::string faltantes = "Aun necesitas encontrar: ";
 					if (!tieneTela) faltantes += "[Tela] ";
 					if (!tieneTinta) faltantes += "[Tinta magica] ";
 					if (!tieneLibro) faltantes += "[Libro de hechizos] ";
 					lineas.push_back(faltantes);
-					lineas.push_back("\"Vuelve cuando tengas los 3 ingredientes completos!\"");
+					lineas.push_back("Vuelve cuando tengas los 3 ingredientes completos!");
 					opciones.push_back("[1] Entendido, buscare lo que falta.");
 				}
 			}
 			break;
 
 		case 11:
-			lineas.push_back("\"Esta bien, te hare la capa!\"");
+			lineas.push_back("Esta bien, te hare la capa!");
 			lineas.push_back("");
 			lineas.push_back("Crafteando capa magica...");
 			lineas.push_back("");
-			lineas.push_back("\"Aqui esta, te dare esta capa pero ojo... usalo responsablemente!\"");
+			lineas.push_back("Aqui esta, te dare esta capa pero ojo... usalo responsablemente!");
 			opciones.push_back("[1] Entendido!");
 			break;
 
@@ -116,34 +119,34 @@ public:
 			break;
 
 		case 15:
-			lineas.push_back("\"Te queda excelente la Capa Magica, Coco.\"");
-			lineas.push_back("\"Recuerda usar tus alas de aprendiz con sabiduria y responsabilidad.\"");
+			lineas.push_back("Te queda excelente la Capa Magica, Coco.");
+			lineas.push_back("Recuerda usar tus alas de aprendiz\ncon verdadera sabiduria y responsabilidad.");
 			opciones.push_back("[1] Gracias Maestro Qifrey!");
 			break;
 
 		case 20:
-			lineas.push_back("\"Eres bienvenida en el taller siempre, Coco.\"");
-			lineas.push_back("\"Cuidate de las corrientes del gran rio y cruza siempre por los puentes.\"");
+			lineas.push_back("Eres bienvenida en el taller siempre, Coco.");
+			lineas.push_back("Cuidate de las corrientes del gran rio.\nCruza siempre por los puentes arcanos.");
 			opciones.push_back("[1] Gracias por el consejo, Maestro.");
 			break;
 
 		case 30:
-			lineas.push_back("\"Las practicas de hechiceria requieren precision y paciencia.\"");
-			lineas.push_back("\"Que tipo de material magico estas buscando exactamente?\"");
+			lineas.push_back("Las practicas de hechiceria requieren precision y paciencia.");
+			lineas.push_back("Que tipo de material magico estas buscando exactamente?");
 			opciones.push_back("[1] Busco una tinta que reaccione al flujo magico del pergamino.");
 			opciones.push_back("[2] Cualquier material basico me servira para practicar.");
 			break;
 
 		case 31:
-			lineas.push_back("\"La tinta magica de plata es muy delicada y poderosa.\"");
-			lineas.push_back("\"Sabras usarla con cuidado y verdadero respeto al atelier?\"");
-			opciones.push_back("[1] Prometo seguir todas las reglas del atelier y ser responsable.");
+			lineas.push_back("La tinta magica de plata es muy delicada y poderosa.");
+			lineas.push_back("Sabras usarla con cuidado y verdadero respeto al atelier?");
+			opciones.push_back("[1] Prometo seguir las reglas del atelier y ser responsable.");
 			opciones.push_back("[2] Intentare tener cuidado, aunque a veces me cuesta.");
 			break;
 
 		case 32:
-			lineas.push_back("\"Bien dicho, Coco. Veo determinacion y honestidad en tus ojos.\"");
-			lineas.push_back("\"Te doy este item: Tinta magica.\"");
+			lineas.push_back("Bien dicho, Coco. Veo determinacion y honestidad en tus ojos.");
+			lineas.push_back("Te doy este item: Tinta magica.");
 			opciones.push_back("[1] Muchas gracias Qifrey, me servira de mucho!");
 			break;
 
@@ -155,40 +158,55 @@ public:
 			break;
 
 		case 34:
-			lineas.push_back("\"Ya te he entregado la Tinta magica, Coco.\"");
-			lineas.push_back("\"Revisa tu mochila y dale buen uso en tus pergaminos.\"");
+			lineas.push_back("Ya te he entregado la Tinta magica, Coco.");
+			lineas.push_back("Revisa tu mochila y dale buen uso en tus pergaminos.");
 			opciones.push_back("[1] Entendido Maestro.");
 			break;
 
+		case 40:
+			lineas.push_back("Increible hallazgo, Coco! Esta tinta arcaica es justo lo");
+			lineas.push_back("que necesitabamos en el taller para restaurar pergaminos.");
+			lineas.push_back("Demuestras una gran curiosidad y respeto por este atelier.");
+			lineas.push_back("Has demostrado ser una verdadera amiga y gran aprendiz!");
+			opciones.push_back("[1] Me alegra mucho ser de ayuda, Maestro!");
+			break;
+
+		case 41:
+			lineas.push_back("[MISION SECUNDARIA COMPLETADA]");
+			lineas.push_back("Entregaste la tinta arcaica al Maestro Qifrey.");
+			lineas.push_back("Tu nivel de confianza con Qifrey ahora es: Amigos (+50 pts)");
+			opciones.push_back("[1] Continuar explorando");
+			break;
+
 		case 99:
-			lineas.push_back("[INVENTARIO LLENO: Capacidad maxima 3 items alcanzada]");
+			lineas.push_back("[INVENTARIO LLENO: Capacidad maxima 6 items alcanzada]");
 			lineas.push_back("No puedes recibir mas items en este momento.");
 			opciones.push_back("[1] Volver");
 			break;
 
 		case 200:
-			lineas.push_back("\"Vaya vaya... miren a quien tenemos aqui.\"");
+			lineas.push_back("Vaya vaya... miren a quien tenemos aqui.");
 			opciones.push_back("[1] Siguiente");
 			break;
 
 		case 201:
-			lineas.push_back("\"A la joven y pequena Coco, porque entraste a mi torre?\"");
+			lineas.push_back("A la joven y pequena Coco, porque entraste a mi torre?");
 			opciones.push_back("[1] Necesito encontrar un libro");
 			opciones.push_back("[2] A ti que te importa, Agott?");
 			break;
 
 		case 202:
-			lineas.push_back("\"Puedes encontrarlo en este resto de cajas si quieres, al final... solo son basura\"");
+			lineas.push_back("Puedes encontrarlo en este resto de cajas si quieres...\nAl final, solo son basura.");
 			opciones.push_back("[1] Entendido");
 			break;
 
 		case 203:
-			lineas.push_back("\"Largate de aqui!\"");
+			lineas.push_back("Largate de aqui!");
 			opciones.push_back("[1] Ya me voy...");
 			break;
 
 		case 210:
-			lineas.push_back("\"Que paso ahora, nina?\"");
+			lineas.push_back("Que paso ahora, nina?");
 			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
 				opciones.push_back("[1] Solo pasaba por aqui, ya encontre el libro, Agott.");
 			} else {
@@ -197,17 +215,17 @@ public:
 			break;
 
 		case 211:
-			lineas.push_back("\"No esperaba que lo encuentres en esta basura jaja.\"");
+			lineas.push_back("No esperaba que lo encuentres en esta basura jaja.");
 			opciones.push_back("[1] Continuar");
 			break;
 
 		case 212:
-			lineas.push_back("\"Sabia que no eras util para eso JAJAJA, prueba empujando las cajas.\"");
+			lineas.push_back("Sabia que no eras util para eso JAJAJA.\nPrueba empujando las cajas de la torre.");
 			opciones.push_back("[1] Gracias por nada...");
 			break;
 
 		case 220:
-			lineas.push_back("\"Porque sigues aqui, Coco?? No eres bienvenida.\"");
+			lineas.push_back("Porque sigues aqui, Coco?? No eres bienvenida.");
 			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
 				opciones.push_back("[1] Nada, solo queria burlarme de tu cara.");
 			} else {
@@ -216,35 +234,35 @@ public:
 			break;
 
 		case 221:
-			lineas.push_back("\"Estupida nina!\"");
+			lineas.push_back("Estupida nina!");
 			opciones.push_back("[1] Salir");
 			break;
 
 		case 222:
-			lineas.push_back("\"Que demonios estas buscando??\"");
+			lineas.push_back("Que demonios estas buscando??");
 			opciones.push_back("[1] QUE- TE- IMPORTA!!!!");
 			break;
 
 		case 223:
-			lineas.push_back("\"...\"");
+			lineas.push_back("...");
 			opciones.push_back("[1] Salir");
 			break;
 
 		case 300:
 			if (!dioVaraRicheh) {
-				lineas.push_back("\"Hola Coco... Que sorpresa verte por aqui abajo.\"");
-				lineas.push_back("\"Toma mi vieja vara magica. Con ella podras\"");
-				lineas.push_back("\"derribar muros de piedra lanzando fuego.\"");
+				lineas.push_back("Hola Coco... Que sorpresa verte por aqui abajo.");
+				lineas.push_back("Toma mi vieja vara magica. Con ella podras");
+				lineas.push_back("derribar muros de piedra lanzando fuego.");
 				opciones.push_back("[1] Muchas gracias Richeh!");
 			} else {
-				lineas.push_back("\"Usa la vara magica con sabiduria, Coco.\"");
-				lineas.push_back("\"Recuerda que el fuego magico responde a tu voluntad.\"");
+				lineas.push_back("Usa la vara magica con sabiduria, Coco.");
+				lineas.push_back("Recuerda que el fuego magico responde a tu voluntad.");
 				opciones.push_back("[1] Entendido Richeh!");
 			}
 			break;
 
 		default:
-			lineas.push_back("\"Continua tu aprendizaje con dedicacion, Coco.\"");
+			lineas.push_back("Continua tu aprendizaje con dedicacion, Coco.");
 			opciones.push_back("[1] Salir");
 			break;
 		}
@@ -289,6 +307,13 @@ public:
 					estadoDialogo = 34;
 				} else {
 					estadoDialogo = 30;
+				}
+			} else if (opcion == 4) {
+				if (inv != nullptr && (inv->tieneItem("Frasco de Tinta") || inv->tieneItem("Tinta de Viento"))) {
+					estadoDialogo = 40;
+				} else {
+					enDialogo = false;
+					estadoDialogo = 0;
 				}
 			}
 		} else if (estadoDialogo == 10) {
@@ -356,6 +381,22 @@ public:
 				}
 			}
 		} else if (estadoDialogo == 33 || estadoDialogo == 34 || estadoDialogo == 99) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 40) {
+			if (inv != nullptr) {
+				if (inv->tieneItem("Frasco de Tinta")) {
+					inv->removerItem("Frasco de Tinta");
+				} else if (inv->tieneItem("Tinta de Viento")) {
+					inv->removerItem("Tinta de Viento");
+				}
+			}
+			if (qifrey != nullptr) {
+				qifrey->setConfianza(2);
+			}
+			puntosMisiones += 50;
+			estadoDialogo = 41;
+		} else if (estadoDialogo == 41) {
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 200) {

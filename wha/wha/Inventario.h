@@ -10,7 +10,7 @@ private:
 	std::vector<ItemMagico*> listaItem;
 	int capacidadMaxima;
 public:
-	Inventario(int capacidad = 4) : capacidadMaxima(capacidad) {}
+	Inventario(int capacidad = 6) : capacidadMaxima(capacidad) {}
 	~Inventario() {
 		for (size_t i = 0; i < listaItem.size(); i++) {
 			if (listaItem[i] != nullptr) {
@@ -21,7 +21,6 @@ public:
 	}
 
 	size_t getCantidad() const { return listaItem.size(); }
-	size_t cantItems() const { return listaItem.size(); }
 	int getCapacidadMaxima() const { return capacidadMaxima; }
 	void setCapacidadMaxima(int cap) { capacidadMaxima = cap; }
 

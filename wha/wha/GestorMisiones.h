@@ -102,6 +102,20 @@ public:
 			desbloqueadas.push_back(false);
 			estados.push_back("BLOQUEADA");
 		}
+
+		bool tieneTintaColeccion = (inv != nullptr && (inv->tieneItem("Frasco de Tinta") || inv->tieneItem("Tinta de Viento")));
+		bool confianzaAmigos = (qifrey != nullptr && qifrey->getConfianza() >= 2);
+
+		titulos.push_back("Coleccion de Tinta");
+		descripciones.push_back("Explora los rincones secretos del taller para hallar frascos de tinta arcaica perdidos y entregaselos a Qifrey.");
+		desbloqueadas.push_back(true);
+		if (confianzaAmigos) {
+			estados.push_back("COMPLETADA");
+		} else if (tieneTintaColeccion) {
+			estados.push_back("EN PROGRESO");
+		} else {
+			estados.push_back("DISPONIBLE");
+		}
 	}
 };
 

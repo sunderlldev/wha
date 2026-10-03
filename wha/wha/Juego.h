@@ -40,12 +40,11 @@ public:
 		return *listaNivel[nivelActual];
 	}
 
-	size_t getCantNiveles() const { return listaNivel.size(); }
 	bool getEjecutando() const { return this->ejecutando; }
-	int getNivelActual() const { return this->nivelActual; }
 	void setEjecutando(bool estado) { this->ejecutando = estado; }
-	void setNivelActual(int nivel) { this->nivelActual = nivel; }
-	void menuPrincipal() {}
+	void menuPrincipal() {
+		pantalla.mostrarHistoriaIntro();
+	}
 
 	void cambiarNivel() {
 		if (nivelActual + 1 < (int)listaNivel.size()) {
@@ -61,8 +60,6 @@ public:
 	void mostrarDesenlaceFinal() {
 		std::cout << "Felicidades! Has completado el viaje del Arbol de Plata!\n";
 	}
-
-	void mostrarPreguntaReflexxiva() {}
 
 	void actualizar() {
 		if (!ejecutando) return;
@@ -145,7 +142,7 @@ public:
 					for (int r = 0; r < 2; r++) {
 						for (int c = 0; c < 2; c++) {
 							if (pox + c >= 0 && pox + c < pantalla.getAnchoJuego() && poy + r >= 0 && poy + r < pantalla.getAltoTotal()) {
-								pantalla.setPixelJuego(pox + c, poy + r, (char)190, 8);
+								pantalla.setPixelJuego(pox + c, poy + r, '%', 3);
 							}
 						}
 					}
@@ -157,8 +154,18 @@ public:
 						if (suelo[i] != nullptr && !suelo[i]->getRecogido()) {
 							int ix = suelo[i]->getX() - camX;
 							int iy = suelo[i]->getY() - camY;
-							if (ix >= 0 && ix < pantalla.getAnchoJuego() && iy >= 0 && iy < pantalla.getAltoTotal()) {
-								pantalla.setPixelJuego(ix, iy, '*', 4);
+							int iAncho = suelo[i]->getAncho();
+							int iAlto = suelo[i]->getAlto();
+							int iCol = suelo[i]->getColor();
+							for (int r = 0; r < iAlto; r++) {
+								for (int c = 0; c < iAncho; c++) {
+									if (ix + c >= 0 && ix + c < pantalla.getAnchoJuego() && iy + r >= 0 && iy + r < pantalla.getAltoTotal()) {
+										char ch = suelo[i]->getCaracter(r, c);
+										if (ch != ' ') {
+											pantalla.setPixelJuego(ix + c, iy + r, ch, iCol);
+										}
+									}
+								}
 							}
 						}
 					}
@@ -169,7 +176,7 @@ public:
 							int cx = cajas[i]->getX() - camX;
 							int cy = cajas[i]->getY() - camY;
 							for (int r = 0; r < 3; r++) {
-								for (int c = 0; c < 3; c++) {
+								for (int c = 0; c < 4; c++) {
 									if (cx + c >= 0 && cx + c < pantalla.getAnchoJuego() && cy + r >= 0 && cy + r < pantalla.getAltoTotal()) {
 										pantalla.setPixelJuego(cx + c, cy + r, cajas[i]->getCaracter(r, c), 4);
 									}
@@ -187,7 +194,8 @@ public:
 								if (qx + c >= 0 && qx + c < pantalla.getAnchoJuego() && qy + r >= 0 && qy + r < pantalla.getAltoTotal()) {
 									char ch = q->getCaracter(r, c);
 									if (ch != ' ') {
-										pantalla.setPixelJuego(qx + c, qy + r, ch, 3);
+										int colQ = (r == 2) ? 1 : 3;
+										pantalla.setPixelJuego(qx + c, qy + r, ch, colQ);
 									}
 								}
 							}
@@ -203,7 +211,8 @@ public:
 								if (ax + c >= 0 && ax + c < pantalla.getAnchoJuego() && ay + r >= 0 && ay + r < pantalla.getAltoTotal()) {
 									char ch = a->getCaracter(r, c);
 									if (ch != ' ') {
-										pantalla.setPixelJuego(ax + c, ay + r, ch, 5);
+										int colA = (r == 2) ? 1 : 5;
+										pantalla.setPixelJuego(ax + c, ay + r, ch, colA);
 									}
 								}
 							}
@@ -219,7 +228,8 @@ public:
 								if (rx + col >= 0 && rx + col < pantalla.getAnchoJuego() && ry + row >= 0 && ry + row < pantalla.getAltoTotal()) {
 									char ch = r->getCaracter(row, col);
 									if (ch != ' ') {
-										pantalla.setPixelJuego(rx + col, ry + row, ch, 4);
+										int colR = (row == 2) ? 1 : 4;
+										pantalla.setPixelJuego(rx + col, ry + row, ch, colR);
 									}
 								}
 							}
@@ -241,8 +251,18 @@ public:
 					}
 				}
 
-				if (!nivel.getPromptFlotante().empty() && !nivel.getEnDialogo() && !nivel.getEnModalPersonajes() && !nivel.getEnModalMisiones() && !nivel.getEnModalInventario() && !nivel.getMostrarEstadisticasFin()) {
+				pantalla.renderizarPanelLateral(
+					nivel.getNumeroNivel(),
+					nivel.getNombreNivel(),
+					prota->getNombre(),
+					prota->getVida(),
+					prota->getVidaMaxima()
+				);
+
+				if (!nivel.getPromptFlotante().empty() && !nivel.getEnDialogo() && nivel.getModalActivo() == 0 && !nivel.getMostrarEstadisticasFin()) {
 					pantalla.dibujarPromptFlotante(nivel.getPromptFlotante());
+				} else {
+					pantalla.resetPromptAnimado();
 				}
 
 				if (nivel.getEnDialogo()) {
@@ -314,7 +334,7 @@ public:
 					std::vector<std::string> descItems;
 					Inventario* inv = prota->getInventario();
 					if (inv != nullptr) {
-						for (size_t i = 0; i < 4; i++) {
+						for (size_t i = 0; i < 6; i++) {
 							ItemMagico* it = inv->getItem(i);
 							if (it != nullptr) {
 								nombres.push_back(it->getNombre());
@@ -341,14 +361,6 @@ public:
 						nivel.getQifrey() != nullptr ? nivel.getQifrey()->getConfianza() : 2
 					);
 				}
-
-				pantalla.renderizarPanelLateral(
-					nivel.getNumeroNivel(),
-					nivel.getNombreNivel(),
-					prota->getNombre(),
-					prota->getVida(),
-					prota->getVidaMaxima()
-				);
 
 				pantalla.dibujar();
 			}
