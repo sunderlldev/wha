@@ -70,6 +70,7 @@ private:
             case 6: return BRIGHT_BLUE;
             case 7: return BRIGHT_RED;
             case 8: return BRIGHT_BLACK;
+            case 9: return GREEN;
             default: return RESET;
         }
     }
@@ -127,7 +128,14 @@ public:
             buffer[f] = std::string(anchoTotal, ' ');
             buffer[f][anchoJuego] = '|';
             for (int c = 0; c < anchoTotal; c++) {
-                bufferColor[f][c] = (c == anchoJuego) ? 8 : 0;
+                if (c == anchoJuego) {
+                    bufferColor[f][c] = 8;
+                } else if (c < anchoJuego) {
+                    buffer[f][c] = (char)219;
+                    bufferColor[f][c] = ((f + c) % 2 == 0) ? 2 : 9;
+                } else {
+                    bufferColor[f][c] = 0;
+                }
             }
         }
     }
@@ -745,7 +753,7 @@ public:
 #endif
     }
 
-    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY) {
+    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0) {
         int filasMapa = (int)matrizMapa.size();
         if (filasMapa == 0) return;
         int columnasMapa = (int)matrizMapa[0].size();
@@ -756,29 +764,34 @@ public:
                 int xMundo = camaraX + xPantalla;
                 if (yMundo >= 0 && yMundo < filasMapa && xMundo >= 0 && xMundo < columnasMapa) {
                     char ch = matrizMapa[yMundo][xMundo];
-                    buffer[yPantalla][xPantalla] = ch;
                     if (ch == '~') {
+                        int fase = (xMundo + yMundo + tickAnim) % 3;
+                        char charAgua = (fase == 0) ? '~' : ((fase == 1) ? '-' : '.');
+                        buffer[yPantalla][xPantalla] = charAgua;
                         bufferColor[yPantalla][xPantalla] = 3;
-                    } else if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
-                        bufferColor[yPantalla][xPantalla] = 2;
-                    } else if (ch == '.' || ch == ':' || ch == '=') {
-                        bufferColor[yPantalla][xPantalla] = 4;
-                    } else if (ch == '+' || ch == '-' || ch == '|') {
-                        bufferColor[yPantalla][xPantalla] = 8;
-                    } else if (ch == 'O') {
-                        bufferColor[yPantalla][xPantalla] = 7;
-                    } else if (ch == '*') {
-                        bufferColor[yPantalla][xPantalla] = 4;
-                    } else if (ch == '!') {
-                        bufferColor[yPantalla][xPantalla] = 4;
-                    } else if (ch == '[' || ch == ']') {
-                        bufferColor[yPantalla][xPantalla] = 8;
                     } else {
-                        bufferColor[yPantalla][xPantalla] = 0;
+                        buffer[yPantalla][xPantalla] = ch;
+                        if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
+                            bufferColor[yPantalla][xPantalla] = 2;
+                        } else if (ch == '.' || ch == ':' || ch == '=') {
+                            bufferColor[yPantalla][xPantalla] = 4;
+                        } else if (ch == '+' || ch == '-' || ch == '|') {
+                            bufferColor[yPantalla][xPantalla] = 8;
+                        } else if (ch == 'O') {
+                            bufferColor[yPantalla][xPantalla] = 7;
+                        } else if (ch == '*') {
+                            bufferColor[yPantalla][xPantalla] = 4;
+                        } else if (ch == '!') {
+                            bufferColor[yPantalla][xPantalla] = 4;
+                        } else if (ch == '[' || ch == ']') {
+                            bufferColor[yPantalla][xPantalla] = 8;
+                        } else {
+                            bufferColor[yPantalla][xPantalla] = 0;
+                        }
                     }
                 } else {
-                    buffer[yPantalla][xPantalla] = ' ';
-                    bufferColor[yPantalla][xPantalla] = 0;
+                    buffer[yPantalla][xPantalla] = (char)219;
+                    bufferColor[yPantalla][xPantalla] = ((xPantalla + yPantalla) % 2 == 0) ? 2 : 9;
                 }
             }
         }

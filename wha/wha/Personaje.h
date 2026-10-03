@@ -14,7 +14,7 @@ protected:
     char frame2[4][7];
     int frameActual;
     int temporizadorAnimacion;
-
+    
 public:
     Personaje()
         : x(0), y(0), nombre("Sin Nombre"), vida(3), vidaMaxima(3),
