@@ -14,12 +14,12 @@ private:
             "   ][  "
         };
         static const std::vector<std::string> frondoso = {
-            "    #o#      "
-            "  ####o#     "
-            " #o# \\#|_#,# "
-            "###\\ |/   #o#"
-            " # {}{      #"
-            "    }{{      "
+            "    #o#      ",
+            "  ####o#     ",
+            " #o# \\#|_#,# ",
+            "###\\ |/   #o#",
+            " # {}{      #",
+            "    }{{      ",
             "   ,'  `     "
         };
         static const std::vector<std::string> gigante = {
@@ -56,6 +56,16 @@ public:
         arteAscii(obtenerDiseno(tipo)) {
         this->ancho = (int)arteAscii[0].size();
         this->alto = (int)arteAscii.size();
+    }
+
+    bool colisionaCon(int px, int py) const override {
+        if (!esSolido) return false;
+        int r = py - y;
+        int c = px - x;
+        if (r >= 0 && r < alto && c >= 0 && c < ancho) {
+            return arteAscii[r][c] != ' ';
+        }
+        return false;
     }
 
     void dibujarEnMatriz(std::vector<std::string>& matriz) override {

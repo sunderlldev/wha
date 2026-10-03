@@ -7,7 +7,6 @@
 #include "Habitacion.h"
 #include "Rio.h"
 #include "Gato.h"
-#include "Camino.h"
 
 class Mapa {
 private:
@@ -20,8 +19,10 @@ public:
 	}
 
 	~Mapa() {
-		for (auto obj : objetos) {
-			delete obj;
+		for (size_t i = 0; i < objetos.size(); i++) {
+			if (objetos[i] != nullptr) {
+				delete objetos[i];
+			}
 		}
 		objetos.clear();
 	}
@@ -56,7 +57,7 @@ public:
 		if (x < 0 || x >= columnas || y < 0 || y >= filas) return false;
 
 		for (size_t i = 0; i < objetos.size(); i++) {
-			if (objetos[i]->getTipo() != habitacion && objetos[i]->getTipo() != camino && objetos[i]->colisionaCon(x, y)) {
+			if (objetos[i]->getTipo() != habitacion && objetos[i]->colisionaCon(x, y)) {
 				return false;
 			}
 		}
@@ -70,8 +71,8 @@ public:
 	}
 
 	bool estaEnHabitacion(int px, int py) {
-		for (const auto& obj : objetos) {
-			if (obj->getTipo() == habitacion && obj->estaDentro(px, py)) {
+		for (size_t i = 0; i < objetos.size(); i++) {
+			if (objetos[i] != nullptr && objetos[i]->getTipo() == habitacion && objetos[i]->estaDentro(px, py)) {
 				return true;
 			}
 		}

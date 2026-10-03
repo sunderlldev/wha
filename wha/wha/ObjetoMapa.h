@@ -9,7 +9,6 @@ enum TipoObjeto {
     arbolGigante,
     habitacion,
     rio,
-    camino,
     gato,
     caja,
     letrero
