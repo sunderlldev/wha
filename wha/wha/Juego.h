@@ -5,6 +5,7 @@
 #include "Nivel2.h"
 #include "Nivel3.h"
 #include "Pantalla.h"
+#include "GestorAudio.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -20,27 +21,28 @@ private:
 	int nivelActual;
 	std::vector<Nivel*> listaNivel;
 	Pantalla pantalla;
+	GestorAudio audio;
 	bool redibujarNecesario;
 	int puntajeGlobal;
 	int segundoPrevio;
 	int tickAnimPrevio;
+	int tickLluviaPrevio;
 public:
-	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1) {
+	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1), tickLluviaPrevio(-1) {
 		pantalla.configurarConsola();
+		audio.reproducirNivel(nivelActual + 1);
 		listaNivel.push_back(new Nivel1());
 		listaNivel.push_back(new Nivel2());
 		listaNivel.push_back(new Nivel3());
 		listaNivel[nivelActual]->inciarNivel();
 
 		if (nivelActual == 1) {
-			Nivel2* n2 = dynamic_cast<Nivel2*>(listaNivel[1]);
-			if (n2 != nullptr) {
-				n2->mostrarCinematicaIntro(pantalla);
-			}
+			listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
 		}
 	}
 
 	~Juego() {
+		audio.detenerMusica();
 		for (size_t i = 0; i < listaNivel.size(); i++) {
 			delete listaNivel[i];
 		}
@@ -62,15 +64,19 @@ public:
 			nivelActual++;
 			redibujarNecesario = true;
 			listaNivel[nivelActual]->inciarNivel();
-			if (nivelActual == 1) {
-				Nivel2* n2 = dynamic_cast<Nivel2*>(listaNivel[1]);
-				if (n2 != nullptr) {
-					n2->mostrarCinematicaIntro(pantalla);
-				}
-			}
+			audio.reproducirNivel(nivelActual + 1);
+			listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
 		} else {
 			mostrarDesenlaceFinal();
 		}
+	}
+
+	void iniciarAudioMinijuego() {
+		audio.reproducirMinijuego();
+	}
+
+	void restaurarAudioNivel() {
+		audio.reproducirNivel(nivelActual + 1);
 	}
 
 	void mostrarDesenlaceFinal() {
@@ -79,6 +85,7 @@ public:
 
 	void actualizar() {
 		if (!ejecutando) return;
+		audio.actualizar();
 
 		Nivel& nivel = getNivelActualObj();
 		bool huboCambio = nivel.actualizar();
@@ -108,9 +115,11 @@ public:
 
 		int segActual = nivel.getSegundosTranscurridos();
 		int tickAnim = (int)((clock() * 2) / CLOCKS_PER_SEC);
-		if (segActual != segundoPrevio || tickAnim != tickAnimPrevio) {
+		int tickLluvia = (int)((clock() * 8) / CLOCKS_PER_SEC);
+		if (segActual != segundoPrevio || tickAnim != tickAnimPrevio || tickLluvia != tickLluviaPrevio) {
 			segundoPrevio = segActual;
 			tickAnimPrevio = tickAnim;
+			tickLluviaPrevio = tickLluvia;
 			huboCambio = true;
 		}
 
@@ -148,8 +157,12 @@ public:
 					}
 				}
 
+				bool (*funcCuarto)(int, int) = (nivel.getNumeroNivel() == 2) ? Nivel2::esCuartoEstatico : Nivel1::esCuartoEstatico;
+				bool (*funcCamino)(int, int) = (nivel.getNumeroNivel() == 2) ? nullptr : Nivel1::esCaminoEstatico;
+
 				pantalla.limpiarBuffer();
-				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), Nivel1::esCuartoEstatico, Nivel1::esCaminoEstatico);
+				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), funcCuarto, funcCamino);
+				pantalla.aplicarLluvia(tickLluvia, camX, camY, nivel.getEnCuartoRicheh(), funcCuarto);
 
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
 					int pox = nivel.getPozoX() - camX;

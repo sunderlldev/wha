@@ -45,11 +45,25 @@ public:
 		}
 	}
 
-	void mostrarCinematicaIntro(Pantalla&) override {
+    static bool esCuartoEstatico(int px, int py) {
+        if (px >= 10 && px <= 50 && py >= 5 && py <= 16) return true;
+        if (px >= 41 && px <= 73 && py >= 23 && py <= 35) return true;
+        if (px >= 106 && px <= 137 && py >= 23 && py <= 34) return true;
+        if (px >= 144 && px <= 163 && py >= 26 && py <= 34) return true;
+        if (px >= 12 && px <= 30 && py >= 33 && py <= 41) return true; 
+        if (px >= 41 && px <= 73 && py >= 42 && py <= 55) return true;
+        if (px >= 108 && px <= 129 && py >= 39 && py <= 53) return true;
+        if (px >= 40 && px <= 72 && py >= 72 && py <= 84) return true;
+        if (px >= 84 && px <= 130 && py >= 68 && py <= 73) return true;
+        return false;
+    }
+
+	void mostrarCinematicaIntro(Pantalla& pantalla) override {
 		Cinematica* introNivel2 = new Cinematica();
 		introNivel2->agregarCuadro(Nivel2_Inicio01, "Es Ininia", 3000);
 		introNivel2->reproducir();
 		delete introNivel2;
+		pantalla.mostrarHistoriaNivel2();
 	}
 
 	virtual void inciarNivel() override {

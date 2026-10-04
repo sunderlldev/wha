@@ -98,5 +98,22 @@
     <ClInclude Include="Myrphon.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="GestorAudio.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="nivel1.mp3">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="nivel2.mp3">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="nivel3.mp3">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
+    <Media Include="minijuego.mp3">
+      <Filter>Archivos de recursos</Filter>
+    </Media>
   </ItemGroup>
 </Project>

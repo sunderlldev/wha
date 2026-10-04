@@ -837,6 +837,109 @@ public:
 #endif
     }
 
+    void mostrarHistoriaNivel2() {
+        limpiarBufferCompleto();
+        int x = 7;
+        int y = 2;
+        int ancho = 106;
+        int alto = 36;
+        dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+        std::string tit1 = "W I T C H   H A T   A T E L I E R";
+        std::string tit2 = "A C T O   I I :   E L   L A B E R I N T O   D E L   P U E B L O";
+        int cx1 = x + (ancho - longitudVisible(tit1)) / 2;
+        int cx2 = x + (ancho - longitudVisible(tit2)) / 2;
+        setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
+        setTextoPantallaCompleta(cx2, y + 3, tit2, 2);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 5][x + c] = L'=';
+            bufferColor[y + 5][x + c] = 8;
+        }
+
+        std::string sub1 = "=== LA TRAVESÍA DE TARTAH EN EL PUEBLO DE KALN ===";
+        int cxSub1 = x + (ancho - longitudVisible(sub1)) / 2;
+        setTextoPantallaCompleta(cxSub1, y + 7, sub1, 4);
+
+        setTextoPantallaCompleta(x + 5, y + 9,  "Lejos del atelier de Qifrey, en el bullicioso y laberíntico pueblo de Kaln,", 1);
+        setTextoPantallaCompleta(x + 5, y + 10, "Tartah, el joven orfebre y aprendiz de hechicero, busca con angustia", 1);
+        setTextoPantallaCompleta(x + 5, y + 11, "a su amigo Coustas, quien ha desaparecido tras el asedio de sombras arcanas.", 1);
+
+        setTextoPantallaCompleta(x + 5, y + 13, "Las calles empedradas están custodiadas por patrullas de los Caballeros Moralis,", 1);
+        setTextoPantallaCompleta(x + 5, y + 14, "mientras misteriosos susurros señalan que la hechicera Ininia estuvo aquí.", 1);
+        setTextoPantallaCompleta(x + 5, y + 15, "Tartah deberá sortear callejones, casas y cuarteles en busca de la verdad.", 1);
+
+        setTextoPantallaCompleta(x + 5, y + 17, "El cielo se ha cerrado en una densa llovizna constante sobre los tejados del pueblo.", 1);
+        setTextoPantallaCompleta(x + 5, y + 18, "Cada rincón oculta una pista vital y cada habitante guarda secretos.", 1);
+        setTextoPantallaCompleta(x + 5, y + 19, "¡El destino de Coustas y los misterios del Árbol de Plata aguardan!", 1);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 21][x + c] = L'-';
+            bufferColor[y + 21][x + c] = 8;
+        }
+
+        std::string sub2 = "=== OBJETIVOS DEL NIVEL 2: EL LABERINTO DEL PUEBLO ===";
+        int cxSub2 = x + (ancho - longitudVisible(sub2)) / 2;
+        setTextoPantallaCompleta(cxSub2, y + 23, sub2, 2);
+
+        setTextoPantallaCompleta(x + 5, y + 25, "* Recorre el laberinto de calles, chozas, panadería y botica de Kaln.", 1);
+        setTextoPantallaCompleta(x + 5, y + 26, "* Investiga los letreros y testimonios dejados por los aldeanos.", 1);
+        setTextoPantallaCompleta(x + 5, y + 27, "* Sigue los rastros de Ininia y busca pistas sobre el paradero de Coustas.", 1);
+        setTextoPantallaCompleta(x + 5, y + 28, "* Encuentra el camino para cruzar hacia el Árbol de Plata.", 1);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 30][x + c] = L'=';
+            bufferColor[y + 30][x + c] = 8;
+        }
+
+        std::string pie = "[ Presiona ENTER para iniciar el Nivel 2 ]";
+        int cxPie = x + (ancho - longitudVisible(pie)) / 2;
+        setTextoPantallaCompleta(cxPie, y + 32, pie, 4);
+
+        dibujar();
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int tecla = _getch();
+                if (tecla == 0 || tecla == 224) {
+                    tecla = _getch();
+                }
+                if (tecla == 13 || tecla == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void aplicarLluvia(int tickLluvia, int camX, int camY, bool enSubMapa, bool (*esCuartoFunc)(int, int) = nullptr) {
+        if (enSubMapa) return;
+        for (int y = 0; y < altoTotal; y++) {
+            int ym = camY + y;
+            for (int x = 0; x < anchoJuego; x++) {
+                int xm = camX + x;
+                if (esCuartoFunc != nullptr && esCuartoFunc(xm, ym)) continue;
+                wchar_t actual = buffer[y][x];
+                if (actual == L'+' || actual == L'-' || actual == L'|' || actual == L'[' || actual == L']' || actual == L'!' || actual == L'O') continue;
+                unsigned int u = (unsigned int)(x + tickLluvia) & 0xFFFFu;
+                unsigned int v = (unsigned int)(y - tickLluvia * 2) & 0xFFFFu;
+                unsigned int h = ((u * 2246822519u) ^ (v * 3266489917u));
+                h = (h ^ (h >> 15)) * 2654435761u;
+                if ((h % 100u) < 2u) {
+                    if (actual == L'~' || actual == L'-') {
+                        buffer[y][x] = L'.';
+                        bufferColor[y][x] = 3;
+                    } else {
+                        buffer[y][x] = (h % 2u == 0) ? L'/' : L'\'';
+                        bufferColor[y][x] = 3;
+                    }
+                }
+            }
+        }
+    }
+
     void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0, bool enSubMapa = false, bool (*esCuartoFunc)(int, int) = nullptr, bool (*esCaminoFunc)(int, int) = nullptr) {
         int filasMapa = (int)matrizMapa.size();
         if (filasMapa == 0) return;

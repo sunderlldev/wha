@@ -473,9 +473,11 @@ public:
 			if (mostrarEstadisticasFin) {
 				if (tecla == '1' || tecla == 13) {
 					mostrarEstadisticasFin = false;
+					completado = true;
 					huboCambio = true;
 				} else if (tecla == 'c' || tecla == 'C' || tecla == 27) {
 					mostrarEstadisticasFin = false;
+					completado = false;
 					huboCambio = true;
 				}
 				return huboCambio;

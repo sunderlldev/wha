@@ -147,6 +147,13 @@
     <ClInclude Include="Animacion.h" />
     <ClInclude Include="Letrero.h" />
     <ClInclude Include="Myrphon.h" />
+    <ClInclude Include="GestorAudio.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="nivel1.mp3" />
+    <Media Include="nivel2.mp3" />
+    <Media Include="nivel3.mp3" />
+    <Media Include="minijuego.mp3" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
