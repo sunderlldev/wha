@@ -7,11 +7,14 @@
 #include "Mapa.h"
 #include "NPC.h"
 #include "Protagonista.h"
+#include "Letrero.h"
 
 class CuartoRicheh {
 private:
 	Mapa* mapa;
 	NPC* richeh;
+	Letrero* letreroCuriosidades;
+	Letrero* letreroLore;
 	bool activo;
 	int cocoPrevX;
 	int cocoPrevY;
@@ -49,16 +52,20 @@ public:
 	}
 
 	CuartoRicheh()
-		: mapa(nullptr), richeh(nullptr), activo(false),
-		  cocoPrevX(0), cocoPrevY(0),
+		: mapa(nullptr), richeh(nullptr), letreroCuriosidades(nullptr), letreroLore(nullptr),
+		  activo(false), cocoPrevX(0), cocoPrevY(0),
 		  transicionBajando(false), transicionSubiendo(false) {
 		mapa = new Mapa(25, 82);
 		std::vector<std::string> m;
 		cargarMatriz(m);
 		mapa->cargarMatriz(m);
-		richeh = new NPC(22, 10, "Richeh", "Aprendiz de Maga");
+		richeh = new NPC(55, 12, "Richeh", "Aprendiz de Maga");
 		richeh->setConfianza(1);
 		richeh->setYaHablo(false);
+		letreroCuriosidades = new Letrero(22, 11, "Curiosidades de Richeh");
+		letreroLore = new Letrero(40, 11, "Diario del Atelier: Myrphon Perdido");
+		mapa->setCaracter(22, 11, '['); mapa->setCaracter(23, 11, '!'); mapa->setCaracter(24, 11, ']');
+		mapa->setCaracter(40, 11, '['); mapa->setCaracter(41, 11, '!'); mapa->setCaracter(42, 11, ']');
 	}
 
 	~CuartoRicheh() {
@@ -70,6 +77,14 @@ public:
 			delete richeh;
 			richeh = nullptr;
 		}
+		if (letreroCuriosidades != nullptr) {
+			delete letreroCuriosidades;
+			letreroCuriosidades = nullptr;
+		}
+		if (letreroLore != nullptr) {
+			delete letreroLore;
+			letreroLore = nullptr;
+		}
 	}
 
 	void reiniciar() {
@@ -77,10 +92,31 @@ public:
 		transicionBajando = false;
 		transicionSubiendo = false;
 		if (richeh != nullptr) {
-			richeh->setX(22);
-			richeh->setY(10);
+			richeh->setX(55);
+			richeh->setY(12);
 			richeh->setConfianza(1);
 			richeh->setYaHablo(false);
+			richeh->setExpresion(0);
+		}
+		if (mapa != nullptr) {
+			std::vector<std::string> m;
+			cargarMatriz(m);
+			mapa->cargarMatriz(m);
+			mapa->setCaracter(22, 11, '['); mapa->setCaracter(23, 11, '!'); mapa->setCaracter(24, 11, ']');
+			mapa->setCaracter(40, 11, '['); mapa->setCaracter(41, 11, '!'); mapa->setCaracter(42, 11, ']');
+		}
+	}
+
+	void colocarMyrphon() {
+		if (mapa != nullptr) {
+			mapa->setCaracter(64, 12, '_');
+			mapa->setCaracter(65, 12, 'v');
+			mapa->setCaracter(66, 12, '_');
+			mapa->setCaracter(63, 13, '(');
+			mapa->setCaracter(64, 13, 'o');
+			mapa->setCaracter(65, 13, ',');
+			mapa->setCaracter(66, 13, 'o');
+			mapa->setCaracter(67, 13, ')');
 		}
 	}
 
@@ -89,6 +125,8 @@ public:
 
 	Mapa* getMapa() { return mapa; }
 	NPC* getRicheh() { return richeh; }
+	Letrero* getLetreroCuriosidades() { return letreroCuriosidades; }
+	Letrero* getLetreroLore() { return letreroLore; }
 
 	bool getTransicionBajando() const { return transicionBajando; }
 	void setTransicionBajando(bool tb) { transicionBajando = tb; }
@@ -116,6 +154,14 @@ public:
 
 	bool estaCercaDelPozo(int px, int py) const {
 		return (abs(px - 9) <= 4 && abs(py - 5) <= 4);
+	}
+
+	bool estaCercaDeLetreroCuriosidades(int px, int py) const {
+		return (abs(px - 22) <= 3 && abs(py - 11) <= 2);
+	}
+
+	bool estaCercaDeLetreroLore(int px, int py) const {
+		return (abs(px - 40) <= 3 && abs(py - 11) <= 2);
 	}
 };
 

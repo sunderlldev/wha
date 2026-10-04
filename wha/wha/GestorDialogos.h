@@ -13,20 +13,39 @@ private:
 	int estadoDialogo;
 	std::string npcDialogoActual;
 	int respuestaInicialAgott;
+	bool richehEnojada;
+	bool misionMyrphonActiva;
+	bool myrphonRescatado;
+	bool dioVaraRicheh;
+	int cartelCuriosidad;
 
 public:
-	GestorDialogos() : enDialogo(false), estadoDialogo(0), npcDialogoActual(""), respuestaInicialAgott(0) {}
+	GestorDialogos()
+		: enDialogo(false), estadoDialogo(0), npcDialogoActual(""),
+		  respuestaInicialAgott(0), richehEnojada(false),
+		  misionMyrphonActiva(false), myrphonRescatado(false),
+		  dioVaraRicheh(false), cartelCuriosidad(0) {}
 	~GestorDialogos() {}
 
 	bool getEnDialogo() const { return enDialogo; }
 	int getEstadoDialogo() const { return estadoDialogo; }
 	std::string getNpcDialogoActual() const { return npcDialogoActual; }
 	int getRespuestaInicialAgott() const { return respuestaInicialAgott; }
+	bool getRichehEnojada() const { return richehEnojada; }
+	bool getMisionMyrphonActiva() const { return misionMyrphonActiva; }
+	bool getMyrphonRescatado() const { return myrphonRescatado; }
+	bool getDioVaraRicheh() const { return dioVaraRicheh; }
+	int getCartelCuriosidad() const { return cartelCuriosidad; }
 
 	void setEnDialogo(bool ed) { enDialogo = ed; }
 	void setEstadoDialogo(int ed) { estadoDialogo = ed; }
 	void setNpcDialogoActual(const std::string& n) { npcDialogoActual = n; }
 	void setRespuestaInicialAgott(int r) { respuestaInicialAgott = r; }
+	void setRichehEnojada(bool re) { richehEnojada = re; }
+	void setMisionMyrphonActiva(bool ma) { misionMyrphonActiva = ma; }
+	void setMyrphonRescatado(bool mr) { myrphonRescatado = mr; }
+	void setDioVaraRicheh(bool dv) { dioVaraRicheh = dv; }
+	void setCartelCuriosidad(int cc) { cartelCuriosidad = cc; }
 
 	void iniciarDialogo(const std::string& npc, int estadoInicial) {
 		enDialogo = true;
@@ -49,7 +68,12 @@ public:
 	                         std::string& hablante, std::string& rol, int& confianza,
 	                         std::vector<std::string>& lineas,
 	                         std::vector<std::string>& opciones) {
-		if (estadoDialogo >= 300) {
+		(void)dioVaraRicheh;
+		if (estadoDialogo >= 400) {
+			hablante = "Letrero";
+			rol = "Informacion";
+			confianza = 0;
+		} else if (estadoDialogo >= 300) {
 			hablante = (richeh != nullptr) ? richeh->getNombre() : "Richeh";
 			rol = (richeh != nullptr) ? richeh->getRolPerspectiva() : "Aprendiz de Maga";
 			confianza = (richeh != nullptr) ? richeh->getConfianza() : 0;
@@ -249,16 +273,153 @@ public:
 			break;
 
 		case 300:
-			if (!dioVaraRicheh) {
-				lineas.push_back("Hola Coco... Que sorpresa verte por aqui abajo.");
-				lineas.push_back("Toma mi vieja vara magica. Con ella podras");
-				lineas.push_back("derribar muros de piedra lanzando fuego.");
-				opciones.push_back("[1] Muchas gracias Richeh!");
-			} else {
-				lineas.push_back("Usa la vara magica con sabiduria, Coco.");
-				lineas.push_back("Recuerda que el fuego magico responde a tu voluntad.");
-				opciones.push_back("[1] Entendido Richeh!");
-			}
+			lineas.push_back("*llorando*");
+			opciones.push_back("[1] Hola, porque estas llorando?");
+			opciones.push_back("[2] Disculpa... cai a este pozo buscando un objeto magico...");
+			break;
+
+		case 301:
+			lineas.push_back("...No es de tu incumbencia. Vete...");
+			lineas.push_back("...Es mi culpa por no haberlo sujetado mas fuerte.");
+			opciones.push_back("[1] Que? Pero como te puedo ayudar?");
+			opciones.push_back("[2] Por eso estas llorando?");
+			break;
+
+		case 302:
+			lineas.push_back("¿Ayudarme?... No creo que puedas.");
+			lineas.push_back("...Mi Myrphon todavia no regresa. Se quedo atrapado");
+			lineas.push_back("en esa horrible cueva Serpentback cuando nos atacaron los magos oscuros...");
+			lineas.push_back("...Si de verdad quieres ayudar, traelo de vuelta a este cuarto.");
+			lineas.push_back("A cambio te dare una Varita Magica que ya no uso.");
+			opciones.push_back("[1] Acepto, traere a Myrphon de vuelta!");
+			break;
+
+		case 303:
+			lineas.push_back("¡No tienes idea de nada! ¡Largate!");
+			lineas.push_back("...¡No quiero volver a ver tu cara por aqui!");
+			opciones.push_back("[1] Salir...");
+			break;
+
+		case 310:
+			lineas.push_back("¿Un item magico? Que persistentes son los viajeros...");
+			lineas.push_back("...Tengo una Varita Magica que ya no quiero usar.");
+			lineas.push_back("No me interesa la magia tradicional de la Alianza...");
+			lineas.push_back("...Pero no te la dare gratis. Mi mente no esta para negociar");
+			lineas.push_back("mientras mi pobre Myrphon siga perdido en la oscuridad.");
+			opciones.push_back("[1] Lamento escuchar eso... Como te puedo ayudar a recuperarlo?");
+			opciones.push_back("[2] Vaya, que mal, y... por un simple animal te pones a llorar?");
+			break;
+
+		case 311:
+			lineas.push_back("Mi Myrphon se asusto por el ataque de unos magos oscuros");
+			lineas.push_back("en el laberinto subterraneo Serpentback...");
+			lineas.push_back("...Si entras alli y lo traes a salvo a este cuarto del pozo,");
+			lineas.push_back("la Varita Magica sera tuya. ¿Trato?");
+			opciones.push_back("[1] Si.");
+			break;
+
+		case 312:
+			lineas.push_back("¡No es un simple animal! ¡Es mi amigo!");
+			lineas.push_back("...¡Vete de mi cuarto ahora mismo!");
+			opciones.push_back("[1] Salir...");
+			break;
+
+		case 320:
+			lineas.push_back("¿Que quieres ahora? Te dije que te largaras.");
+			opciones.push_back("[1] Esta bien, ya me iba");
+			opciones.push_back("[2] Espera, hablo en serio... Quiero ayudarte a buscar a Myrphon");
+			break;
+
+		case 321:
+			lineas.push_back("(Te mira de reojo de forma desconfiada) ...¿De verdad?...");
+			lineas.push_back("...Esta bien. Se perdio en el laberinto Serpentback por culpa");
+			lineas.push_back("de unos magos oscuros. Traelo de vuelta a este cuarto.");
+			lineas.push_back("Si lo logras, te dare la Varita Magica que buscas. No me falles.");
+			opciones.push_back("[1] Hare lo mejor que pueda y te lo traere!");
+			break;
+
+		case 330:
+			lineas.push_back("¿Pudiste encontrarlo? ¿Donde esta mi Myrphon?");
+			opciones.push_back("[1] Aun no...");
+			break;
+
+		case 331:
+			lineas.push_back("Por favor, date prisa... El laberinto Serpentback es muy oscuro");
+			lineas.push_back("y debe tener mucho miedo. Estare esperando aqui.");
+			opciones.push_back("[1] Entendido...");
+			break;
+
+		case 350:
+			lineas.push_back("(Sus ojos se abren de par en par al ver al animal) \"¡¡Myrphon!!\"");
+			opciones.push_back("[1] Aqui esta, sano y salvo.");
+			break;
+
+		case 351:
+			lineas.push_back("(Abraza fuertemente a su mascota mientras llora de alegria)");
+			lineas.push_back("¡Muchas gracias! Pense que no volveria a verlo...");
+			lineas.push_back("...Lo prometido es deuda. Toma esto, es la Varita Magica");
+			lineas.push_back("de la Alianza. A mi no me sirve para mi tipo de magia,");
+			lineas.push_back("pero a ti te sera muy util... Gracias de nuevo, aventurero.");
+			lineas.push_back("Ahora, si me disculpas, pasare tiempo con mi amigo.");
+			opciones.push_back("[1] Muchas gracias Richeh!");
+			break;
+
+		case 360:
+			lineas.push_back("( •u• ): Hola!! Myrphon y yo estamos muy felices");
+			lineas.push_back("gracias a ti. Ten cuidado en tus viajes!!");
+			opciones.push_back("[1] Nos vemos Richeh!");
+			break;
+
+		case 400:
+			lineas.push_back("[DATO CURIOSO DE RICHEH #1]");
+			lineas.push_back("Richeh es hermana mayor de Eini, uno de los mejores estudiantes");
+			lineas.push_back("de la estricta academia de magos (la Alianza)...");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 401:
+			lineas.push_back("...Mientras el es perfeccionista, sigue todas las reglas");
+			lineas.push_back("y se preocupa por el estatus, Richeh lo ignora activamente");
+			lineas.push_back("y considera que la academia es una carcel que destruye la creatividad.");
+			opciones.push_back("[1] Cerrar");
+			break;
+
+		case 402:
+			lineas.push_back("[DATO CURIOSO DE RICHEH #2]");
+			lineas.push_back("Cuando Richeh se enfada o no quiere hacer algo, se pone");
+			lineas.push_back("rigida como un mueble y sus companeras tienen que");
+			lineas.push_back("cargarla en peso para moverla.");
+			opciones.push_back("[1] Cerrar");
+			break;
+
+		case 404:
+			lineas.push_back("[DATO CURIOSO DE RICHEH #3]");
+			lineas.push_back("La autora, Kamome Shirahama, diseno las tunicas y el cabello");
+			lineas.push_back("de Richeh con lineas muy rectas, pesadas y rigidas...");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 405:
+			lineas.push_back("...para reflejar visualmente lo 'cuadrada' y terca");
+			lineas.push_back("que es su personalidad.");
+			opciones.push_back("[1] Cerrar");
+			break;
+
+		case 410:
+			lineas.push_back("[DIARIO DEL ATELIER: MYRPHON PERDIDO]");
+			lineas.push_back("Richeh, companera de cuarto de Agott, no le gusta las visitas");
+			lineas.push_back("desde que se perdio Myrphon, un pequeno pinguino con rasgos de grifo.");
+			lineas.push_back("Myrphon se perdio tras el ataque inesperado de unos magos oscuros");
+			lineas.push_back("en el laberinto subterraneo Serpentback durante el segundo examen...");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 411:
+			lineas.push_back("...El examen evaluaba si un aprendiz usa la magia en secreto.");
+			lineas.push_back("Se cancelo por el caos, el pobre Myrphon quedo atrapado.");
+			lineas.push_back("Richeh y Agott tienen la esperanza de que algun aventurero");
+			lineas.push_back("valiente pueda encontrarlo sano y salvo.");
+			opciones.push_back("[1] Cerrar");
 			break;
 
 		default:
@@ -445,18 +606,106 @@ public:
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 300) {
-			if (!dioVaraRicheh) {
-				dioVaraRicheh = true;
-				if (inv != nullptr && !inv->tieneItem("Vara magica")) {
-					inv->agregarItem(new ItemMagico(0, 0, "Vara magica", "Vara de la infancia de Richeh con la que practicaba de pequena. Lanza bolas de fuego magico para destruir obstaculos de piedra.", "Herramienta Magica", true));
-					puntosMisiones += 25;
-					promptFlotante = "[Recogiste: Vara magica]";
-				}
-				if (richeh != nullptr) {
-					richeh->setYaHablo(true);
-					richeh->setConfianza(2);
-				}
+			if (opcion == 1) {
+				estadoDialogo = 301;
+			} else if (opcion == 2) {
+				estadoDialogo = 310;
 			}
+		} else if (estadoDialogo == 301) {
+			if (opcion == 1) {
+				estadoDialogo = 302;
+			} else if (opcion == 2) {
+				if (richeh != nullptr && richeh->getConfianza() > 0) {
+					richeh->setConfianza(richeh->getConfianza() - 1);
+				}
+				richehEnojada = true;
+				estadoDialogo = 303;
+			}
+		} else if (estadoDialogo == 302) {
+			misionMyrphonActiva = true;
+			if (richeh != nullptr && richeh->getConfianza() < 2) {
+				richeh->setConfianza(richeh->getConfianza() + 1);
+			}
+			puntosMisiones += 15;
+			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 303) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 310) {
+			if (opcion == 1) {
+				estadoDialogo = 311;
+			} else if (opcion == 2) {
+				if (richeh != nullptr && richeh->getConfianza() > 0) {
+					richeh->setConfianza(richeh->getConfianza() - 1);
+				}
+				richehEnojada = true;
+				estadoDialogo = 312;
+			}
+		} else if (estadoDialogo == 311) {
+			misionMyrphonActiva = true;
+			puntosMisiones += 15;
+			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 312) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 320) {
+			if (opcion == 1) {
+				enDialogo = false;
+				estadoDialogo = 0;
+			} else if (opcion == 2) {
+				estadoDialogo = 321;
+			}
+		} else if (estadoDialogo == 321) {
+			misionMyrphonActiva = true;
+			richehEnojada = false;
+			puntosMisiones += 15;
+			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 330) {
+			estadoDialogo = 331;
+		} else if (estadoDialogo == 331) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 350) {
+			estadoDialogo = 351;
+		} else if (estadoDialogo == 351) {
+			dioVaraRicheh = true;
+			this->dioVaraRicheh = true;
+			misionMyrphonActiva = false;
+			if (inv != nullptr && !inv->tieneItem("Vara magica")) {
+				inv->agregarItem(new ItemMagico(0, 0, "Vara magica", "Varita Magica de la Alianza entregada por Richeh tras rescatar a Myrphon. Permite lanzar fuego para derribar muros.", "Herramienta Magica", true));
+				puntosMisiones += 50;
+				promptFlotante = "[Recibiste: Vara magica]";
+			}
+			if (richeh != nullptr) {
+				richeh->setYaHablo(true);
+				richeh->setConfianza(2);
+				richeh->setExpresion(2);
+			}
+			objetivoActual = "Usar la Vara magica para derribar el muro del almacen";
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 360) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 400) {
+			estadoDialogo = 401;
+		} else if (estadoDialogo == 401 || estadoDialogo == 402) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 404) {
+			estadoDialogo = 405;
+		} else if (estadoDialogo == 405) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 410) {
+			estadoDialogo = 411;
+		} else if (estadoDialogo == 411) {
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else {

@@ -118,6 +118,33 @@ public:
 		if (confianza == 1) return "Neutral";
 		return "Amigos";
 	}
+
+	void setExpresion(int exp) {
+		if (this->nombre == "Richeh") {
+			if (exp == 1) {
+				frame1[2][2] = 'O';
+				frame1[2][3] = '_';
+				frame1[2][4] = 'O';
+				frame2[2][2] = 'O';
+				frame2[2][3] = '_';
+				frame2[2][4] = 'O';
+			} else if (exp == 2) {
+				frame1[2][2] = '^';
+				frame1[2][3] = 'u';
+				frame1[2][4] = '^';
+				frame2[2][2] = '^';
+				frame2[2][3] = 'u';
+				frame2[2][4] = '^';
+			} else {
+				frame1[2][2] = '.';
+				frame1[2][3] = '_';
+				frame1[2][4] = '.';
+				frame2[2][2] = '-';
+				frame2[2][3] = '_';
+				frame2[2][4] = '-';
+			}
+		}
+	}
 };
 
 #endif
