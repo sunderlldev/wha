@@ -41,7 +41,7 @@ private:
     int altoTotal;
     int anchoJuego;
     int anchoPanel;
-    std::vector<std::string> buffer;
+    std::vector<std::wstring> buffer;
     std::vector<std::vector<int>> bufferColor;
     std::string ultimoDialogoHablante;
     std::string ultimoDialogoTexto;
@@ -57,24 +57,62 @@ private:
         return len;
     }
 
-    std::string encuadrarFilaPanel(const std::string& texto, int ancho) const {
-        std::string res = " " + texto;
-        int vLen = longitudVisible(res);
-        if (vLen >= ancho - 1) {
-            int curV = 0;
-            size_t cutIdx = 0;
-            for (size_t i = 0; i < res.length(); i++) {
-                if (((unsigned char)res[i] & 0xC0) != 0x80) {
-                    if (curV >= ancho - 1) break;
-                    curV++;
-                }
-                cutIdx = i + 1;
+    std::vector<wchar_t> aWideString(const std::string& str) const {
+        std::vector<wchar_t> res;
+        size_t i = 0;
+        while (i < str.length()) {
+            unsigned char c0 = (unsigned char)str[i];
+            if (c0 == 219) {
+                res.push_back(L'█');
+                i++;
+            } else if ((c0 & 0x80) == 0) {
+                res.push_back((wchar_t)c0);
+                i++;
+            } else if ((c0 & 0xE0) == 0xC0 && i + 1 < str.length()) {
+                wchar_t wc = (wchar_t)(((c0 & 0x1F) << 6) | ((unsigned char)str[i + 1] & 0x3F));
+                res.push_back(wc);
+                i += 2;
+            } else if ((c0 & 0xF0) == 0xE0 && i + 2 < str.length()) {
+                wchar_t wc = (wchar_t)(((c0 & 0x0F) << 12) | (((unsigned char)str[i + 1] & 0x3F) << 6) | ((unsigned char)str[i + 2] & 0x3F));
+                res.push_back(wc);
+                i += 3;
+            } else {
+                res.push_back((wchar_t)c0);
+                i++;
             }
-            res = res.substr(0, cutIdx);
-        } else {
-            res += std::string(ancho - 1 - vLen, ' ');
         }
-        return res + "|";
+        return res;
+    }
+
+    std::wstring encuadrarFilaPanelW(const std::string& texto, int ancho) const {
+        std::vector<wchar_t> wchars = aWideString(" " + texto);
+        std::wstring res;
+        for (size_t i = 0; i < wchars.size() && (int)res.length() < ancho - 1; i++) {
+            res += wchars[i];
+        }
+        while ((int)res.length() < ancho - 1) {
+            res += L' ';
+        }
+        res += L'|';
+        return res;
+    }
+
+    const wchar_t* obtenerCodigoColorW(int color) const {
+        switch (color) {
+            case 1: return L"\033[97m";
+            case 2: return L"\033[92m";
+            case 3: return L"\033[96m";
+            case 4: return L"\033[93m";
+            case 5: return L"\033[95m";
+            case 6: return L"\033[94m";
+            case 7: return L"\033[91m";
+            case 8: return L"\033[90m";
+            case 9: return L"\033[32m";
+            case 10: return L"\033[38;5;208m";
+            case 11: return L"\033[38;5;28m";
+            case 12: return L"\033[38;5;130m";
+            default: return L"\033[0m";
+        }
     }
 
     const char* obtenerCodigoColor(int color) const {
@@ -98,7 +136,7 @@ private:
 public:
     Pantalla() : anchoTotal(120), altoTotal(40), anchoJuego(84), anchoPanel(35),
                  ultimoDialogoHablante(""), ultimoDialogoTexto(""), ultimoPromptTexto("") {
-        buffer = std::vector<std::string>(altoTotal, std::string(anchoTotal, ' '));
+        buffer = std::vector<std::wstring>(altoTotal, std::wstring(anchoTotal, L' '));
         bufferColor = std::vector<std::vector<int>>(altoTotal, std::vector<int>(anchoTotal, 0));
     }
 
@@ -146,15 +184,15 @@ public:
 
     void limpiarBuffer() {
         for (int f = 0; f < altoTotal; f++) {
-            buffer[f] = std::string(anchoTotal, ' ');
-            buffer[f][anchoJuego] = '|';
+            buffer[f] = std::wstring(anchoTotal, L' ');
+            buffer[f][anchoJuego] = L'|';
             for (int c = 0; c < anchoTotal; c++) {
                 if (c == anchoJuego) {
                     bufferColor[f][c] = 8;
                 } else if (c < anchoJuego) {
                     int r = std::abs(c * 7 + f * 13) % 3;
-                    buffer[f][c] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
-                    bufferColor[f][c] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
+                    buffer[f][c] = (r == 0) ? L'"' : ((r == 1) ? L'\'' : L',');
+                    bufferColor[f][c] = 11;
                 } else {
                     bufferColor[f][c] = 0;
                 }
@@ -164,17 +202,18 @@ public:
 
     void setPixelJuego(int x, int y, char c, int color = 0) {
         if (x >= 0 && x < anchoJuego && y >= 0 && y < altoTotal) {
-            buffer[y][x] = c;
+            buffer[y][x] = ((unsigned char)c == 219) ? L'█' : (wchar_t)(unsigned char)c;
             bufferColor[y][x] = color;
         }
     }
 
     void setTextoJuego(int x, int y, const std::string& texto, int color = 0) {
         if (y < 0 || y >= altoTotal) return;
-        for (int i = 0; i < (int)texto.length(); i++) {
-            int posX = x + i;
+        std::vector<wchar_t> wchars = aWideString(texto);
+        for (size_t i = 0; i < wchars.size(); i++) {
+            int posX = x + (int)i;
             if (posX >= 0 && posX < anchoJuego) {
-                buffer[y][posX] = texto[i];
+                buffer[y][posX] = wchars[i];
                 bufferColor[y][posX] = color;
             }
         }
@@ -186,16 +225,16 @@ public:
             for (int c = 0; c < ancho; c++) {
                 if (r == 0 || r == alto - 1) {
                     if (c == 0 || c == ancho - 1) {
-                        buffer[y + r][x + c] = '+';
+                        buffer[y + r][x + c] = L'+';
                     } else {
-                        buffer[y + r][x + c] = '-';
+                        buffer[y + r][x + c] = L'-';
                     }
                     bufferColor[y + r][x + c] = colorBorde;
                 } else if (c == 0 || c == ancho - 1) {
-                    buffer[y + r][x + c] = '|';
+                    buffer[y + r][x + c] = L'|';
                     bufferColor[y + r][x + c] = colorBorde;
                 } else {
-                    buffer[y + r][x + c] = ' ';
+                    buffer[y + r][x + c] = L' ';
                     bufferColor[y + r][x + c] = 0;
                 }
             }
@@ -203,7 +242,7 @@ public:
     }
 
     void dibujarPromptFlotante(const std::string& texto) {
-        int anchoCaja = (int)texto.length() + 4;
+        int anchoCaja = longitudVisible(texto) + 4;
         if (anchoCaja > anchoJuego - 4) anchoCaja = anchoJuego - 4;
         int startX = (anchoJuego - anchoCaja) / 2;
         int startY = altoTotal - 4;
@@ -211,13 +250,15 @@ public:
 
         if (texto != ultimoPromptTexto && (texto.find("Coco:") != std::string::npos || texto.find("Letrero:") != std::string::npos)) {
             ultimoPromptTexto = texto;
-            for (size_t i = 0; i < texto.length(); i++) {
+            std::vector<wchar_t> wchars = aWideString(texto);
+            for (size_t i = 0; i < wchars.size(); i++) {
                 if (startX + 2 + (int)i < anchoJuego - 2) {
-                    setPixelJuego(startX + 2 + (int)i, startY + 1, texto[i], 1);
+                    buffer[startY + 1][startX + 2 + (int)i] = wchars[i];
+                    bufferColor[startY + 1][startX + 2 + (int)i] = 1;
                 }
                 dibujar();
 #ifdef _WIN32
-                if (texto[i] != ' ' && i % 3 == 0) {
+                if (wchars[i] != L' ' && i % 3 == 0) {
                     int freq = (texto.find("Coco:") != std::string::npos) ? 720 : 500;
                     Beep(freq, 10);
                 } else {
@@ -260,10 +301,10 @@ public:
         if (confianza <= 0) confStr += "Sin confianza";
         else if (confianza == 1) confStr += "Neutral";
         else confStr += "Amigos";
-        setTextoJuego(x + ancho - (int)confStr.length() - 2, y + 1, confStr, 3);
+        setTextoJuego(x + ancho - longitudVisible(confStr) - 2, y + 1, confStr, 3);
 
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + 2][x + c] = '-';
+            buffer[y + 2][x + c] = L'-';
             bufferColor[y + 2][x + c] = 8;
         }
 
@@ -294,7 +335,7 @@ public:
 
             for (int r = y + 3; r <= y + 8; r++) {
                 for (int c = 1; c < ancho - 1; c++) {
-                    buffer[r][x + c] = ' ';
+                    buffer[r][x + c] = L' ';
                     bufferColor[r][x + c] = 0;
                 }
             }
@@ -309,14 +350,15 @@ public:
 
             int filaActual = y + 3;
             for (size_t i = 0; i < lineasProcesadas.size() && filaActual < y + 9; i++) {
-                for (size_t c = 0; c < lineasProcesadas[i].length(); c++) {
+                std::vector<wchar_t> wchars = aWideString(lineasProcesadas[i]);
+                for (size_t c = 0; c < wchars.size(); c++) {
                     if (x + 3 + (int)c < x + ancho - 3) {
-                        buffer[filaActual][x + 3 + (int)c] = lineasProcesadas[i][c];
+                        buffer[filaActual][x + 3 + (int)c] = wchars[c];
                         bufferColor[filaActual][x + 3 + (int)c] = 1;
                     }
                     dibujar();
 #ifdef _WIN32
-                    if (lineasProcesadas[i][c] != ' ' && c % 3 == 0) {
+                    if (wchars[c] != L' ' && c % 3 == 0) {
                         Beep(freqHablante, 10);
                     } else {
                         std::this_thread::sleep_for(std::chrono::milliseconds(12));
@@ -330,37 +372,29 @@ public:
         } else {
             int filaActual = y + 3;
             for (size_t i = 0; i < lineasProcesadas.size() && filaActual < y + 9; i++) {
-                std::string lineaRecortada = lineasProcesadas[i];
-                if ((int)lineaRecortada.length() > ancho - 6) {
-                    lineaRecortada = lineaRecortada.substr(0, ancho - 6);
-                }
-                setTextoJuego(x + 3, filaActual, lineaRecortada, 1);
+                setTextoJuego(x + 3, filaActual, lineasProcesadas[i], 1);
                 filaActual++;
             }
         }
 
         int filaDivisoria = y + 9;
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[filaDivisoria][x + c] = '-';
+            buffer[filaDivisoria][x + c] = L'-';
             bufferColor[filaDivisoria][x + c] = 8;
         }
 
         int filaOpciones = y + 10;
         for (size_t i = 0; i < opciones.size() && filaOpciones < y + alto - 2; i++) {
-            std::string opcRecortada = opciones[i];
-            if ((int)opcRecortada.length() > ancho - 6) {
-                opcRecortada = opcRecortada.substr(0, ancho - 6);
-            }
-            setTextoJuego(x + 3, filaOpciones, opcRecortada, 3);
+            setTextoJuego(x + 3, filaOpciones, opciones[i], 3);
             filaOpciones++;
         }
 
         if (opciones.empty()) {
             setTextoJuego(x + 3, y + alto - 2, "Pulsa ESC o ENTER para continuar", 4);
         } else if (opciones.size() == 1) {
-            setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1] o pulsa ESC para salir", 4);
+            setTextoJuego(x + 3, y + alto - 2, "Elige una opción [1] o pulsa ESC para salir", 4);
         } else {
-            setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1-" + std::to_string(opciones.size()) + "] o pulsa ESC para salir", 4);
+            setTextoJuego(x + 3, y + alto - 2, "Elige una opción [1-" + std::to_string(opciones.size()) + "] o pulsa ESC para salir", 4);
         }
         if (esNuevo) {
             dibujar();
@@ -377,8 +411,8 @@ public:
         int ancho = 76;
         int alto = 32;
         dibujarCaja(x, y, ancho, alto);
-        setTextoJuego(x + 24, y + 1, "=== GUIA DE PERSONAJES ===");
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = '-';
+        setTextoJuego(x + 24, y + 1, "=== GUÍA DE PERSONAJES ===");
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
 
         int fila = y + 3;
         for (size_t i = 0; i < nombres.size() && fila < y + 15; i++) {
@@ -397,7 +431,7 @@ public:
             fila += 2;
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 16][x + c] = '-';
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 16][x + c] = L'-';
         setTextoJuego(x + 3, y + 17, "DETALLES:");
 
         if (seleccionado >= 0 && seleccionado < (int)desbloqueados.size()) {
@@ -408,15 +442,15 @@ public:
                 if (confianzas[seleccionado] == 1) nivelConf = "Neutral";
                 else if (confianzas[seleccionado] >= 2) nivelConf = "Amigos";
                 setTextoJuego(x + 5, y + 21, "Nivel de confianza: " + nivelConf);
-                setTextoJuego(x + 5, y + 23, "Descripcion:");
+                setTextoJuego(x + 5, y + 23, "Descripción:");
                 setTextoJuego(x + 5, y + 24, descripciones[seleccionado]);
             } else {
-                setTextoJuego(x + 5, y + 19, "Personaje aun no descubierto en este nivel.");
+                setTextoJuego(x + 5, y + 19, "Personaje aún no descubierto en este nivel.");
                 setTextoJuego(x + 5, y + 20, "Explora el atelier o avanza en la historia.");
             }
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = '-';
+        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
         setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [P/ESC] Cerrar panel");
     }
 
@@ -429,7 +463,7 @@ public:
         int alto = 32;
         dibujarCaja(x, y, ancho, alto);
         setTextoJuego(x + 22, y + 1, "=== MOCHILA / INVENTARIO ===");
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = '-';
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
 
         int fila = y + 3;
         for (int i = 0; i < 6; i++) {
@@ -441,14 +475,14 @@ public:
                     entrada += " (" + tipos[i] + ")";
                 }
             } else {
-                entrada += "(Ranura vacia)";
+                entrada += "(Ranura vacía)";
             }
             setTextoJuego(x + 4, fila, entrada);
             fila += 1;
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 10][x + c] = '-';
-        setTextoJuego(x + 4, y + 11, "[DETALLES DEL ITEM]");
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 10][x + c] = L'-';
+        setTextoJuego(x + 4, y + 11, "[DETALLES DEL ÍTEM]");
 
         if (seleccionado >= 0 && seleccionado < (int)nombres.size() && !nombres[seleccionado].empty()) {
             setTextoJuego(x + 5, y + 13, "Nombre:      " + nombres[seleccionado]);
@@ -456,15 +490,15 @@ public:
                 setTextoJuego(x + 5, y + 15, "Tipo:        " + tipos[seleccionado]);
             }
             if (seleccionado < (int)descripciones.size()) {
-                setTextoJuego(x + 5, y + 17, "Descripcion: ");
+                setTextoJuego(x + 5, y + 17, "Descripción: ");
                 setTextoJuego(x + 5, y + 19, descripciones[seleccionado]);
             }
         } else {
-            setTextoJuego(x + 5, y + 13, "Ranura de mochila sin item asignado.");
-            setTextoJuego(x + 5, y + 15, "Capacidad maxima: 6 items en este nivel.");
+            setTextoJuego(x + 5, y + 13, "Ranura de mochila sin ítem asignado.");
+            setTextoJuego(x + 5, y + 15, "Capacidad máxima: 6 ítems en este nivel.");
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = '-';
+        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
         setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [1-6] Elegir   [I/ESC] Cerrar");
     }
 
@@ -481,7 +515,7 @@ public:
 
         if (!verDetalle) {
             setTextoJuego(x + 25, y + 1, "=== MISIONES ===");
-            for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = '-';
+            for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
 
             int fila = y + 4;
             for (size_t i = 0; i < titulos.size() && fila < y + 22; i++) {
@@ -490,13 +524,13 @@ public:
                 if (desbloqueadas[i]) {
                     entrada += titulos[i];
                     std::string est = " [" + estados[i] + "]";
-                    int espacioRestante = ancho - (int)entrada.length() - (int)est.length() - 5;
+                    int espacioRestante = ancho - longitudVisible(entrada) - longitudVisible(est) - 5;
                     if (espacioRestante > 0) entrada += std::string(espacioRestante, ' ');
                     entrada += est;
                 } else {
                     entrada += "########";
                     std::string est = " [BLOQUEADA]";
-                    int espacioRestante = ancho - (int)entrada.length() - (int)est.length() - 5;
+                    int espacioRestante = ancho - longitudVisible(entrada) - longitudVisible(est) - 5;
                     if (espacioRestante > 0) entrada += std::string(espacioRestante, ' ');
                     entrada += est;
                 }
@@ -504,26 +538,26 @@ public:
                 fila += 2;
             }
 
-            for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = '-';
+            for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
             setTextoJuego(x + 4, y + alto - 2, "[W/S] Navegar   [ENTER] Ver detalle   [M/ESC] Cerrar");
         } else {
-            std::string tituloDetalle = "=== MISION " + std::to_string(seleccionado + 1) + ": ";
+            std::string tituloDetalle = "=== MISIÓN " + std::to_string(seleccionado + 1) + ": ";
             if (desbloqueadas[seleccionado]) {
                 tituloDetalle += titulos[seleccionado] + " ===";
             } else {
                 tituloDetalle += "######## ===";
             }
-            if ((int)tituloDetalle.length() > ancho - 4) {
+            if (longitudVisible(tituloDetalle) > ancho - 4) {
                 tituloDetalle = tituloDetalle.substr(0, ancho - 7) + "...";
             }
             setTextoJuego(x + 4, y + 1, tituloDetalle);
-            for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = '-';
+            for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
 
             if (desbloqueadas[seleccionado]) {
-                setTextoJuego(x + 4, y + 5, "Mision: " + titulos[seleccionado]);
+                setTextoJuego(x + 4, y + 5, "Misión: " + titulos[seleccionado]);
                 setTextoJuego(x + 4, y + 7, "Estado: " + estados[seleccionado]);
-                for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = '-';
-                setTextoJuego(x + 4, y + 11, "Descripcion:");
+                for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = L'-';
+                setTextoJuego(x + 4, y + 11, "Descripción:");
                 std::string desc = descripciones[seleccionado];
                 std::vector<std::string> lineasDesc;
                 std::string lineaActual = "";
@@ -533,7 +567,7 @@ public:
                         lineaActual = "";
                     } else {
                         lineaActual += desc[i];
-                        if ((int)lineaActual.length() >= ancho - 10) {
+                        if (longitudVisible(lineaActual) >= ancho - 10) {
                             lineasDesc.push_back(lineaActual);
                             lineaActual = "";
                         }
@@ -548,15 +582,15 @@ public:
                     filaDesc += 2;
                 }
             } else {
-                setTextoJuego(x + 4, y + 5, "Mision Bloqueada");
+                setTextoJuego(x + 4, y + 5, "Misión Bloqueada");
                 setTextoJuego(x + 4, y + 7, "Estado: BLOQUEADA");
-                for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = '-';
-                setTextoJuego(x + 4, y + 11, "Descripcion:");
-                setTextoJuego(x + 4, y + 13, "Esta mision aun no ha sido desbloqueada.");
+                for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = L'-';
+                setTextoJuego(x + 4, y + 11, "Descripción:");
+                setTextoJuego(x + 4, y + 13, "Esta misión aún no ha sido desbloqueada.");
                 setTextoJuego(x + 4, y + 15, "Completa los objetivos previos para acceder.");
             }
 
-            for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = '-';
+            for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
             setTextoJuego(x + 4, y + alto - 2, "[ENTER / ESC] Volver a la lista de misiones");
         }
     }
@@ -571,15 +605,15 @@ public:
         int alto = 34;
         dibujarCaja(x, y, ancho, alto);
 
-        setTextoJuego(x + 18, y + 1, "=== ESTADISTICAS DE FIN DE NIVEL ===");
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = '-';
+        setTextoJuego(x + 18, y + 1, "=== ESTADÍSTICAS DE FIN DE NIVEL ===");
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
 
         setTextoJuego(x + 4, y + 4, "Nivel superado:   NIVEL " + std::to_string(nivel) + " - " + nombreNivel);
         setTextoJuego(x + 4, y + 5, "Maga:             " + prota + " (Aprendiz)");
-        setTextoJuego(x + 4, y + 6, "Objetivo:         Capa Magica Crafteada con Exito");
+        setTextoJuego(x + 4, y + 6, "Objetivo:         Capa Mágica Crafteada con Éxito");
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 8][x + c] = '-';
-        setTextoJuego(x + 4, y + 9, "[DESGLOSE DE PUNTUACION SEGUN TIEMPO Y MISIONES]");
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 8][x + c] = L'-';
+        setTextoJuego(x + 4, y + 9, "[DESGLOSE DE PUNTUACIÓN SEGÚN TIEMPO Y MISIONES]");
 
         int min = segs / 60;
         int seg = segs % 60;
@@ -587,13 +621,13 @@ public:
 
         setTextoJuego(x + 4, y + 11, "Tiempo empleado:                      " + tStr);
         setTextoJuego(x + 4, y + 13, "Puntos por velocidad de tiempo:       +" + std::to_string(bonoTiempo) + " pts");
-        setTextoJuego(x + 4, y + 15, "Puntos por misiones y recoleccion:    +" + std::to_string(puntosMisiones) + " pts");
-        for (int c = 4; c < ancho - 4; c++) buffer[y + 17][x + c] = '-';
+        setTextoJuego(x + 4, y + 15, "Puntos por misiones y recolección:    +" + std::to_string(puntosMisiones) + " pts");
+        for (int c = 4; c < ancho - 4; c++) buffer[y + 17][x + c] = L'-';
 
         int total = bonoTiempo + puntosMisiones;
         setTextoJuego(x + 4, y + 19, "PUNTAJE TOTAL DEL NIVEL:              " + std::to_string(total) + " PTS");
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 21][x + c] = '-';
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 21][x + c] = L'-';
         setTextoJuego(x + 4, y + 22, "[LOGROS Y ESTADO DE LORE]");
         std::string confStr = "Sin confianza";
         if (confianzaQifrey == 1) confStr = "Neutral";
@@ -602,51 +636,51 @@ public:
         setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Mágica de Vuelo");
         setTextoJuego(x + 4, y + 26, "Habilidad de vuelo:                   Activada para Coco");
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 4][x + c] = '-';
+        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 4][x + c] = L'-';
         setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Avanzar al Nivel 2    [C] Seguir explorando");
         setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego");
     }
 
     void renderizarPanelLateral(int nivel, const std::string& nombreNivel,
                                const std::string& protagonista, int vida, int vidaMax) {
-        std::vector<std::string> lineasPanel(altoTotal, std::string(anchoPanel, ' '));
+        std::vector<std::wstring> lineasPanel(altoTotal, std::wstring(anchoPanel, L' '));
 
-        std::string separador = std::string(anchoPanel - 1, '-') + "|";
-        std::string bordeCaja = std::string(anchoPanel - 1, '-') + "+";
+        std::wstring separador = std::wstring(anchoPanel - 1, L'-') + L"|";
+        std::wstring bordeCaja = std::wstring(anchoPanel - 1, L'-') + L"+";
 
         lineasPanel[0]  = bordeCaja;
-        lineasPanel[1]  = encuadrarFilaPanel("     WITCH HAT ATELIER", anchoPanel);
-        lineasPanel[2]  = encuadrarFilaPanel("      ÁRBOL DE PLATA", anchoPanel);
+        lineasPanel[1]  = encuadrarFilaPanelW("     WITCH HAT ATELIER", anchoPanel);
+        lineasPanel[2]  = encuadrarFilaPanelW("      ÁRBOL DE PLATA", anchoPanel);
         lineasPanel[3]  = separador;
-        lineasPanel[4]  = encuadrarFilaPanel("NIVEL " + std::to_string(nivel) + ": " + nombreNivel, anchoPanel);
-        lineasPanel[5]  = encuadrarFilaPanel("MAGA: " + protagonista + " (Aprendiz)", anchoPanel);
+        lineasPanel[4]  = encuadrarFilaPanelW("NIVEL " + std::to_string(nivel) + ": " + nombreNivel, anchoPanel);
+        lineasPanel[5]  = encuadrarFilaPanelW("MAGA: " + protagonista + " (Aprendiz)", anchoPanel);
 
         std::string corazones = "";
         for (int i = 0; i < vidaMax; i++) {
             if (i < vida) corazones += "<3 ";
             else corazones += ".. ";
         }
-        lineasPanel[6]  = encuadrarFilaPanel("VIDA: " + corazones, anchoPanel);
+        lineasPanel[6]  = encuadrarFilaPanelW("VIDA: " + corazones, anchoPanel);
         lineasPanel[7]  = separador;
-        lineasPanel[8]  = encuadrarFilaPanel("[CONTROLES]", anchoPanel);
+        lineasPanel[8]  = encuadrarFilaPanelW("[CONTROLES]", anchoPanel);
         lineasPanel[9]  = separador;
-        lineasPanel[10] = encuadrarFilaPanel("", anchoPanel);
-        lineasPanel[11] = encuadrarFilaPanel("[W, A, S, D]  Moverse en mapa", anchoPanel);
-        lineasPanel[12] = encuadrarFilaPanel("", anchoPanel);
-        lineasPanel[13] = encuadrarFilaPanel("[ENTER]       Interactuar", anchoPanel);
-        lineasPanel[14] = encuadrarFilaPanel("", anchoPanel);
-        lineasPanel[15] = encuadrarFilaPanel("[M]           Misiones", anchoPanel);
-        lineasPanel[16] = encuadrarFilaPanel("", anchoPanel);
-        lineasPanel[17] = encuadrarFilaPanel("[I]           Inventario", anchoPanel);
-        lineasPanel[18] = encuadrarFilaPanel("", anchoPanel);
-        lineasPanel[19] = encuadrarFilaPanel("[P]           Personajes", anchoPanel);
-        lineasPanel[20] = encuadrarFilaPanel("", anchoPanel);
-        lineasPanel[21] = encuadrarFilaPanel("[ESC]         Salir / Pausa", anchoPanel);
-        lineasPanel[22] = encuadrarFilaPanel("", anchoPanel);
+        lineasPanel[10] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[11] = encuadrarFilaPanelW("[W, A, S, D]  Moverse en mapa", anchoPanel);
+        lineasPanel[12] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[13] = encuadrarFilaPanelW("[ENTER]       Interactuar", anchoPanel);
+        lineasPanel[14] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[15] = encuadrarFilaPanelW("[M]           Misiones", anchoPanel);
+        lineasPanel[16] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[17] = encuadrarFilaPanelW("[I]           Inventario", anchoPanel);
+        lineasPanel[18] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[19] = encuadrarFilaPanelW("[P]           Personajes", anchoPanel);
+        lineasPanel[20] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[21] = encuadrarFilaPanelW("[ESC]         Salir / Pausa", anchoPanel);
+        lineasPanel[22] = encuadrarFilaPanelW("", anchoPanel);
         lineasPanel[23] = separador;
 
         for (int f = 24; f < altoTotal - 1; f++) {
-            lineasPanel[f] = encuadrarFilaPanel("", anchoPanel);
+            lineasPanel[f] = encuadrarFilaPanelW("", anchoPanel);
         }
         lineasPanel[altoTotal - 1] = bordeCaja;
 
@@ -674,19 +708,16 @@ public:
     void dibujarPantallaMensajeCentrado(const std::string& texto) {
         limpiarBuffer();
         int fila = altoTotal / 2;
-        int col = (anchoTotal - (int)texto.length()) / 2;
+        int col = (anchoTotal - longitudVisible(texto)) / 2;
         if (col < 0) col = 0;
         if (fila >= 0 && fila < altoTotal) {
-            for (size_t i = 0; i < texto.length() && col + (int)i < anchoTotal; i++) {
-                buffer[fila][col + i] = texto[i];
-                bufferColor[fila][col + i] = 4;
-            }
+            setTextoPantallaCompleta(col, fila, texto, 4);
         }
     }
 
     void limpiarBufferCompleto() {
         for (int f = 0; f < altoTotal; f++) {
-            buffer[f] = std::string(anchoTotal, ' ');
+            buffer[f] = std::wstring(anchoTotal, L' ');
             for (int c = 0; c < anchoTotal; c++) {
                 bufferColor[f][c] = 0;
             }
@@ -695,10 +726,11 @@ public:
 
     void setTextoPantallaCompleta(int x, int y, const std::string& texto, int color = 0) {
         if (y < 0 || y >= altoTotal) return;
-        for (int i = 0; i < (int)texto.length(); i++) {
-            int posX = x + i;
+        std::vector<wchar_t> wchars = aWideString(texto);
+        for (size_t i = 0; i < wchars.size(); i++) {
+            int posX = x + (int)i;
             if (posX >= 0 && posX < anchoTotal) {
-                buffer[y][posX] = texto[i];
+                buffer[y][posX] = wchars[i];
                 bufferColor[y][posX] = color;
             }
         }
@@ -710,16 +742,16 @@ public:
             for (int c = 0; c < ancho; c++) {
                 if (r == 0 || r == alto - 1) {
                     if (c == 0 || c == ancho - 1) {
-                        buffer[y + r][x + c] = '+';
+                        buffer[y + r][x + c] = L'+';
                     } else {
-                        buffer[y + r][x + c] = '-';
+                        buffer[y + r][x + c] = L'-';
                     }
                     bufferColor[y + r][x + c] = colorBorde;
                 } else if (c == 0 || c == ancho - 1) {
-                    buffer[y + r][x + c] = '|';
+                    buffer[y + r][x + c] = L'|';
                     bufferColor[y + r][x + c] = colorBorde;
                 } else {
-                    buffer[y + r][x + c] = ' ';
+                    buffer[y + r][x + c] = L' ';
                     bufferColor[y + r][x + c] = 0;
                 }
             }
@@ -736,18 +768,18 @@ public:
 
         std::string tit1 = "W I T C H   H A T   A T E L I E R";
         std::string tit2 = "E L   Á R B O L   D E   P L A T A";
-        int cx1 = x + (ancho - (int)tit1.length()) / 2;
-        int cx2 = x + (ancho - (int)tit2.length()) / 2;
+        int cx1 = x + (ancho - longitudVisible(tit1)) / 2;
+        int cx2 = x + (ancho - longitudVisible(tit2)) / 2;
         setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
         setTextoPantallaCompleta(cx2, y + 3, tit2, 3);
 
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + 5][x + c] = '=';
+            buffer[y + 5][x + c] = L'=';
             bufferColor[y + 5][x + c] = 8;
         }
 
         std::string sub1 = "=== PRÓLOGO: EL SECRETO DE LA MAGIA ===";
-        int cxSub1 = x + (ancho - (int)sub1.length()) / 2;
+        int cxSub1 = x + (ancho - longitudVisible(sub1)) / 2;
         setTextoPantallaCompleta(cxSub1, y + 7, sub1, 4);
 
         setTextoPantallaCompleta(x + 5, y + 9,  "En un mundo donde la hechicería parece un don reservado para unos pocos elegidos,", 1);
@@ -763,12 +795,12 @@ public:
         setTextoPantallaCompleta(x + 5, y + 19, "el arte del dibujo mágico y superar las rigurosas pruebas de los hechiceros.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + 21][x + c] = '-';
+            buffer[y + 21][x + c] = L'-';
             bufferColor[y + 21][x + c] = 8;
         }
 
         std::string sub2 = "=== OBJETIVOS DEL NIVEL 1: EL ATELIER DE QIFREY ===";
-        int cxSub2 = x + (ancho - (int)sub2.length()) / 2;
+        int cxSub2 = x + (ancho - longitudVisible(sub2)) / 2;
         setTextoPantallaCompleta(cxSub2, y + 23, sub2, 2);
 
         setTextoPantallaCompleta(x + 5, y + 25, "* Explora el atelier, la choza de trazos y la misteriosa torre de Agott.", 1);
@@ -777,12 +809,12 @@ public:
         setTextoPantallaCompleta(x + 5, y + 28, "* Busca frascos de tinta arcaica perdidos para ganarte la plena confianza del maestro.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + 30][x + c] = '=';
+            buffer[y + 30][x + c] = L'=';
             bufferColor[y + 30][x + c] = 8;
         }
 
         std::string pie = "[ Presiona ENTER para iniciar el viaje ]";
-        int cxPie = x + (ancho - (int)pie.length()) / 2;
+        int cxPie = x + (ancho - longitudVisible(pie)) / 2;
         setTextoPantallaCompleta(cxPie, y + 32, pie, 4);
 
         dibujar();
@@ -816,18 +848,18 @@ public:
                     char ch = matrizMapa[yMundo][xMundo];
                     if (ch == '~') {
                         int fase = (xMundo + yMundo + tickAnim) % 3;
-                        char charAgua = (fase == 0) ? '~' : ((fase == 1) ? '-' : '.');
+                        wchar_t charAgua = (fase == 0) ? L'~' : ((fase == 1) ? L'-' : L'.');
                         buffer[yPantalla][xPantalla] = charAgua;
                         bufferColor[yPantalla][xPantalla] = 3;
                     } else if (enSubMapa && (ch == '/' || ch == '=')) {
-                        buffer[yPantalla][xPantalla] = ch;
+                        buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
                         bufferColor[yPantalla][xPantalla] = 12;
                     } else if (ch == ' ' && !enSubMapa && (esCuartoFunc == nullptr || !esCuartoFunc(xMundo, yMundo))) {
                         int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
-                        buffer[yPantalla][xPantalla] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
-                        bufferColor[yPantalla][xPantalla] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
+                        buffer[yPantalla][xPantalla] = (r == 0) ? L'"' : ((r == 1) ? L'\'' : L',');
+                        bufferColor[yPantalla][xPantalla] = 11;
                     } else {
-                        buffer[yPantalla][xPantalla] = ch;
+                        buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
                         if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
                             bufferColor[yPantalla][xPantalla] = 2;
                         } else if (ch == '.' || ch == ':' || ch == '=') {
@@ -849,10 +881,10 @@ public:
                 } else {
                     if (!enSubMapa) {
                         int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
-                        buffer[yPantalla][xPantalla] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
-                        bufferColor[yPantalla][xPantalla] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
+                        buffer[yPantalla][xPantalla] = (r == 0) ? L'"' : ((r == 1) ? L'\'' : L',');
+                        bufferColor[yPantalla][xPantalla] = 11;
                     } else {
-                        buffer[yPantalla][xPantalla] = ' ';
+                        buffer[yPantalla][xPantalla] = L' ';
                         bufferColor[yPantalla][xPantalla] = 0;
                     }
                 }
@@ -862,7 +894,7 @@ public:
 
     void animarEscaleraPozo(bool bajando, int nivelNum, const std::string& nivelNom,
                             const std::string& protaNom, int vida, int vidaMax) {
-        char block = (char)219;
+        wchar_t block = L'█';
         int totalFrames = 8;
         int railIzquierda = 36;
         int railDerecha = 47;
@@ -873,10 +905,10 @@ public:
             for (int f = 0; f < altoTotal; f++) {
                 for (int c = 0; c < anchoJuego; c++) {
                     if (c < 24 || c > 59) {
-                        buffer[f][c] = (f % 2 == 0 ? (c % 8 == 0 ? '|' : '-') : (c % 8 == 4 ? '|' : '-'));
+                        buffer[f][c] = (f % 2 == 0 ? (c % 8 == 0 ? L'|' : L'-') : (c % 8 == 4 ? L'|' : L'-'));
                         bufferColor[f][c] = 8;
                     } else {
-                        buffer[f][c] = ' ';
+                        buffer[f][c] = L' ';
                         bufferColor[f][c] = 0;
                     }
                 }
@@ -945,8 +977,8 @@ public:
                 }
             }
 
-            std::string msg = bajando ? "[ Bajando al sotano de Richeh... ]" : "[ Subiendo a la torre de Agott... ]";
-            int cxMsg = (anchoJuego - (int)msg.length()) / 2;
+            std::string msg = bajando ? "[ Bajando al sótano de Richeh... ]" : "[ Subiendo a la torre de Agott... ]";
+            int cxMsg = (anchoJuego - longitudVisible(msg)) / 2;
             setTextoJuego(cxMsg, altoTotal - 3, msg, 4);
 
             renderizarPanelLateral(nivelNum, nivelNom, protaNom, vida, vidaMax);
@@ -963,55 +995,66 @@ public:
     void dibujar() {
 #ifdef _WIN32
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        COORD pos = { 0, 0 };
-        SetConsoleCursorPosition(hOut, pos);
-#else
-        std::cout << "\033[H";
+        DWORD dwMode = 0;
+        if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode)) {
+            COORD pos = { 0, 0 };
+            SetConsoleCursorPosition(hOut, pos);
+
+            std::wstring frameCompleto;
+            frameCompleto.reserve(altoTotal * (anchoTotal + 20));
+            int colorActual = -1;
+
+            for (int f = 0; f < altoTotal; f++) {
+                for (int c = 0; c < anchoTotal; c++) {
+                    int col = bufferColor[f][c];
+                    if (col != colorActual) {
+                        frameCompleto += obtenerCodigoColorW(col);
+                        colorActual = col;
+                    }
+                    frameCompleto += buffer[f][c];
+                }
+                if (f < altoTotal - 1) {
+                    frameCompleto += L"\n";
+                }
+            }
+            frameCompleto += L"\033[0m";
+
+            DWORD written = 0;
+            WriteConsoleW(hOut, frameCompleto.c_str(), (DWORD)frameCompleto.length(), &written, NULL);
+            return;
+        }
 #endif
+        std::cout << "\033[H";
         std::string frameCompleto = "";
         int colorActual = -1;
+
         for (int f = 0; f < altoTotal; f++) {
-            int columnasVisibles = 0;
-            size_t c = 0;
-            while (c < buffer[f].length() && columnasVisibles < anchoTotal) {
-                int col = (c < bufferColor[f].size()) ? bufferColor[f][c] : 0;
+            for (int c = 0; c < anchoTotal; c++) {
+                int col = bufferColor[f][c];
                 if (col != colorActual) {
                     frameCompleto += obtenerCodigoColor(col);
                     colorActual = col;
                 }
-                char ch = buffer[f][c];
-                if ((unsigned char)ch == 219) {
+                wchar_t wc = buffer[f][c];
+                if (wc == L'█') {
                     frameCompleto += "\xE2\x96\x88";
-                    columnasVisibles++;
-                    c++;
-                } else if (((unsigned char)ch & 0xE0) == 0xC0 && c + 1 < buffer[f].length()) {
-                    frameCompleto += ch;
-                    frameCompleto += buffer[f][c + 1];
-                    columnasVisibles++;
-                    c += 2;
-                } else if (((unsigned char)ch & 0xF0) == 0xE0 && c + 2 < buffer[f].length()) {
-                    frameCompleto += ch;
-                    frameCompleto += buffer[f][c + 1];
-                    frameCompleto += buffer[f][c + 2];
-                    columnasVisibles++;
-                    c += 3;
+                } else if (wc < 128) {
+                    frameCompleto += (char)wc;
+                } else if (wc < 0x800) {
+                    frameCompleto += (char)(0xC0 | ((wc >> 6) & 0x1F));
+                    frameCompleto += (char)(0x80 | (wc & 0x3F));
                 } else {
-                    frameCompleto += ch;
-                    columnasVisibles++;
-                    c++;
+                    frameCompleto += (char)(0xE0 | ((wc >> 12) & 0x0F));
+                    frameCompleto += (char)(0x80 | ((wc >> 6) & 0x3F));
+                    frameCompleto += (char)(0x80 | (wc & 0x3F));
                 }
-            }
-            while (columnasVisibles < anchoTotal) {
-                frameCompleto += ' ';
-                columnasVisibles++;
             }
             if (f < altoTotal - 1) {
                 frameCompleto += "\n";
             }
         }
         frameCompleto += RESET;
-        std::cout << frameCompleto;
-        std::cout.flush();
+        std::cout << frameCompleto << std::flush;
     }
 };
 
