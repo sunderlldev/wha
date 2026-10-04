@@ -65,7 +65,16 @@ public:
             if (c == nullptr) continue;
 
             system("cls");
-            std::cout << "\n\n";
+            std::cout << "\n";
+
+            if (!c->texto.empty()) {
+                std::cout << "         +---------------------------------------------------+\n";
+                std::cout << "         | " << c->texto << "\n";
+                std::cout << "         +---------------------------------------------------+\n\n";
+            }
+            else {
+                std::cout << "\n";
+            }
 
             int altoMatriz = (int)c->matrizPixel.size();
             for (int r = 0; r < altoMatriz; r++) {
@@ -79,16 +88,10 @@ public:
                         std::cout << "  ";
                     }
                     else {
-                        std::cout << "\033[38;2;" << px.r << ";" << px.g << ";" << px.v << "m\xe2\x96\x88\xe2\x96\x88\033[0m";
+                        std::cout << "\033[48;2;" << px.r << ";" << px.g << ";" << px.v << "m  \033[0m";
                     }
                 }
                 std::cout << "\n";
-            }
-
-            if (!c->texto.empty()) {
-                std::cout << "\n         +---------------------------------------------------+\n";
-                std::cout << "         | " << c->texto << "\n";
-                std::cout << "         +---------------------------------------------------+\n";
             }
 
             std::cout << std::flush;
