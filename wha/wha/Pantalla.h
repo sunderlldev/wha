@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <thread>
 #include <chrono>
+#include <clocale>
 #include "Animacion.h"
 
 #ifdef _WIN32
@@ -46,12 +47,32 @@ private:
     std::string ultimoDialogoTexto;
     std::string ultimoPromptTexto;
 
-    std::string encuadrarFilaPanel(const std::string& texto, int ancho) {
+    int longitudVisible(const std::string& str) const {
+        int len = 0;
+        for (size_t i = 0; i < str.length(); i++) {
+            if (((unsigned char)str[i] & 0xC0) != 0x80) {
+                len++;
+            }
+        }
+        return len;
+    }
+
+    std::string encuadrarFilaPanel(const std::string& texto, int ancho) const {
         std::string res = " " + texto;
-        if ((int)res.length() >= ancho - 1) {
-            res = res.substr(0, ancho - 1);
+        int vLen = longitudVisible(res);
+        if (vLen >= ancho - 1) {
+            int curV = 0;
+            size_t cutIdx = 0;
+            for (size_t i = 0; i < res.length(); i++) {
+                if (((unsigned char)res[i] & 0xC0) != 0x80) {
+                    if (curV >= ancho - 1) break;
+                    curV++;
+                }
+                cutIdx = i + 1;
+            }
+            res = res.substr(0, cutIdx);
         } else {
-            res += std::string(ancho - 1 - res.length(), ' ');
+            res += std::string(ancho - 1 - vLen, ' ');
         }
         return res + "|";
     }
@@ -96,10 +117,13 @@ public:
     int getAnchoJuego() const { return anchoJuego; }
 
     void configurarConsola() {
+        setlocale(LC_ALL, "");
 #ifdef _WIN32
         system("mode con: cols=120 lines=40");
-        system("title Witch Hat Atelier - Arbol de Plata");
+        system("title Witch Hat Atelier - Árbol de Plata");
         system("cls");
+        SetConsoleCP(65001);
+        SetConsoleOutputCP(65001);
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         if (hOut != INVALID_HANDLE_VALUE) {
             CONSOLE_CURSOR_INFO cursorInfo;
@@ -574,8 +598,8 @@ public:
         std::string confStr = "Sin confianza";
         if (confianzaQifrey == 1) confStr = "Neutral";
         else if (confianzaQifrey >= 2) confStr = "Amigos";
-        setTextoJuego(x + 4, y + 24, "Vinculo con Maestro Qifrey:           " + confStr);
-        setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Magica de Vuelo");
+        setTextoJuego(x + 4, y + 24, "Vínculo con Maestro Qifrey:           " + confStr);
+        setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Mágica de Vuelo");
         setTextoJuego(x + 4, y + 26, "Habilidad de vuelo:                   Activada para Coco");
 
         for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 4][x + c] = '-';
@@ -592,7 +616,7 @@ public:
 
         lineasPanel[0]  = bordeCaja;
         lineasPanel[1]  = encuadrarFilaPanel("     WITCH HAT ATELIER", anchoPanel);
-        lineasPanel[2]  = encuadrarFilaPanel("      ARBOL DE PLATA", anchoPanel);
+        lineasPanel[2]  = encuadrarFilaPanel("      ÁRBOL DE PLATA", anchoPanel);
         lineasPanel[3]  = separador;
         lineasPanel[4]  = encuadrarFilaPanel("NIVEL " + std::to_string(nivel) + ": " + nombreNivel, anchoPanel);
         lineasPanel[5]  = encuadrarFilaPanel("MAGA: " + protagonista + " (Aprendiz)", anchoPanel);
@@ -711,7 +735,7 @@ public:
         dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
 
         std::string tit1 = "W I T C H   H A T   A T E L I E R";
-        std::string tit2 = "E L   A R B O L   D E   P L A T A";
+        std::string tit2 = "E L   Á R B O L   D E   P L A T A";
         int cx1 = x + (ancho - (int)tit1.length()) / 2;
         int cx2 = x + (ancho - (int)tit2.length()) / 2;
         setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
@@ -722,21 +746,21 @@ public:
             bufferColor[y + 5][x + c] = 8;
         }
 
-        std::string sub1 = "=== PROLOGO: EL SECRETO DE LA MAGIA ===";
+        std::string sub1 = "=== PRÓLOGO: EL SECRETO DE LA MAGIA ===";
         int cxSub1 = x + (ancho - (int)sub1.length()) / 2;
         setTextoPantallaCompleta(cxSub1, y + 7, sub1, 4);
 
-        setTextoPantallaCompleta(x + 5, y + 9,  "En un mundo donde la hechiceria parece un don reservado para unos pocos elegidos,", 1);
+        setTextoPantallaCompleta(x + 5, y + 9,  "En un mundo donde la hechicería parece un don reservado para unos pocos elegidos,", 1);
         setTextoPantallaCompleta(x + 5, y + 10, "la verdad prohibida es que cualquier ser humano es capaz de hacer magia: solo se", 1);
-        setTextoPantallaCompleta(x + 5, y + 11, "necesita tinta magica y trazar con suma precision los sellos y circulos arcanos.", 1);
+        setTextoPantallaCompleta(x + 5, y + 11, "necesita tinta mágica y trazar con suma precisión los sellos y círculos arcanos.", 1);
 
-        setTextoPantallaCompleta(x + 5, y + 13, "Coco, una humilde joven fascinada por los magos, recibio un dia un libro prohibido", 1);
+        setTextoPantallaCompleta(x + 5, y + 13, "Coco, una humilde joven fascinada por los magos, recibió un día un libro prohibido", 1);
         setTextoPantallaCompleta(x + 5, y + 14, "de un misterioso hechicero con sombrero de ala ancha. Al intentar recrear los trazos", 1);
-        setTextoPantallaCompleta(x + 5, y + 15, "a escondidas en su habitacion, desato un hechizo oscuro que petrifico a su madre.", 1);
+        setTextoPantallaCompleta(x + 5, y + 15, "a escondidas en su habitación, desató un hechizo oscuro que petrificó a su madre.", 1);
 
         setTextoPantallaCompleta(x + 5, y + 17, "Rescatada por el hechicero Qifrey, Coco fue acogida en su atelier como aprendiz.", 1);
-        setTextoPantallaCompleta(x + 5, y + 18, "Para descubrir el contrahechizo capaz de salvar a su madre, Coco debera dominar", 1);
-        setTextoPantallaCompleta(x + 5, y + 19, "el arte del dibujo magico y superar las rigurosas pruebas de los hechiceros.", 1);
+        setTextoPantallaCompleta(x + 5, y + 18, "Para descubrir el contrahechizo capaz de salvar a su madre, Coco deberá dominar", 1);
+        setTextoPantallaCompleta(x + 5, y + 19, "el arte del dibujo mágico y superar las rigurosas pruebas de los hechiceros.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 21][x + c] = '-';
@@ -748,8 +772,8 @@ public:
         setTextoPantallaCompleta(cxSub2, y + 23, sub2, 2);
 
         setTextoPantallaCompleta(x + 5, y + 25, "* Explora el atelier, la choza de trazos y la misteriosa torre de Agott.", 1);
-        setTextoPantallaCompleta(x + 5, y + 26, "* Recolecta los materiales para tu Capa Magica: Tela, Tinta magica y Libro.", 1);
-        setTextoPantallaCompleta(x + 5, y + 27, "* Conversa con Maestro Qifrey, interactua con Agott y descubre el sotano de Richeh.", 1);
+        setTextoPantallaCompleta(x + 5, y + 26, "* Recolecta los materiales para tu Capa Mágica: Tela, Tinta mágica y Libro.", 1);
+        setTextoPantallaCompleta(x + 5, y + 27, "* Conversa con Maestro Qifrey, interactúa con Agott y descubre el sótano de Richeh.", 1);
         setTextoPantallaCompleta(x + 5, y + 28, "* Busca frascos de tinta arcaica perdidos para ganarte la plena confianza del maestro.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
@@ -947,13 +971,39 @@ public:
         std::string frameCompleto = "";
         int colorActual = -1;
         for (int f = 0; f < altoTotal; f++) {
-            for (int c = 0; c < anchoTotal; c++) {
-                int col = bufferColor[f][c];
+            int columnasVisibles = 0;
+            size_t c = 0;
+            while (c < buffer[f].length() && columnasVisibles < anchoTotal) {
+                int col = (c < bufferColor[f].size()) ? bufferColor[f][c] : 0;
                 if (col != colorActual) {
                     frameCompleto += obtenerCodigoColor(col);
                     colorActual = col;
                 }
-                frameCompleto += buffer[f][c];
+                char ch = buffer[f][c];
+                if ((unsigned char)ch == 219) {
+                    frameCompleto += "\xE2\x96\x88";
+                    columnasVisibles++;
+                    c++;
+                } else if (((unsigned char)ch & 0xE0) == 0xC0 && c + 1 < buffer[f].length()) {
+                    frameCompleto += ch;
+                    frameCompleto += buffer[f][c + 1];
+                    columnasVisibles++;
+                    c += 2;
+                } else if (((unsigned char)ch & 0xF0) == 0xE0 && c + 2 < buffer[f].length()) {
+                    frameCompleto += ch;
+                    frameCompleto += buffer[f][c + 1];
+                    frameCompleto += buffer[f][c + 2];
+                    columnasVisibles++;
+                    c += 3;
+                } else {
+                    frameCompleto += ch;
+                    columnasVisibles++;
+                    c++;
+                }
+            }
+            while (columnasVisibles < anchoTotal) {
+                frameCompleto += ' ';
+                columnasVisibles++;
             }
             if (f < altoTotal - 1) {
                 frameCompleto += "\n";

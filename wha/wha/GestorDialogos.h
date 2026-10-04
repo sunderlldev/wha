@@ -90,12 +90,12 @@ public:
 
 		switch (estadoDialogo) {
 		case 1:
-			lineas.push_back("Hola, Coco. Que necesitas en el taller hoy?");
-			opciones.push_back("[1] Maestro Qifrey, podrias ayudarme a craftear la Capa Magica?");
-			opciones.push_back("[2] Solo venia a explorar el taller y ver tus libros.");
-			opciones.push_back("[3] Maestro, necesito materiales especiales para mis practicas.");
+			lineas.push_back("Hola, Coco. ¿Qué necesitas en el taller hoy?");
+			opciones.push_back("[1] Maestro Qifrey, ¿podrías ayudarme a confeccionar la Capa Mágica?");
+			opciones.push_back("[2] Solo venía a explorar el taller y ver tus libros.");
+			opciones.push_back("[3] Maestro, necesito materiales especiales para mis prácticas.");
 			if (inv != nullptr && (inv->tieneItem("Frasco de Tinta") || inv->tieneItem("Tinta de Viento"))) {
-				opciones.push_back("[4] Maestro, encontre una tinta especial explorando el taller!");
+				opciones.push_back("[4] ¡Maestro, encontré una tinta especial explorando el taller!");
 			}
 			break;
 
@@ -107,167 +107,167 @@ public:
 				int total = (tieneTela ? 1 : 0) + (tieneTinta ? 1 : 0) + (tieneLibro ? 1 : 0);
 
 				if (total == 0) {
-					lineas.push_back("Para la Capa Magica necesito 3 items: Tela, Tinta magica y Libro.");
-					lineas.push_back("Aun no tienes ninguno.\nBusca en el taller y el almacen abandonado!");
-					opciones.push_back("[1] Esta bien, ire a buscarlos por el atelier.");
+					lineas.push_back("Para la Capa Mágica necesito 3 objetos: Tela, Tinta mágica y Libro.");
+					lineas.push_back("Aún no tienes ninguno.\n¡Busca en el taller y en el almacén abandonado!");
+					opciones.push_back("[1] Está bien, iré a buscarlos por el atelier.");
 				} else {
-					lineas.push_back("Te faltan materiales para craftear la Capa Magica.");
-					std::string faltantes = "Aun necesitas encontrar: ";
+					lineas.push_back("Te faltan materiales para confeccionar la Capa Mágica.");
+					std::string faltantes = "Aún necesitas encontrar: ";
 					if (!tieneTela) faltantes += "[Tela] ";
-					if (!tieneTinta) faltantes += "[Tinta magica] ";
+					if (!tieneTinta) faltantes += "[Tinta mágica] ";
 					if (!tieneLibro) faltantes += "[Libro de hechizos] ";
 					lineas.push_back(faltantes);
-					lineas.push_back("Vuelve cuando tengas los 3 ingredientes completos!");
-					opciones.push_back("[1] Entendido, buscare lo que falta.");
+					lineas.push_back("¡Vuelve cuando tengas los 3 ingredientes completos!");
+					opciones.push_back("[1] Entendido, buscaré lo que falta.");
 				}
 			}
 			break;
 
 		case 11:
-			lineas.push_back("Esta bien, te hare la capa!");
+			lineas.push_back("¡Está bien, te haré la capa!");
 			lineas.push_back("");
-			lineas.push_back("Crafteando capa magica...");
+			lineas.push_back("Confeccionando capa mágica...");
 			lineas.push_back("");
-			lineas.push_back("Aqui esta, te dare esta capa pero ojo... usalo responsablemente!");
-			opciones.push_back("[1] Entendido!");
+			lineas.push_back("¡Aquí está! Te daré esta capa, pero úsala responsablemente.");
+			opciones.push_back("[1] ¡Entendido!");
 			break;
 
 		case 12:
-			lineas.push_back("[CRAFTEO EXITOSO: Capa magica obtenida]");
-			lineas.push_back("Se consumieron: Tela, Tinta magica y Libro de hechizos.");
-			lineas.push_back("La Capa Magica ha sido equipada y agregada a tu inventario.");
-			opciones.push_back("[1] Muchas gracias Maestro Qifrey!");
+			lineas.push_back("[CONFECCIÓN EXITOSA: Capa Mágica obtenida]");
+			lineas.push_back("Se consumieron: Tela, Tinta mágica y Libro de hechizos.");
+			lineas.push_back("La Capa Mágica ha sido equipada y agregada a tu inventario.");
+			opciones.push_back("[1] ¡Muchas gracias, Maestro Qifrey!");
 			break;
 
 		case 15:
-			lineas.push_back("Te queda excelente la Capa Magica, Coco.");
-			lineas.push_back("Recuerda usar tus alas de aprendiz\ncon verdadera sabiduria y responsabilidad.");
-			opciones.push_back("[1] Gracias Maestro Qifrey!");
+			lineas.push_back("Te queda excelente la Capa Mágica, Coco.");
+			lineas.push_back("Recuerda usar tus alas de aprendiz\ncon verdadera sabiduría y responsabilidad.");
+			opciones.push_back("[1] ¡Gracias, Maestro Qifrey!");
 			break;
 
 		case 20:
 			lineas.push_back("Eres bienvenida en el taller siempre, Coco.");
-			lineas.push_back("Cuidate de las corrientes del gran rio.\nCruza siempre por los puentes arcanos.");
+			lineas.push_back("Cuídate de las corrientes del gran río.\nCruza siempre por los puentes arcanos.");
 			opciones.push_back("[1] Gracias por el consejo, Maestro.");
 			break;
 
 		case 30:
-			lineas.push_back("Las practicas de hechiceria requieren precision y paciencia.");
-			lineas.push_back("Que tipo de material magico estas buscando exactamente?");
-			opciones.push_back("[1] Busco una tinta que reaccione al flujo magico del pergamino.");
-			opciones.push_back("[2] Cualquier material basico me servira para practicar.");
+			lineas.push_back("Las prácticas de hechicería requieren precisión y paciencia.");
+			lineas.push_back("¿Qué tipo de material mágico estás buscando exactamente?");
+			opciones.push_back("[1] Busco una tinta que reaccione al flujo mágico del pergamino.");
+			opciones.push_back("[2] Cualquier material básico me servirá para practicar.");
 			break;
 
 		case 31:
-			lineas.push_back("La tinta magica de plata es muy delicada y poderosa.");
-			lineas.push_back("Sabras usarla con cuidado y verdadero respeto al atelier?");
+			lineas.push_back("La tinta mágica de plata es muy delicada y poderosa.");
+			lineas.push_back("¿Sabrás usarla con cuidado y verdadero respeto al atelier?");
 			opciones.push_back("[1] Prometo seguir las reglas del atelier y ser responsable.");
-			opciones.push_back("[2] Intentare tener cuidado, aunque a veces me cuesta.");
+			opciones.push_back("[2] Intentaré tener cuidado, aunque a veces me cuesta.");
 			break;
 
 		case 32:
-			lineas.push_back("Bien dicho, Coco. Veo determinacion y honestidad en tus ojos.");
-			lineas.push_back("Te doy este item: Tinta magica.");
-			opciones.push_back("[1] Muchas gracias Qifrey, me servira de mucho!");
+			lineas.push_back("Bien dicho, Coco. Veo determinación y honestidad en tus ojos.");
+			lineas.push_back("Te doy este objeto: Tinta mágica.");
+			opciones.push_back("[1] ¡Muchas gracias Qifrey, me servirá de mucho!");
 			break;
 
 		case 33:
-			lineas.push_back("[HAS OBTENIDO: Tinta magica]");
+			lineas.push_back("[HAS OBTENIDO: Tinta mágica]");
 			lineas.push_back("Se ha agregado a tu inventario.");
-			lineas.push_back("Tu vinculo y confianza con Maestro Qifrey han aumentado!");
+			lineas.push_back("¡Tu vínculo y confianza con Maestro Qifrey han aumentado!");
 			opciones.push_back("[1] Continuar explorando");
 			break;
 
 		case 34:
-			lineas.push_back("Ya te he entregado la Tinta magica, Coco.");
+			lineas.push_back("Ya te he entregado la Tinta mágica, Coco.");
 			lineas.push_back("Revisa tu mochila y dale buen uso en tus pergaminos.");
-			opciones.push_back("[1] Entendido Maestro.");
+			opciones.push_back("[1] Entendido, Maestro.");
 			break;
 
 		case 40:
-			lineas.push_back("Increible hallazgo, Coco! Esta tinta arcaica es justo lo");
-			lineas.push_back("que necesitabamos en el taller para restaurar pergaminos.");
+			lineas.push_back("¡Increíble hallazgo, Coco! Esta tinta arcaica es justo lo");
+			lineas.push_back("que necesitábamos en el taller para restaurar pergaminos.");
 			lineas.push_back("Demuestras una gran curiosidad y respeto por este atelier.");
-			lineas.push_back("Has demostrado ser una verdadera amiga y gran aprendiz!");
-			opciones.push_back("[1] Me alegra mucho ser de ayuda, Maestro!");
+			lineas.push_back("¡Has demostrado ser una verdadera amiga y gran aprendiz!");
+			opciones.push_back("[1] ¡Me alegra mucho ser de ayuda, Maestro!");
 			break;
 
 		case 41:
-			lineas.push_back("[MISION SECUNDARIA COMPLETADA]");
+			lineas.push_back("[MISIÓN SECUNDARIA COMPLETADA]");
 			lineas.push_back("Entregaste la tinta arcaica al Maestro Qifrey.");
 			lineas.push_back("Tu nivel de confianza con Qifrey ahora es: Amigos (+50 pts)");
 			opciones.push_back("[1] Continuar explorando");
 			break;
 
 		case 99:
-			lineas.push_back("[INVENTARIO LLENO: Capacidad maxima 6 items alcanzada]");
-			lineas.push_back("No puedes recibir mas items en este momento.");
+			lineas.push_back("[INVENTARIO LLENO: Capacidad máxima 6 objetos alcanzada]");
+			lineas.push_back("No puedes recibir más objetos en este momento.");
 			opciones.push_back("[1] Volver");
 			break;
 
 		case 200:
-			lineas.push_back("Vaya vaya... miren a quien tenemos aqui.");
+			lineas.push_back("Vaya, vaya... Miren a quién tenemos aquí.");
 			opciones.push_back("[1] Siguiente");
 			break;
 
 		case 201:
-			lineas.push_back("A la joven y pequena Coco, porque entraste a mi torre?");
-			opciones.push_back("[1] Necesito encontrar un libro");
-			opciones.push_back("[2] A ti que te importa, Agott?");
+			lineas.push_back("A la joven y pequeña Coco, ¿por qué entraste a mi torre?");
+			opciones.push_back("[1] Necesito encontrar un libro.");
+			opciones.push_back("[2] ¿A ti qué te importa, Agott?");
 			break;
 
 		case 202:
-			lineas.push_back("Puedes encontrarlo en este resto de cajas si quieres...\nAl final, solo son basura.");
+			lineas.push_back("Puedes encontrarlo en este montón de cajas si quieres...\nAl final, solo son basura.");
 			opciones.push_back("[1] Entendido");
 			break;
 
 		case 203:
-			lineas.push_back("Largate de aqui!");
+			lineas.push_back("¡Lárgate de aquí!");
 			opciones.push_back("[1] Ya me voy...");
 			break;
 
 		case 210:
-			lineas.push_back("Que paso ahora, nina?");
+			lineas.push_back("¿Qué pasó ahora, niña?");
 			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				opciones.push_back("[1] Solo pasaba por aqui, ya encontre el libro, Agott.");
+				opciones.push_back("[1] Solo pasaba por aquí, ya encontré el libro, Agott.");
 			} else {
 				opciones.push_back("[1] Sigo buscando el libro, necesito ayuda...");
 			}
 			if (myrphonRescatado) {
-				opciones.push_back("[2] Recupere a su mascota, esta a salvo con Richeh.");
+				opciones.push_back("[2] Recuperé a su mascota, está a salvo con Richeh.");
 			}
 			break;
 
 		case 211:
-			lineas.push_back("No esperaba que lo encuentres en esta basura jaja.");
+			lineas.push_back("No esperaba que lo encontraras en esta basura, jaja.");
 			opciones.push_back("[1] Continuar");
 			break;
 
 		case 212:
-			lineas.push_back("Sabia que no eras util para eso JAJAJA.\nPrueba empujando las cajas de la torre.");
+			lineas.push_back("Sabía que no eras útil para eso, jajaja.\nPrueba empujando las cajas de la torre.");
 			opciones.push_back("[1] Gracias por nada...");
 			break;
 
 		case 220:
-			lineas.push_back("Porque sigues aqui, Coco?? No eres bienvenida.");
+			lineas.push_back("¿Por qué sigues aquí, Coco? No eres bienvenida.");
 			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				opciones.push_back("[1] Nada, solo queria burlarme de tu cara.");
+				opciones.push_back("[1] Nada, solo quería burlarme de tu cara.");
 			} else {
-				opciones.push_back("[1] Sigo buscando algo, deja de molestar!");
+				opciones.push_back("[1] ¡Sigo buscando algo, deja de molestar!");
 			}
 			if (myrphonRescatado) {
-				opciones.push_back("[2] Recupere a su mascota, esta a salvo con Richeh.");
+				opciones.push_back("[2] Recuperé a su mascota, está a salvo con Richeh.");
 			}
 			break;
 
 		case 221:
-			lineas.push_back("Estupida nina!");
+			lineas.push_back("¡Estúpida niña!");
 			opciones.push_back("[1] Salir");
 			break;
 
 		case 222:
-			lineas.push_back("Que demonios estas buscando??");
-			opciones.push_back("[1] QUE- TE- IMPORTA!!!!");
+			lineas.push_back("¿Qué demonios estás buscando?");
+			opciones.push_back("[1] ¡¡QUÉ TE IMPORTA!!");
 			break;
 
 		case 223:
@@ -276,7 +276,7 @@ public:
 			break;
 
 		case 230:
-			lineas.push_back("El taller ya volvio a la normalidad. Deja de perder el tiempo y concentrate en tu viaje.");
+			lineas.push_back("El taller ya volvió a la normalidad. Deja de perder el tiempo y concéntrate en tu viaje.");
 			opciones.push_back("[1] Salir");
 			break;
 
@@ -287,14 +287,14 @@ public:
 
 		case 232:
 			lineas.push_back("(Sus ojos se abren de golpe, perdiendo toda su compostura)");
-			lineas.push_back("Hablas en serio? E-Esa criatura tan adorable esta bien?...");
+			lineas.push_back("¿Hablas en serio? ¿E-Esa criatura tan adorable está bien?...");
 			opciones.push_back("[1] Continuar...");
 			break;
 
 		case 233:
-			lineas.push_back("(Se aclara la garganta rapidamente y recupera su postura seria)");
-			lineas.push_back("Quiero decir... Que buena noticia para Richeh.");
-			lineas.push_back("Ella... ha estado muy distraida sin el.");
+			lineas.push_back("(Se aclara la garganta rápidamente y recupera su postura seria)");
+			lineas.push_back("Quiero decir... Qué buena noticia para Richeh.");
+			lineas.push_back("Ella... ha estado muy distraída sin él.");
 			opciones.push_back("[1] Continuar...");
 			break;
 
@@ -307,53 +307,53 @@ public:
 		case 235:
 			lineas.push_back("...Gracias por traerlo de vuelta.");
 			lineas.push_back("Has hecho un trabajo aceptable, Coco.");
-			opciones.push_back("[1] De nada, Agott!");
+			opciones.push_back("[1] ¡De nada, Agott!");
 			break;
 
 		case 300:
 			lineas.push_back("*llorando*");
-			opciones.push_back("[1] Hola, porque estas llorando?");
-			opciones.push_back("[2] Disculpa... cai a este pozo buscando un objeto magico...");
+			opciones.push_back("[1] Hola, ¿por qué estás llorando?");
+			opciones.push_back("[2] Disculpa... caí a este pozo buscando un objeto mágico...");
 			break;
 
 		case 301:
 			lineas.push_back("...No es de tu incumbencia. Vete...");
-			lineas.push_back("...Es mi culpa por no haberlo sujetado mas fuerte.");
-			opciones.push_back("[1] Que? Pero como te puedo ayudar?");
-			opciones.push_back("[2] Por eso estas llorando?");
+			lineas.push_back("...Es mi culpa por no haberlo sujetado más fuerte.");
+			opciones.push_back("[1] ¿Qué? Pero ¿cómo te puedo ayudar?");
+			opciones.push_back("[2] ¿Por eso estás llorando?");
 			break;
 
 		case 302:
 			lineas.push_back("¿Ayudarme?... No creo que puedas.");
-			lineas.push_back("...Mi Myrphon todavia no regresa. Se quedo atrapado");
+			lineas.push_back("...Mi Myrphon todavía no regresa. Se quedó atrapado");
 			lineas.push_back("en esa horrible cueva Serpentback cuando nos atacaron los magos oscuros...");
-			lineas.push_back("...Si de verdad quieres ayudar, traelo de vuelta a este cuarto.");
-			lineas.push_back("A cambio te dare una Varita Magica que ya no uso.");
-			opciones.push_back("[1] Acepto, traere a Myrphon de vuelta!");
+			lineas.push_back("...Si de verdad quieres ayudar, tráelo de vuelta a este cuarto.");
+			lineas.push_back("A cambio te daré una Varita Mágica que ya no uso.");
+			opciones.push_back("[1] ¡Acepto, traeré a Myrphon de vuelta!");
 			break;
 
 		case 303:
-			lineas.push_back("¡No tienes idea de nada! ¡Largate!");
-			lineas.push_back("...¡No quiero volver a ver tu cara por aqui!");
+			lineas.push_back("¡No tienes idea de nada! ¡Lárgate!");
+			lineas.push_back("...¡No quiero volver a ver tu cara por aquí!");
 			opciones.push_back("[1] Salir...");
 			break;
 
 		case 310:
-			lineas.push_back("¿Un item magico? Que persistentes son los viajeros...");
-			lineas.push_back("...Tengo una Varita Magica que ya no quiero usar.");
+			lineas.push_back("¿Un objeto mágico? Qué persistentes son los viajeros...");
+			lineas.push_back("...Tengo una Varita Mágica que ya no quiero usar.");
 			lineas.push_back("No me interesa la magia tradicional de la Alianza...");
-			lineas.push_back("...Pero no te la dare gratis. Mi mente no esta para negociar");
+			lineas.push_back("...Pero no te la daré gratis. Mi mente no está para negociar");
 			lineas.push_back("mientras mi pobre Myrphon siga perdido en la oscuridad.");
-			opciones.push_back("[1] Lamento escuchar eso... Como te puedo ayudar a recuperarlo?");
-			opciones.push_back("[2] Vaya, que mal, y... por un simple animal te pones a llorar?");
+			opciones.push_back("[1] Lamento escuchar eso... ¿Cómo te puedo ayudar a recuperarlo?");
+			opciones.push_back("[2] Vaya, qué mal, y... ¿por un simple animal te pones a llorar?");
 			break;
 
 		case 311:
-			lineas.push_back("Mi Myrphon se asusto por el ataque de unos magos oscuros");
-			lineas.push_back("en el laberinto subterraneo Serpentback...");
-			lineas.push_back("...Si entras alli y lo traes a salvo a este cuarto del pozo,");
-			lineas.push_back("la Varita Magica sera tuya. ¿Trato?");
-			opciones.push_back("[1] Si.");
+			lineas.push_back("Mi Myrphon se asustó por el ataque de unos magos oscuros");
+			lineas.push_back("en el laberinto subterráneo Serpentback...");
+			lineas.push_back("...Si entras allí y lo traes a salvo a este cuarto del pozo,");
+			lineas.push_back("la Varita Mágica será tuya. ¿Trato?");
+			opciones.push_back("[1] Sí.");
 			break;
 
 		case 312:
@@ -363,49 +363,49 @@ public:
 			break;
 
 		case 320:
-			lineas.push_back("¿Que quieres ahora? Te dije que te largaras.");
-			opciones.push_back("[1] Esta bien, ya me iba");
-			opciones.push_back("[2] Espera, hablo en serio... Quiero ayudarte a buscar a Myrphon");
+			lineas.push_back("¿Qué quieres ahora? Te dije que te largaras.");
+			opciones.push_back("[1] Está bien, ya me iba.");
+			opciones.push_back("[2] Espera, hablo en serio... Quiero ayudarte a buscar a Myrphon.");
 			break;
 
 		case 321:
 			lineas.push_back("(Te mira de reojo de forma desconfiada) ...¿De verdad?...");
-			lineas.push_back("...Esta bien. Se perdio en el laberinto Serpentback por culpa");
-			lineas.push_back("de unos magos oscuros. Traelo de vuelta a este cuarto.");
-			lineas.push_back("Si lo logras, te dare la Varita Magica que buscas. No me falles.");
-			opciones.push_back("[1] Hare lo mejor que pueda y te lo traere!");
+			lineas.push_back("...Está bien. Se perdió en el laberinto Serpentback por culpa");
+			lineas.push_back("de unos magos oscuros. Tráelo de vuelta a este cuarto.");
+			lineas.push_back("Si lo logras, te daré la Varita Mágica que buscas. No me falles.");
+			opciones.push_back("[1] ¡Haré lo mejor que pueda y te lo traeré!");
 			break;
 
 		case 330:
-			lineas.push_back("¿Pudiste encontrarlo? ¿Donde esta mi Myrphon?");
-			opciones.push_back("[1] Aun no...");
+			lineas.push_back("¿Pudiste encontrarlo? ¿Dónde está mi Myrphon?");
+			opciones.push_back("[1] Aún no...");
 			break;
 
 		case 331:
 			lineas.push_back("Por favor, date prisa... El laberinto Serpentback es muy oscuro");
-			lineas.push_back("y debe tener mucho miedo. Estare esperando aqui.");
+			lineas.push_back("y debe tener mucho miedo. Estaré esperando aquí.");
 			opciones.push_back("[1] Entendido...");
 			break;
 
 		case 350:
 			lineas.push_back("(Sus ojos se abren de par en par al ver al animal) \"¡¡Myrphon!!\"");
-			opciones.push_back("[1] Aqui esta, sano y salvo.");
+			opciones.push_back("[1] Aquí está, sano y salvo.");
 			break;
 
 		case 351:
-			lineas.push_back("(Abraza fuertemente a su mascota mientras llora de alegria)");
-			lineas.push_back("¡Muchas gracias! Pense que no volveria a verlo...");
-			lineas.push_back("...Lo prometido es deuda. Toma esto, es la Varita Magica");
-			lineas.push_back("de la Alianza. A mi no me sirve para mi tipo de magia,");
-			lineas.push_back("pero a ti te sera muy util... Gracias de nuevo, aventurero.");
-			lineas.push_back("Ahora, si me disculpas, pasare tiempo con mi amigo.");
-			opciones.push_back("[1] Muchas gracias Richeh!");
+			lineas.push_back("(Abraza fuertemente a su mascota mientras llora de alegría)");
+			lineas.push_back("¡Muchas gracias! Pensé que no volvería a verlo...");
+			lineas.push_back("...Lo prometido es deuda. Toma esto, es la Varita Mágica");
+			lineas.push_back("de la Alianza. A mí no me sirve para mi tipo de magia,");
+			lineas.push_back("pero a ti te será muy útil... Gracias de nuevo, aventurero.");
+			lineas.push_back("Ahora, si me disculpas, pasaré tiempo con mi amigo.");
+			opciones.push_back("[1] ¡Muchas gracias, Richeh!");
 			break;
 
 		case 360:
-			lineas.push_back("( •u• ): Hola!! Myrphon y yo estamos muy felices");
-			lineas.push_back("gracias a ti. Ten cuidado en tus viajes!!");
-			opciones.push_back("[1] Nos vemos Richeh!");
+			lineas.push_back("( •u• ): ¡Hola! Myrphon y yo estamos muy felices");
+			lineas.push_back("gracias a ti. ¡¡Ten cuidado en tus viajes!!");
+			opciones.push_back("[1] ¡Nos vemos, Richeh!");
 			break;
 
 		case 400:
@@ -416,24 +416,24 @@ public:
 			break;
 
 		case 401:
-			lineas.push_back("...Mientras el es perfeccionista, sigue todas las reglas");
+			lineas.push_back("...Mientras él es perfeccionista, sigue todas las reglas");
 			lineas.push_back("y se preocupa por el estatus, Richeh lo ignora activamente");
-			lineas.push_back("y considera que la academia es una carcel que destruye la creatividad.");
+			lineas.push_back("y considera que la academia es una cárcel que destruye la creatividad.");
 			opciones.push_back("[1] Cerrar");
 			break;
 
 		case 402:
 			lineas.push_back("[DATO CURIOSO DE RICHEH #2]");
 			lineas.push_back("Cuando Richeh se enfada o no quiere hacer algo, se pone");
-			lineas.push_back("rigida como un mueble y sus companeras tienen que");
+			lineas.push_back("rígida como un mueble y sus compañeras tienen que");
 			lineas.push_back("cargarla en peso para moverla.");
 			opciones.push_back("[1] Cerrar");
 			break;
 
 		case 404:
 			lineas.push_back("[DATO CURIOSO DE RICHEH #3]");
-			lineas.push_back("La autora, Kamome Shirahama, diseno las tunicas y el cabello");
-			lineas.push_back("de Richeh con lineas muy rectas, pesadas y rigidas...");
+			lineas.push_back("La autora, Kamome Shirahama, diseñó las túnicas y el cabello");
+			lineas.push_back("de Richeh con líneas muy rectas, pesadas y rígidas...");
 			opciones.push_back("[1] Continuar...");
 			break;
 
@@ -445,17 +445,17 @@ public:
 
 		case 410:
 			lineas.push_back("[DIARIO DEL ATELIER: MYRPHON PERDIDO]");
-			lineas.push_back("Richeh, companera de cuarto de Agott, no le gusta las visitas");
-			lineas.push_back("desde que se perdio Myrphon, un pequeno pinguino con rasgos de grifo.");
-			lineas.push_back("Myrphon se perdio tras el ataque inesperado de unos magos oscuros");
-			lineas.push_back("en el laberinto subterraneo Serpentback durante el segundo examen...");
+			lineas.push_back("Richeh, compañera de cuarto de Agott, no le gustan las visitas");
+			lineas.push_back("desde que se perdió Myrphon, un pequeño pingüino con rasgos de grifo.");
+			lineas.push_back("Myrphon se perdió tras el ataque inesperado de unos magos oscuros");
+			lineas.push_back("en el laberinto subterráneo Serpentback durante el segundo examen...");
 			opciones.push_back("[1] Continuar...");
 			break;
 
 		case 411:
 			lineas.push_back("...El examen evaluaba si un aprendiz usa la magia en secreto.");
-			lineas.push_back("Se cancelo por el caos, el pobre Myrphon quedo atrapado.");
-			lineas.push_back("Richeh y Agott tienen la esperanza de que algun aventurero");
+			lineas.push_back("Se canceló por el caos, el pobre Myrphon quedó atrapado.");
+			lineas.push_back("Richeh y Agott tienen la esperanza de que algún aventurero");
 			lineas.push_back("valiente pueda encontrarlo sano y salvo.");
 			opciones.push_back("[1] Cerrar");
 			break;

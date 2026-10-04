@@ -70,7 +70,7 @@ public:
 		bool tieneMateriales = (tieneTela && tieneTinta && tieneLibro) || crafteoCapa;
 
 		titulos.push_back("Hablar con Qifrey");
-		descripciones.push_back("Encuentra al Maestro Qifrey en el atelier y dialoga\ncon el sobre el crafteo de la Capa Magica.");
+		descripciones.push_back("Encuentra al Maestro Qifrey en el atelier y dialoga\ncon él sobre la confección de la Capa Mágica.");
 		desbloqueadas.push_back(true);
 		if (habloConQifrey) {
 			estados.push_back("COMPLETADA");
@@ -79,7 +79,7 @@ public:
 		}
 
 		titulos.push_back("Conseguir Materiales");
-		descripciones.push_back("Recolecta en el atelier los 3 materiales indispensables:\nTela, Libro de hechizos y Tinta magica.");
+		descripciones.push_back("Recolecta en el atelier los 3 materiales indispensables:\nTela, Libro de hechizos y Tinta mágica.");
 		if (habloConQifrey) {
 			desbloqueadas.push_back(true);
 			if (tieneMateriales) {
@@ -92,8 +92,8 @@ public:
 			estados.push_back("BLOQUEADA");
 		}
 
-		titulos.push_back("Craftear Capa Magica");
-		descripciones.push_back("Regresa con Maestro Qifrey y entrega los materiales\npara confeccionar la legendaria Capa Magica.");
+		titulos.push_back("Confeccionar Capa Mágica");
+		descripciones.push_back("Regresa con el Maestro Qifrey y entrega los materiales\npara confeccionar la legendaria Capa Mágica.");
 		if (tieneMateriales) {
 			desbloqueadas.push_back(true);
 			if (crafteoCapa) {
@@ -109,8 +109,8 @@ public:
 		bool tieneTintaColeccion = (inv != nullptr && (inv->tieneItem("Frasco de Tinta") || inv->tieneItem("Tinta de Viento")));
 		bool confianzaAmigos = (qifrey != nullptr && qifrey->getConfianza() >= 2);
 
-		titulos.push_back("Coleccion de Tinta");
-		descripciones.push_back("Explora los rincones secretos del taller para hallar frascos\nde tinta arcaica perdidos y entregaselos a Qifrey.");
+		titulos.push_back("Colección de Tinta");
+		descripciones.push_back("Explora los rincones secretos del taller para hallar frascos\nde tinta arcaica perdidos y entregárselos a Qifrey.");
 		desbloqueadas.push_back(true);
 		if (confianzaAmigos) {
 			estados.push_back("COMPLETADA");
@@ -121,7 +121,7 @@ public:
 		}
 
 		titulos.push_back("Rescate de Myrphon");
-		descripciones.push_back("Encuentra y rescata a Myrphon, la mascota de Richeh,\natrapada en el laberinto subterraneo Serpentback.");
+		descripciones.push_back("Encuentra y rescata a Myrphon, la mascota de Richeh,\natrapada en el laberinto subterráneo Serpentback.");
 		if (misionMyrphonActiva || myrphonRescatado || dioVaraRicheh) {
 			desbloqueadas.push_back(true);
 			if (dioVaraRicheh) {

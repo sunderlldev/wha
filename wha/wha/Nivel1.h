@@ -69,7 +69,7 @@ public:
 			Inventario* inv = protagonista->getInventario();
 			bool tieneVara = (inv != nullptr && inv->tieneItem("Vara magica"));
 			if (tieneVara) {
-				promptFlotante = "[ENTER] Usar Vara magica para derribar pared";
+				promptFlotante = "[ENTER] Usar Vara mágica para derribar pared";
 			} else {
 				promptFlotante = "Coco: Este lugar parece estar bloqueado, puedo derribarlo pero necesito magia...";
 			}
@@ -82,14 +82,14 @@ public:
 			int mh = myrphon->getAlto();
 			int distX = (px + pw <= mx) ? (mx - (px + pw)) : ((mx + mw <= px) ? (px - (mx + mw)) : 0);
 			int distY = (py + ph <= my) ? (my - (py + ph)) : ((my + mh <= py) ? (py - (my + mh)) : 0);
-			if (distX <= 3 && distY <= 3) {
-				if (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva()) {
-					promptFlotante = "[ENTER] Rescatar a Myrphon";
-				} else {
-					promptFlotante = "Coco: Un pequeno pinguino con rasgos de grifo... Parece perdido.";
+				if (distX <= 3 && distY <= 3) {
+					if (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva()) {
+						promptFlotante = "[ENTER] Rescatar a Myrphon";
+					} else {
+						promptFlotante = "Coco: Un pequeño pingüino con rasgos de grifo... Parece perdido.";
+					}
+					return true;
 				}
-				return true;
-			}
 		}
 		return false;
 	}
@@ -107,7 +107,7 @@ public:
 					}
 				}
 				inv->removerItem("Vara magica");
-				promptFlotante = "[Lanzaste bola de fuego! Pared destruida (Vara consumida)]";
+				promptFlotante = "[¡Lanzaste bola de fuego! Pared destruida (Vara consumida)]";
 				return true;
 			}
 		}
@@ -133,8 +133,8 @@ public:
 				if (gestorMisiones != nullptr) {
 					gestorMisiones->setObjetivoActual("Llevar a Myrphon de regreso con Richeh");
 				}
-				promptFlotante = "[Rescataste a Myrphon! Llevaselo a Richeh]";
-				mostrarMensajeTemporal("[¡Myrphon rescatado! Vuelve al sotano de Richeh]", 100);
+				promptFlotante = "[¡Rescataste a Myrphon! Llévaselo a Richeh]";
+				mostrarMensajeTemporal("[¡Myrphon rescatado! Vuelve al sótano de Richeh]", 100);
 				return true;
 			}
 		}
@@ -253,9 +253,9 @@ public:
 		itemsSuelo.push_back(new ItemMagico(160, 50, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran rio.", "Objeto de Coleccion", false));
 
 		limpiarLetreros();
-		letreros.push_back(new Letrero(75, 22, "Letrero: [CHOZA DE TRAZOS] Dibuja runas con pasion y cuida tus pergaminos."));
-		letreros.push_back(new Letrero(355, 30, "Letrero: ALMACEN ABANDONADO. Peligro: Derrumbe. Usa magia ignea."));
-		letreros.push_back(new Letrero(400, 70, "Letrero: TORRE DE AGOTT. Prohibido el paso sin autorizacion de Agott."));
+		letreros.push_back(new Letrero(75, 22, "Letrero: [CHOZA DE TRAZOS] Dibuja runas con pasión y cuida tus pergaminos."));
+		letreros.push_back(new Letrero(355, 30, "Letrero: ALMACÉN ABANDONADO. Peligro: Derrumbe. Usa magia ígnea."));
+		letreros.push_back(new Letrero(400, 70, "Letrero: TORRE DE AGOTT. Prohibido el paso sin autorización de Agott."));
 		letreros.push_back(new Letrero(75, 152, "Letrero: DESPACHO DE QIFREY. Maestro del atelier y protector del agua."));
 
 		for (size_t i = 0; i < letreros.size(); i++) {

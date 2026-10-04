@@ -61,7 +61,7 @@ public:
 	}
 
 	void mostrarDesenlaceFinal() {
-		std::cout << "Felicidades! Has completado el viaje del Arbol de Plata!\n";
+		std::cout << "¡Felicidades! ¡Has completado el viaje del Árbol de Plata!\n";
 	}
 
 	void actualizar() {
@@ -299,14 +299,14 @@ public:
 					roles.push_back("Aprendiz");
 					roles.push_back("Aprendiz");
 					roles.push_back("Aprendiz");
-					roles.push_back("Inspector Magico");
+					roles.push_back("Inspector Mágico");
 
 					std::vector<std::string> desc;
-					desc.push_back("Protagonista del Nivel 1. Descubrio la verdad sobre el dibujo magico.");
+					desc.push_back("Protagonista del Nivel 1. Descubrió la verdad sobre el dibujo mágico.");
 					desc.push_back("Tutor y protector del atelier. Especialista en trazos y magia de agua.");
 					desc.push_back("Amiga reflexiva de Coco. Gran conocedora de runas antiguas.");
-					desc.push_back("Companera disciplinada y exigente. Aspira a la perfeccion del trazo.");
-					desc.push_back("Companera alegre y entusiasta. Le fascina la magia que anima vidas.");
+					desc.push_back("Compañera disciplinada y exigente. Aspira a la perfección del trazo.");
+					desc.push_back("Compañera alegre y entusiasta. Le fascina la magia que anima vidas.");
 					desc.push_back("Hechicero artesano que protege el atelier contra peligros.");
 
 					std::vector<int> confianzas;
