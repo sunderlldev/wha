@@ -11,12 +11,10 @@ private:
 
 public:
     Myrphon(int x, int y)
-        : ObjetoMapa(x, y, 7, 4, false, myrphon), rescatado(false) {
+        : ObjetoMapa(x, y, 7, 2, false, myrphon), rescatado(false) {
         arteAscii = {
-            "  _v_  ",
-            " (o,o) ",
-            " /( )\\ ",
-            "  ^ ^  "
+            " (\\)   ",
+            "<(o)==<"
         };
     }
 

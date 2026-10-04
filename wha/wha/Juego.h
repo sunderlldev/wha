@@ -136,7 +136,7 @@ public:
 				}
 
 				pantalla.limpiarBuffer();
-				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), Nivel1::esCuartoEstatico);
+				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), Nivel1::esCuartoEstatico, Nivel1::esCaminoEstatico);
 
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
 					int pox = nivel.getPozoX() - camX;

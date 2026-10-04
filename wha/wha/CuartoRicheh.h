@@ -96,14 +96,16 @@ public:
 
 	void colocarMyrphon() {
 		if (mapa != nullptr) {
-			mapa->setCaracter(64, 12, '_');
-			mapa->setCaracter(65, 12, 'v');
-			mapa->setCaracter(66, 12, '_');
-			mapa->setCaracter(63, 13, '(');
-			mapa->setCaracter(64, 13, 'o');
-			mapa->setCaracter(65, 13, ',');
-			mapa->setCaracter(66, 13, 'o');
-			mapa->setCaracter(67, 13, ')');
+			mapa->setCaracter(64, 12, '(');
+			mapa->setCaracter(65, 12, '\\');
+			mapa->setCaracter(66, 12, ')');
+			mapa->setCaracter(63, 13, '<');
+			mapa->setCaracter(64, 13, '(');
+			mapa->setCaracter(65, 13, 'o');
+			mapa->setCaracter(66, 13, ')');
+			mapa->setCaracter(67, 13, '=');
+			mapa->setCaracter(68, 13, '=');
+			mapa->setCaracter(69, 13, '<');
 		}
 	}
 

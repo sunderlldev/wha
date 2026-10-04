@@ -111,6 +111,7 @@ private:
             case 10: return L"\033[38;5;208m";
             case 11: return L"\033[38;5;28m";
             case 12: return L"\033[38;5;130m";
+            case 13: return L"\033[34m";
             default: return L"\033[0m";
         }
     }
@@ -129,6 +130,7 @@ private:
             case 10: return ORANGE;
             case 11: return DARK_GREEN;
             case 12: return BROWN;
+            case 13: return BLUE;
             default: return RESET;
         }
     }
@@ -835,7 +837,7 @@ public:
 #endif
     }
 
-    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0, bool enSubMapa = false, bool (*esCuartoFunc)(int, int) = nullptr) {
+    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0, bool enSubMapa = false, bool (*esCuartoFunc)(int, int) = nullptr, bool (*esCaminoFunc)(int, int) = nullptr) {
         int filasMapa = (int)matrizMapa.size();
         if (filasMapa == 0) return;
         int columnasMapa = (int)matrizMapa[0].size();
@@ -854,10 +856,20 @@ public:
                     } else if (enSubMapa && (ch == '/' || ch == '=')) {
                         buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
                         bufferColor[yPantalla][xPantalla] = 12;
-                    } else if (ch == ' ' && !enSubMapa && (esCuartoFunc == nullptr || !esCuartoFunc(xMundo, yMundo))) {
-                        int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
-                        buffer[yPantalla][xPantalla] = (r == 0) ? L'"' : ((r == 1) ? L'\'' : L',');
-                        bufferColor[yPantalla][xPantalla] = 11;
+                    } else if (ch == ' ' && !enSubMapa) {
+                        if (esCuartoFunc != nullptr && esCuartoFunc(xMundo, yMundo)) {
+                            buffer[yPantalla][xPantalla] = L' ';
+                            bufferColor[yPantalla][xPantalla] = 0;
+                        } else if (esCaminoFunc != nullptr && esCaminoFunc(xMundo, yMundo)) {
+                            int r = std::abs(xMundo * 5 + yMundo * 11) % 5;
+                            wchar_t charCamino = (r == 0) ? L'.' : ((r == 1) ? L':' : L' ');
+                            buffer[yPantalla][xPantalla] = charCamino;
+                            bufferColor[yPantalla][xPantalla] = 8;
+                        } else {
+                            int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
+                            buffer[yPantalla][xPantalla] = (r == 0) ? L'"' : ((r == 1) ? L'\'' : L',');
+                            bufferColor[yPantalla][xPantalla] = 11;
+                        }
                     } else {
                         buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
                         if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
@@ -868,6 +880,8 @@ public:
                             bufferColor[yPantalla][xPantalla] = 8;
                         } else if (ch == 'O') {
                             bufferColor[yPantalla][xPantalla] = 7;
+                        } else if (ch == '<') {
+                            bufferColor[yPantalla][xPantalla] = 4;
                         } else if (ch == '*') {
                             bufferColor[yPantalla][xPantalla] = 4;
                         } else if (ch == '!') {
@@ -879,14 +893,8 @@ public:
                         }
                     }
                 } else {
-                    if (!enSubMapa) {
-                        int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
-                        buffer[yPantalla][xPantalla] = (r == 0) ? L'"' : ((r == 1) ? L'\'' : L',');
-                        bufferColor[yPantalla][xPantalla] = 11;
-                    } else {
-                        buffer[yPantalla][xPantalla] = L' ';
-                        bufferColor[yPantalla][xPantalla] = 0;
-                    }
+                    buffer[yPantalla][xPantalla] = L' ';
+                    bufferColor[yPantalla][xPantalla] = 0;
                 }
             }
         }
@@ -941,28 +949,28 @@ public:
             int pose = frame % 2;
 
             int patronCoco[8][10] = {
-                {0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
-                {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+                {0, 0, 0, 0, 13, 13, 0, 0, 0, 0},
+                {0, 0, 13, 13, 13, 13, 13, 13, 0, 0},
                 {0, 0, 0, 4, 4, 4, 4, 0, 0, 0},
-                {0, 6, 6, 6, 6, 6, 6, 6, 6, 0},
-                {0, 0, 0, 6, 6, 6, 6, 0, 0, 0},
+                {0, 13, 13, 13, 13, 13, 13, 13, 13, 0},
+                {0, 0, 0, 13, 13, 13, 13, 0, 0, 0},
                 {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
-                {0, 0, 6, 6, 0, 0, 6, 6, 0, 0},
+                {0, 0, 13, 13, 0, 0, 13, 13, 0, 0},
                 {0, 12, 12, 0, 0, 0, 0, 12, 12, 0}
             };
 
             if (pose == 0) {
                 patronCoco[4][0] = 12;
                 patronCoco[4][1] = 12;
-                patronCoco[6][2] = 6;
-                patronCoco[6][3] = 6;
+                patronCoco[6][2] = 13;
+                patronCoco[6][3] = 13;
                 patronCoco[7][1] = 12;
                 patronCoco[7][2] = 12;
             } else {
                 patronCoco[4][8] = 12;
                 patronCoco[4][9] = 12;
-                patronCoco[6][6] = 6;
-                patronCoco[6][7] = 6;
+                patronCoco[6][6] = 13;
+                patronCoco[6][7] = 13;
                 patronCoco[7][7] = 12;
                 patronCoco[7][8] = 12;
             }

@@ -28,6 +28,16 @@ public:
 		return false;
 	}
 
+	static bool esCaminoEstatico(int px, int py) {
+		if (px >= 76 && px <= 108 && py >= 46 && py <= 148) return true;
+		if (px >= 108 && px <= 303 && py >= 94 && py <= 111) return true;
+		if (px >= 302 && px <= 321 && py >= 26 && py <= 169) return true;
+		if (px >= 320 && px <= 384 && py >= 98 && py <= 108) return true;
+		if (px >= 320 && px <= 382 && py >= 24 && py <= 54) return true;
+		if (px >= 320 && px <= 382 && py >= 150 && py <= 172) return true;
+		return false;
+	}
+
 	virtual int determinarCuarto(int px, int py) const override {
 		if (px >= 59 && px <= 125 && py >= 19 && py <= 45) return 1;
 		if (px >= 382 && px <= 457 && py >= 11 && py <= 49) return 2;
@@ -121,8 +131,8 @@ public:
 			if (distX <= 3 && distY <= 3) {
 				myrphon->setRescatado(true);
 				if (mapa != nullptr) {
-					for (int r = 0; r < 4; r++) {
-						for (int c = 0; c < 7; c++) {
+					for (int r = 0; r < mh; r++) {
+						for (int c = 0; c < mw; c++) {
 							mapa->setCaracter(mx + c, my + r, ' ');
 						}
 					}
