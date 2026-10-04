@@ -31,6 +31,13 @@ public:
 		listaNivel.push_back(new Nivel2());
 		listaNivel.push_back(new Nivel3());
 		listaNivel[nivelActual]->inciarNivel();
+
+		if (nivelActual == 1) {
+			Nivel2* n2 = dynamic_cast<Nivel2*>(listaNivel[1]);
+			if (n2 != nullptr) {
+				n2->mostrarCinematicaIntro(pantalla);
+			}
+		}
 	}
 
 	~Juego() {
@@ -55,6 +62,12 @@ public:
 			nivelActual++;
 			redibujarNecesario = true;
 			listaNivel[nivelActual]->inciarNivel();
+			if (nivelActual == 1) {
+				Nivel2* n2 = dynamic_cast<Nivel2*>(listaNivel[1]);
+				if (n2 != nullptr) {
+					n2->mostrarCinematicaIntro(pantalla);
+				}
+			}
 		} else {
 			mostrarDesenlaceFinal();
 		}
@@ -253,7 +266,13 @@ public:
 						if (pantallaX + c >= 0 && pantallaX + c < pantalla.getAnchoJuego() && pantallaY + r >= 0 && pantallaY + r < pantalla.getAltoTotal()) {
 							char ch = prota->getCaracter(r, c);
 							if (ch != ' ') {
-								int colCoco = (r == 2) ? 1 : 6;
+								int colPersonaje = 6;
+
+								if (nivel.getNumeroNivel() == 2) {
+									colPersonaje = 2;
+								}
+
+								int colCoco = (r == 2) ? 1 : colPersonaje;
 								pantalla.setPixelJuego(pantallaX + c, pantallaY + r, ch, colCoco);
 							}
 						}
