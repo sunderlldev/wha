@@ -34,37 +34,37 @@ private:
 
 	void cargarMapa() {
 		mapa.clear();
-		mapa.push_back(R"(##############################################################################)");
-		mapa.push_back(R"(# #     #         #           #       #   #     #       #       #     #     ##)");
-		mapa.push_back(R"(# ##### # ####  ### # ####  # ##### # #   # #  ## ###   # # ####  # ### # ####)");
-		mapa.push_back(R"(#   #       # #     #                   # #   #     # #   # #     #   #     ##)");
-		mapa.push_back(R"(### # # # # # ####  # ##### # #######     # # # ##### #######  #####  # ### ##)");
-		mapa.push_back(R"(# # #     # #             # # #         #   #   #     #     #   #   #   #   ##)");
-		mapa.push_back(R"(# # # ### #   #  #####  # # ### # # #  ## # # ###  #### ### ### # # ####  # ##)");
-		mapa.push_back(R"(# # # # #   # #         # #     #       #       #         #     # #       # ##)");
-		mapa.push_back(R"(# # # # #  #### ##### # # #   # # ##### # ### # ##### # # ### # # ####### # ##)");
-		mapa.push_back(R"(# # #                 # #           #   # #     #   #   #   #     #   #   # ##)");
-		mapa.push_back(R"(# # ### # ## #  ####### #  ######## # #     ## ####  ####  ## # #   # # # # ##)");
-		mapa.push_back(R"(#     #   #             # # #     # # #           #       #       #         ##)");
-		mapa.push_back(R"(#  ## #####   ##  ##  #   # # # # #    # #####  # # # ### #  # ## #  #########)");
-		mapa.push_back(R"(# #   #     #     # #   # #   #   #             # # #             # #   #   ##)");
-		mapa.push_back(R"(# ##  # ### # ###   # ### ##  #  ## #######  # #  ### # # #######   # # # # ##)");
-		mapa.push_back(R"(#   #   #   # #     #   #     #                                 # #   #   # ##)");
-		mapa.push_back(R"(##  ####  # # # ### #   ## ##  # ###### ### #######  #### ### # # ##### #   ##)");
-		mapa.push_back(R"(# #         # # # # #             #     #   #   #     #       #       #     ##)");
-		mapa.push_back(R"(# ####### #   # # #   ####     ## ######  # # # # # # #    ##### #    ###   ##)");
-		mapa.push_back(R"(#   #     #   #   #   #   #   #   #       # #         # #         # # #     ##)");
-		mapa.push_back(R"(#  ## # #  #### # ## ## # ### # # # ##  ### #   ###     # ## # #### #   ######)");
-		mapa.push_back(R"(#     #       # #         #   # #         #           # #                   ##)");
-		mapa.push_back(R"(# # # # #######   ## #### # ### ###  ## # ##### ####### # ### # ######### # ##)");
-		mapa.push_back(R"(# #   #         # #   #       #   #   # #     #       #       # #         # ##)");
-		mapa.push_back(R"(# # # ######  ##  #  ##  #### ###  ###  #   # # # ##  #   ###   ##  #  #### ##)");
-		mapa.push_back(R"(# # # #           #   # #       #   #   #           # #     #               ##)");
-		mapa.push_back(R"(# #   ### #  ######   # #  #  ##### # ##   #### ### # # ####  ### # ##### # ##)");
-		mapa.push_back(R"(# # #     #         #   #         #   #   #                           #   # ##)");
-		mapa.push_back(R"(# # ##### ##  # ###### ######## ### ### ###  #### ##  #  # #### ####    ##  ##)");
-		mapa.push_back(R"(# #           #               #                 #       #               #   ##)");
-		mapa.push_back(R"(##############################################################################)");
+		mapa.push_back(R"(################################################################################)");
+		mapa.push_back(R"(##                ####                                ####                    ##)");
+		mapa.push_back(R"(##                ####                                ####                    ##)");
+		mapa.push_back(R"(##    ################################    ################################    ##)");
+		mapa.push_back(R"(##    ################################    ################################    ##)");
+		mapa.push_back(R"(##                            ####                                ####        ##)");
+		mapa.push_back(R"(##                            ####                                ####        ##)");
+		mapa.push_back(R"(##############    ################################    ##########################)");
+		mapa.push_back(R"(##############    ################################    ##########################)");
+		mapa.push_back(R"(##        ####                            ####                                ##)");
+		mapa.push_back(R"(##        ####                            ####                                ##)");
+		mapa.push_back(R"(##    ####################    ############################################    ##)");
+		mapa.push_back(R"(##    ####################    ############################################    ##)");
+		mapa.push_back(R"(##                    ####                                          ####      ##)");
+		mapa.push_back(R"(##                    ####                                          ####      ##)");
+		mapa.push_back(R"(##############    ####################    ####################    ##############)");
+		mapa.push_back(R"(##############    ####################    ####################    ##############)");
+		mapa.push_back(R"(##                              ####                                          ##)");
+		mapa.push_back(R"(##                              ####                                          ##)");
+		mapa.push_back(R"(##    ############################################    ####################    ##)");
+		mapa.push_back(R"(##    ############################################    ####################    ##)");
+		mapa.push_back(R"(##            ####                          ####                              ##)");
+		mapa.push_back(R"(##            ####                          ####                              ##)");
+		mapa.push_back(R"(##########################    ################################    ##############)");
+		mapa.push_back(R"(##########################    ################################    ##############)");
+		mapa.push_back(R"(##                              ####                                          ##)");
+		mapa.push_back(R"(##                              ####                                          ##)");
+		mapa.push_back(R"(##############    ####################    ################################    ##)");
+		mapa.push_back(R"(##                                                                            ##)");
+		mapa.push_back(R"(##                                                                            ##)");
+		mapa.push_back(R"(################################################################################)");
 	}
 
 public:
@@ -77,14 +77,14 @@ public:
 
 	void reiniciar() {
 		cocoX = 3;
-		cocoY = 3;
-		myrphonX = 73;
-		myrphonY = 27;
+		cocoY = 1;
+		myrphonX = 72;
+		myrphonY = 28;
 
-		enemigoX[0] = 18; enemigoY[0] = 3;  enemigoDx[0] = 0;  enemigoDy[0] = 1;
-		enemigoX[1] = 36; enemigoY[1] = 13; enemigoDx[1] = 1;  enemigoDy[1] = 0;
-		enemigoX[2] = 54; enemigoY[2] = 7;  enemigoDx[2] = 0;  enemigoDy[2] = 1;
-		enemigoX[3] = 44; enemigoY[3] = 25; enemigoDx[3] = -1; enemigoDy[3] = 0;
+		enemigoX[0] = 20; enemigoY[0] = 5;  enemigoDx[0] = 1;  enemigoDy[0] = 0;
+		enemigoX[1] = 40; enemigoY[1] = 17; enemigoDx[1] = -1; enemigoDy[1] = 0;
+		enemigoX[2] = 14; enemigoY[2] = 7;  enemigoDx[2] = 0;  enemigoDy[2] = 1;
+		enemigoX[3] = 62; enemigoY[3] = 15; enemigoDx[3] = 0;  enemigoDy[3] = -1;
 
 		invulnerableTicks = 0;
 	}
@@ -95,11 +95,20 @@ public:
 		return mapa[y][x] == '#';
 	}
 
+	bool colisiona(int x, int y) const {
+		for (int r = 0; r < 2; r++) {
+			for (int c = 0; c < 4; c++) {
+				if (esPared(x + c, y + r)) return true;
+			}
+		}
+		return false;
+	}
+
 	void moverEnemigos() {
 		for (int i = 0; i < 4; i++) {
 			int nx = enemigoX[i] + enemigoDx[i];
 			int ny = enemigoY[i] + enemigoDy[i];
-			if (esPared(nx, ny)) {
+			if (colisiona(nx, ny)) {
 				enemigoDx[i] = -enemigoDx[i];
 				enemigoDy[i] = -enemigoDy[i];
 			} else {
@@ -112,7 +121,7 @@ public:
 	void moverMyrphon() {
 		int dx = 0;
 		int dy = 0;
-		if (abs(cocoX - myrphonX) < 8 && abs(cocoY - myrphonY) < 6) {
+		if (abs(cocoX - myrphonX) < 12 && abs(cocoY - myrphonY) < 6) {
 			if (cocoX < myrphonX) dx = 1;
 			else if (cocoX > myrphonX) dx = -1;
 			if (cocoY < myrphonY) dy = 1;
@@ -125,9 +134,9 @@ public:
 			else if (r == 3) dy = -1;
 		}
 
-		if (dx != 0 && !esPared(myrphonX + dx, myrphonY)) {
+		if (dx != 0 && !colisiona(myrphonX + dx, myrphonY)) {
 			myrphonX += dx;
-		} else if (dy != 0 && !esPared(myrphonX, myrphonY + dy)) {
+		} else if (dy != 0 && !colisiona(myrphonX, myrphonY + dy)) {
 			myrphonY += dy;
 		}
 	}
@@ -160,15 +169,32 @@ public:
 
 			pantalla.limpiarBuffer();
 
-			pantalla.dibujarCaja(1, 0, 82, 3, 4);
+			std::string alerta = "¡ATRAPA A MYRPHON!";
+			int colAlerta = 4;
+			int colBorde = 4;
+			if (segsRestantes <= 5) {
+				alerta = "¡¡ATRAPALOOOO!!";
+				colAlerta = 7;
+				colBorde = 7;
+			} else if (segsRestantes <= 10) {
+				alerta = "¡MYRPHON SE ESCAPA!";
+				colAlerta = 7;
+				colBorde = 7;
+			} else if (segsRestantes <= 20) {
+				alerta = "¡APURATE QUE SE ACABA EL TIEMPO!";
+				colAlerta = 4;
+				colBorde = 4;
+			}
+
+			pantalla.dibujarCaja(1, 0, 82, 3, colBorde);
 			std::string segsStr = (segsRestantes < 10 ? "0" : "") + std::to_string(segsRestantes);
 			std::string hudTexto = "TIEMPO: " + segsStr + "s | VIDAS: ";
 			for (int v = 0; v < protagonista->getVidaMaxima(); v++) {
 				if (v < protagonista->getVida()) hudTexto += "<3 ";
 				else hudTexto += ".. ";
 			}
-			hudTexto += "| ¡ATRAPA A MYRPHON!";
-			pantalla.setTextoJuego(3, 1, hudTexto, 4);
+			hudTexto += "| " + alerta;
+			pantalla.setTextoJuego(3, 1, hudTexto, colAlerta);
 
 			int offsetY = 4;
 			int offsetX = 2;
@@ -182,22 +208,22 @@ public:
 				}
 			}
 
-			pantalla.setPixelJuego(offsetX + myrphonX, offsetY + myrphonY, 'm', 4);
-			pantalla.setPixelJuego(offsetX + myrphonX + 1, offsetY + myrphonY, '!', 4);
+			pantalla.setTextoJuego(offsetX + myrphonX, offsetY + myrphonY, "(o> ", 4);
+			pantalla.setTextoJuego(offsetX + myrphonX, offsetY + myrphonY + 1, "/||\\", 4);
 
 			for (int i = 0; i < 4; i++) {
-				pantalla.setPixelJuego(offsetX + enemigoX[i], offsetY + enemigoY[i], 'X', 7);
+				if (i < 2) {
+					pantalla.setTextoJuego(offsetX + enemigoX[i], offsetY + enemigoY[i], " === ", 7);
+					pantalla.setTextoJuego(offsetX + enemigoX[i], offsetY + enemigoY[i] + 1, "/<_o", 7);
+				} else {
+					pantalla.setTextoJuego(offsetX + enemigoX[i], offsetY + enemigoY[i], "==== ", 7);
+					pantalla.setTextoJuego(offsetX + enemigoX[i], offsetY + enemigoY[i] + 1, "(v_v)", 7);
+				}
 			}
 
-			if (invulnerableTicks == 0 || (invulnerableTicks % 2 == 0)) {
-				pantalla.setPixelJuego(offsetX + cocoX, offsetY + cocoY, '(', 6);
-				pantalla.setPixelJuego(offsetX + cocoX + 1, offsetY + cocoY, '*', 6);
-				pantalla.setPixelJuego(offsetX + cocoX + 2, offsetY + cocoY, ')', 6);
-			} else {
-				pantalla.setPixelJuego(offsetX + cocoX, offsetY + cocoY, '(', 3);
-				pantalla.setPixelJuego(offsetX + cocoX + 1, offsetY + cocoY, '*', 3);
-				pantalla.setPixelJuego(offsetX + cocoX + 2, offsetY + cocoY, ')', 3);
-			}
+			int colCoco = (invulnerableTicks == 0 || (invulnerableTicks % 2 == 0)) ? 6 : 3;
+			pantalla.setTextoJuego(offsetX + cocoX, offsetY + cocoY, " /\\ ", colCoco);
+			pantalla.setTextoJuego(offsetX + cocoX, offsetY + cocoY + 1, "(°u°)", colCoco);
 
 			pantalla.setTextoJuego(3, 37, "[W,A,S,D] Moverse a toda prisa       [ESC] Rendirse", 8);
 
@@ -210,7 +236,7 @@ public:
 			if (tickAnim % 3 == 0) {
 				moverEnemigos();
 			}
-			if (tickAnim % 5 == 0) {
+			if (tickAnim % 4 == 0) {
 				moverMyrphon();
 			}
 
@@ -219,6 +245,12 @@ public:
 				int tecla = _getch();
 				if (tecla == 0 || tecla == 224) tecla = _getch();
 				if (tecla == 27) {
+					protagonista->setVida(protagonista->getVida() - 1);
+					pantalla.animarCorazonRoto(protagonista->getVida());
+					if (protagonista->getVida() <= 0) {
+						pantalla.animarCaidaPozoMuerte(1, "Atelier de Qifrey", protagonista->getNombre());
+						return 2;
+					}
 					return 0;
 				}
 				int dx = 0;
@@ -231,7 +263,7 @@ public:
 				if (dx != 0 || dy != 0) {
 					int nx = cocoX + dx;
 					int ny = cocoY + dy;
-					if (!esPared(nx, ny) && !esPared(nx + 2, ny)) {
+					if (!colisiona(nx, ny)) {
 						cocoX = nx;
 						cocoY = ny;
 					}
@@ -240,22 +272,30 @@ public:
 #endif
 
 			for (int i = 0; i < 4; i++) {
-				if (abs(cocoX - enemigoX[i]) <= 1 && abs(cocoY - enemigoY[i]) <= 1) {
+				if (abs(cocoX - enemigoX[i]) <= 3 && abs(cocoY - enemigoY[i]) <= 1) {
 					if (invulnerableTicks == 0) {
 						protagonista->setVida(protagonista->getVida() - 1);
-						invulnerableTicks = 20;
+						pantalla.setTextoJuego(offsetX + cocoX, offsetY + cocoY, "\\ * /", 4);
+						pantalla.setTextoJuego(offsetX + cocoX, offsetY + cocoY + 1, ">!o!<", 7);
+						pantalla.dibujar();
 #ifdef _WIN32
-						Beep(220, 80);
+						Beep(650, 40);
+						Beep(400, 50);
+						Beep(250, 60);
 #endif
+						std::this_thread::sleep_for(std::chrono::milliseconds(120));
+
 						if (protagonista->getVida() <= 0) {
 							pantalla.animarCaidaPozoMuerte(1, "Atelier de Qifrey", protagonista->getNombre());
 							return 2;
+						} else {
+							invulnerableTicks = 25;
 						}
 					}
 				}
 			}
 
-			if (abs(cocoX - myrphonX) <= 2 && abs(cocoY - myrphonY) <= 1) {
+			if (abs(cocoX - myrphonX) <= 3 && abs(cocoY - myrphonY) <= 1) {
 				pantalla.dibujarModalVictoriaMyrphon();
 				if (gestorMisiones != nullptr) {
 					gestorMisiones->sumarPuntosMision(50);

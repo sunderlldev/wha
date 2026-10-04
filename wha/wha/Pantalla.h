@@ -294,7 +294,7 @@ public:
 
         if (texto != ultimoPromptTexto && (texto.find("Coco:") != std::string::npos || texto.find("Letrero:") != std::string::npos)) {
             ultimoPromptTexto = texto;
-            int freq = (texto.find("Coco:") != std::string::npos) ? 720 : 500;
+            int freq = (texto.find("Coco:") != std::string::npos) ? 800 : 500;
             for (size_t i = 0; i < lineas.size(); i++) {
                 std::vector<wchar_t> wchars = aWideString(lineas[i]);
                 for (size_t c = 0; c < wchars.size(); c++) {
@@ -406,10 +406,10 @@ public:
 
 #ifdef _WIN32
             int freqHablante = 480;
-            if (hablante == "Coco") freqHablante = 720;
+            if (hablante == "Coco") freqHablante = 800;
             else if (hablante == "Qifrey") freqHablante = 280;
             else if (hablante == "Agott") freqHablante = 540;
-            else if (hablante == "Richeh") freqHablante = 380;
+            else if (hablante == "Richeh") freqHablante = 660;
 #endif
 
             int filaActual = y + 3;
@@ -471,51 +471,105 @@ public:
                                 const std::vector<int>& confianzas,
                                 const std::vector<bool>& desbloqueados) {
         int x = 4;
-        int y = 4;
+        int y = 3;
         int ancho = 76;
-        int alto = 32;
-        dibujarCaja(x, y, ancho, alto);
-        setTextoJuego(x + 24, y + 1, "=== GUÍA DE PERSONAJES ===");
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
+        int alto = 34;
+        dibujarCaja(x, y, ancho, alto, 3);
+        setTextoJuego(x + 24, y + 1, "=== GUÍA DE PERSONAJES ===", 4);
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 2][x + c] = L'-';
+            bufferColor[y + 2][x + c] = 3;
+        }
 
         int fila = y + 3;
-        for (size_t i = 0; i < nombres.size() && fila < y + 15; i++) {
-            std::string prefijo = ((int)i == seleccionado) ? "-> " : "   ";
+        for (size_t i = 0; i < nombres.size() && fila < y + 13; i++) {
+            bool sel = ((int)i == seleccionado);
+            std::string prefijo = sel ? "-> " : "   ";
             std::string entrada = prefijo;
+            int colItem = sel ? 4 : (desbloqueados[i] ? 1 : 8);
             if (desbloqueados[i]) {
                 entrada += "[" + std::to_string(i + 1) + "] " + nombres[i] + " (" + roles[i] + ")";
                 std::string textoConf = "Sin confianza";
                 if (confianzas[i] == 1) textoConf = "Neutral";
-                else if (confianzas[i] >= 2) textoConf = "Amigos";
+                else if (confianzas[i] == 2) textoConf = "Amigos";
+                else if (confianzas[i] == -1) textoConf = "Hostil";
+                else if (confianzas[i] == -2) textoConf = "Asustado";
+                else if (confianzas[i] == 3) textoConf = "Agradecido";
                 entrada += " [" + textoConf + "]";
             } else {
                 entrada += "[" + std::to_string(i + 1) + "] [ ??? ] (Bloqueado)";
             }
-            setTextoJuego(x + 3, fila, entrada);
-            fila += 2;
+            setTextoJuego(x + 3, fila, entrada, colItem);
+            fila += 1;
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 16][x + c] = L'-';
-        setTextoJuego(x + 3, y + 17, "DETALLES:");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 13][x + c] = L'-';
+            bufferColor[y + 13][x + c] = 3;
+        }
+        setTextoJuego(x + 3, y + 14, "DETALLES DEL PERSONAJE:", 3);
 
         if (seleccionado >= 0 && seleccionado < (int)desbloqueados.size()) {
             if (desbloqueados[seleccionado]) {
-                setTextoJuego(x + 5, y + 19, "Nombre: " + nombres[seleccionado]);
-                setTextoJuego(x + 5, y + 20, "Rol:    " + roles[seleccionado]);
+                setTextoJuego(x + 5, y + 16, "Nombre: " + nombres[seleccionado], 4);
+                setTextoJuego(x + 5, y + 17, "Rol:    " + roles[seleccionado], 1);
                 std::string nivelConf = "Sin confianza";
-                if (confianzas[seleccionado] == 1) nivelConf = "Neutral";
-                else if (confianzas[seleccionado] >= 2) nivelConf = "Amigos";
-                setTextoJuego(x + 5, y + 21, "Nivel de confianza: " + nivelConf);
-                setTextoJuego(x + 5, y + 23, "Descripción:");
-                setTextoJuego(x + 5, y + 24, descripciones[seleccionado]);
+                int colConf = 8;
+                if (confianzas[seleccionado] == 1) { nivelConf = "Neutral"; colConf = 4; }
+                else if (confianzas[seleccionado] == 2) { nivelConf = "Amigos"; colConf = 2; }
+                else if (confianzas[seleccionado] == -1) { nivelConf = "Hostil"; colConf = 7; }
+                else if (confianzas[seleccionado] == -2) { nivelConf = "Asustado"; colConf = 4; }
+                else if (confianzas[seleccionado] == 3) { nivelConf = "Agradecido"; colConf = 2; }
+                setTextoJuego(x + 5, y + 18, "Confianza: " + nivelConf, colConf);
+                setTextoJuego(x + 5, y + 20, "Descripcion:", 3);
+
+                std::vector<std::string> ldesc = dividirEnLineas(descripciones[seleccionado], 46);
+                for (size_t li = 0; li < ldesc.size() && y + 21 + (int)li < y + alto - 3; li++) {
+                    setTextoJuego(x + 5, y + 21 + (int)li, ldesc[li], 1);
+                }
+
+                int artX = x + 56;
+                int artY = y + 16;
+                if (nombres[seleccionado] == "Coco") {
+                    setTextoJuego(artX, artY,     "   /\\   ", 6);
+                    setTextoJuego(artX, artY + 1, "  (°u°)  ", 6);
+                } else if (nombres[seleccionado] == "Qifrey") {
+                    setTextoJuego(artX, artY,     "   /     ", 3);
+                    setTextoJuego(artX, artY + 1, " ( -_-)  ", 1);
+                    setTextoJuego(artX, artY + 2, "   \\    ", 3);
+                } else if (nombres[seleccionado] == "Richeh") {
+                    setTextoJuego(artX, artY,     "  /--\\   ", 4);
+                    setTextoJuego(artX, artY + 1, " ( •~•)  ", 6);
+                } else if (nombres[seleccionado] == "Agott") {
+                    setTextoJuego(artX, artY,     "  /==\\   ", 5);
+                    setTextoJuego(artX, artY + 1, " ( '_´)  ", 1);
+                } else if (nombres[seleccionado] == "Tetia") {
+                    setTextoJuego(artX, artY,     "  /\\/\\   ", 2);
+                    setTextoJuego(artX, artY + 1, " (^o^)   ", 4);
+                } else if (nombres[seleccionado] == "Olruggio") {
+                    setTextoJuego(artX, artY,     "  ===    ", 7);
+                    setTextoJuego(artX, artY + 1, " ( -_-)  ", 1);
+                } else if (nombres[seleccionado] == "Iguin") {
+                    setTextoJuego(artX, artY,     "  ===    ", 7);
+                    setTextoJuego(artX, artY + 1, " /<_o    ", 7);
+                } else if (nombres[seleccionado] == "Restys") {
+                    setTextoJuego(artX, artY,     " ====    ", 7);
+                    setTextoJuego(artX, artY + 1, " (v_v)   ", 7);
+                } else if (nombres[seleccionado] == "Myrphon") {
+                    setTextoJuego(artX, artY,     "  (o>    ", 4);
+                    setTextoJuego(artX, artY + 1, " /||\\   ", 4);
+                }
             } else {
-                setTextoJuego(x + 5, y + 19, "Personaje aún no descubierto en este nivel.");
-                setTextoJuego(x + 5, y + 20, "Explora el atelier o avanza en la historia.");
+                setTextoJuego(x + 5, y + 17, "Personaje aun no descubierto en este nivel.", 8);
+                setTextoJuego(x + 5, y + 18, "Explora el atelier o avanza en la historia.", 8);
             }
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
-        setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [P/ESC] Cerrar panel");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + alto - 3][x + c] = L'-';
+            bufferColor[y + alto - 3][x + c] = 3;
+        }
+        setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [1-9] Elegir   [P/ESC] Cerrar", 3);
     }
 
     void dibujarModalInventario(int seleccionado, const std::vector<std::string>& nombres,
@@ -525,14 +579,19 @@ public:
         int y = 4;
         int ancho = 72;
         int alto = 32;
-        dibujarCaja(x, y, ancho, alto);
-        setTextoJuego(x + 22, y + 1, "=== MOCHILA / INVENTARIO ===");
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
+        dibujarCaja(x, y, ancho, alto, 4);
+        setTextoJuego(x + 22, y + 1, "=== MOCHILA / INVENTARIO ===", 4);
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 2][x + c] = L'-';
+            bufferColor[y + 2][x + c] = 4;
+        }
 
         int fila = y + 3;
         for (int i = 0; i < 8; i++) {
-            std::string prefijo = (i == seleccionado) ? "-> " : "   ";
+            bool sel = (i == seleccionado);
+            std::string prefijo = sel ? "-> " : "   ";
             std::string entrada = prefijo + "[" + std::to_string(i + 1) + "] ";
+            int colRanura = sel ? 4 : 1;
             if (i < (int)nombres.size() && !nombres[i].empty()) {
                 entrada += nombres[i];
                 if (i < (int)tipos.size() && !tipos[i].empty()) {
@@ -540,30 +599,40 @@ public:
                 }
             } else {
                 entrada += "(Ranura vacía)";
+                if (!sel) colRanura = 8;
             }
-            setTextoJuego(x + 4, fila, entrada);
+            setTextoJuego(x + 4, fila, entrada, colRanura);
             fila += 1;
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 12][x + c] = L'-';
-        setTextoJuego(x + 4, y + 13, "[DETALLES DEL ÍTEM]");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 12][x + c] = L'-';
+            bufferColor[y + 12][x + c] = 4;
+        }
+        setTextoJuego(x + 4, y + 13, "[DETALLES DEL ÍTEM]", 4);
 
         if (seleccionado >= 0 && seleccionado < (int)nombres.size() && !nombres[seleccionado].empty()) {
-            setTextoJuego(x + 5, y + 15, "Nombre:      " + nombres[seleccionado]);
+            setTextoJuego(x + 5, y + 15, "Nombre:      " + nombres[seleccionado], 2);
             if (seleccionado < (int)tipos.size()) {
-                setTextoJuego(x + 5, y + 17, "Tipo:        " + tipos[seleccionado]);
+                setTextoJuego(x + 5, y + 17, "Tipo:        " + tipos[seleccionado], 3);
             }
             if (seleccionado < (int)descripciones.size()) {
-                setTextoJuego(x + 5, y + 19, "Descripción: ");
-                setTextoJuego(x + 5, y + 21, descripciones[seleccionado]);
+                setTextoJuego(x + 5, y + 19, "Descripción: ", 4);
+                std::vector<std::string> ldesc = dividirEnLineas(descripciones[seleccionado], 58);
+                for (size_t li = 0; li < ldesc.size() && y + 21 + (int)li < y + alto - 3; li++) {
+                    setTextoJuego(x + 5, y + 21 + (int)li, ldesc[li], 1);
+                }
             }
         } else {
-            setTextoJuego(x + 5, y + 15, "Ranura de mochila sin ítem asignado.");
-            setTextoJuego(x + 5, y + 17, "Capacidad máxima: 8 ítems en este nivel.");
+            setTextoJuego(x + 5, y + 15, "Ranura de mochila sin ítem asignado.", 8);
+            setTextoJuego(x + 5, y + 17, "Capacidad máxima: 8 ítems en este nivel.", 8);
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
-        setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [1-8] Elegir   [I/ESC] Cerrar");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + alto - 3][x + c] = L'-';
+            bufferColor[y + alto - 3][x + c] = 4;
+        }
+        setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [1-8] Elegir   [I/ESC] Cerrar", 4);
     }
 
     void dibujarModalMisiones(int seleccionado, bool verDetalle,
@@ -575,16 +644,21 @@ public:
         int y = 5;
         int ancho = 72;
         int alto = 30;
-        dibujarCaja(x, y, ancho, alto);
+        dibujarCaja(x, y, ancho, alto, 3);
 
         if (!verDetalle) {
-            setTextoJuego(x + 25, y + 1, "=== MISIONES ===");
-            for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
+            setTextoJuego(x + 25, y + 1, "=== MISIONES ===", 4);
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 2][x + c] = L'-';
+                bufferColor[y + 2][x + c] = 3;
+            }
 
             int fila = y + 4;
             for (size_t i = 0; i < titulos.size() && fila < y + 22; i++) {
-                std::string prefijo = ((int)i == seleccionado) ? "-> " : "   ";
+                bool sel = ((int)i == seleccionado);
+                std::string prefijo = sel ? "-> " : "   ";
                 std::string entrada = prefijo + "[" + std::to_string(i + 1) + "] ";
+                int colFila = sel ? 4 : 1;
                 if (desbloqueadas[i]) {
                     entrada += titulos[i];
                     std::string est = " [" + estados[i] + "]";
@@ -597,13 +671,17 @@ public:
                     int espacioRestante = ancho - longitudVisible(entrada) - longitudVisible(est) - 5;
                     if (espacioRestante > 0) entrada += std::string(espacioRestante, ' ');
                     entrada += est;
+                    if (!sel) colFila = 8;
                 }
-                setTextoJuego(x + 4, fila, entrada);
+                setTextoJuego(x + 4, fila, entrada, colFila);
                 fila += 2;
             }
 
-            for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
-            setTextoJuego(x + 4, y + alto - 2, "[W/S] Navegar   [ENTER] Ver detalle   [M/ESC] Cerrar");
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + alto - 3][x + c] = L'-';
+                bufferColor[y + alto - 3][x + c] = 3;
+            }
+            setTextoJuego(x + 4, y + alto - 2, "[W/S] Navegar   [ENTER] Ver detalle   [M/ESC] Cerrar", 3);
         } else {
             std::string tituloDetalle = "=== MISIÓN " + std::to_string(seleccionado + 1) + ": ";
             if (desbloqueadas[seleccionado]) {
@@ -614,48 +692,44 @@ public:
             if (longitudVisible(tituloDetalle) > ancho - 4) {
                 tituloDetalle = tituloDetalle.substr(0, ancho - 7) + "...";
             }
-            setTextoJuego(x + 4, y + 1, tituloDetalle);
-            for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
+            setTextoJuego(x + 4, y + 1, tituloDetalle, 4);
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 2][x + c] = L'-';
+                bufferColor[y + 2][x + c] = 3;
+            }
 
             if (desbloqueadas[seleccionado]) {
-                setTextoJuego(x + 4, y + 5, "Misión: " + titulos[seleccionado]);
-                setTextoJuego(x + 4, y + 7, "Estado: " + estados[seleccionado]);
-                for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = L'-';
-                setTextoJuego(x + 4, y + 11, "Descripción:");
-                std::string desc = descripciones[seleccionado];
-                std::vector<std::string> lineasDesc;
-                std::string lineaActual = "";
-                for (size_t i = 0; i < desc.length(); i++) {
-                    if (desc[i] == '\n') {
-                        lineasDesc.push_back(lineaActual);
-                        lineaActual = "";
-                    } else {
-                        lineaActual += desc[i];
-                        if (longitudVisible(lineaActual) >= ancho - 10) {
-                            lineasDesc.push_back(lineaActual);
-                            lineaActual = "";
-                        }
-                    }
+                setTextoJuego(x + 4, y + 5, "Misión: " + titulos[seleccionado], 4);
+                int colEst = (estados[seleccionado] == "COMPLETADA") ? 2 : 4;
+                setTextoJuego(x + 4, y + 7, "Estado: " + estados[seleccionado], colEst);
+                for (int c = 4; c < ancho - 4; c++) {
+                    buffer[y + 9][x + c] = L'-';
+                    bufferColor[y + 9][x + c] = 3;
                 }
-                if (!lineaActual.empty()) {
-                    lineasDesc.push_back(lineaActual);
-                }
+                setTextoJuego(x + 4, y + 11, "Descripción:", 3);
+                std::vector<std::string> lineasDesc = dividirEnLineas(descripciones[seleccionado], ancho - 10);
                 int filaDesc = y + 13;
                 for (size_t i = 0; i < lineasDesc.size() && filaDesc < y + alto - 4; i++) {
-                    setTextoJuego(x + 4, filaDesc, lineasDesc[i]);
+                    setTextoJuego(x + 4, filaDesc, lineasDesc[i], 1);
                     filaDesc += 2;
                 }
             } else {
-                setTextoJuego(x + 4, y + 5, "Misión Bloqueada");
-                setTextoJuego(x + 4, y + 7, "Estado: BLOQUEADA");
-                for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = L'-';
-                setTextoJuego(x + 4, y + 11, "Descripción:");
-                setTextoJuego(x + 4, y + 13, "Esta misión aún no ha sido desbloqueada.");
-                setTextoJuego(x + 4, y + 15, "Completa los objetivos previos para acceder.");
+                setTextoJuego(x + 4, y + 5, "Misión Bloqueada", 8);
+                setTextoJuego(x + 4, y + 7, "Estado: BLOQUEADA", 8);
+                for (int c = 4; c < ancho - 4; c++) {
+                    buffer[y + 9][x + c] = L'-';
+                    bufferColor[y + 9][x + c] = 8;
+                }
+                setTextoJuego(x + 4, y + 11, "Descripción:", 8);
+                setTextoJuego(x + 4, y + 13, "Esta misión aún no ha sido desbloqueada.", 8);
+                setTextoJuego(x + 4, y + 15, "Completa los objetivos previos para acceder.", 8);
             }
 
-            for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
-            setTextoJuego(x + 4, y + alto - 2, "[ENTER / ESC] Volver a la lista de misiones");
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + alto - 3][x + c] = L'-';
+                bufferColor[y + alto - 3][x + c] = 3;
+            }
+            setTextoJuego(x + 4, y + alto - 2, "[ENTER / ESC] Volver a la lista de misiones", 3);
         }
     }
 
@@ -1044,10 +1118,60 @@ public:
                     } else if (enSubMapa && (ch == '/' || ch == '=')) {
                         buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
                         bufferColor[yPantalla][xPantalla] = 12;
+                    } else if (enSubMapa && ch == ' ') {
+                        bool dentroRicheh = ((xMundo >= 6 && xMundo <= 14 && yMundo >= 3 && yMundo <= 7) ||
+                                             (xMundo >= 6 && xMundo <= 74 && yMundo >= 8 && yMundo <= 15) ||
+                                             (xMundo >= 44 && xMundo <= 74 && yMundo >= 5 && yMundo <= 18));
+                        if (dentroRicheh) {
+                            if (xMundo >= 38 && xMundo <= 68 && yMundo >= 9 && yMundo <= 15) {
+                                int r = (xMundo + yMundo) % 2;
+                                buffer[yPantalla][xPantalla] = (r == 0) ? L'~' : L'=';
+                                bufferColor[yPantalla][xPantalla] = 5;
+                            } else {
+                                int r = (xMundo % 4 == 0 && yMundo % 2 == 0);
+                                buffer[yPantalla][xPantalla] = r ? L'.' : L' ';
+                                bufferColor[yPantalla][xPantalla] = 8;
+                            }
+                        } else {
+                            int r = std::abs(xMundo * 7 + yMundo * 11) % 4;
+                            buffer[yPantalla][xPantalla] = (r == 0) ? L'░' : ((r == 1) ? L'▒' : ((r == 2) ? L':' : L'.'));
+                            bufferColor[yPantalla][xPantalla] = 8;
+                        }
                     } else if (ch == ' ' && !enSubMapa) {
                         if (esCuartoFunc != nullptr && esCuartoFunc(xMundo, yMundo)) {
-                            buffer[yPantalla][xPantalla] = L' ';
-                            bufferColor[yPantalla][xPantalla] = 0;
+                            if (xMundo >= 60 && xMundo <= 126 && yMundo >= 19 && yMundo <= 45) {
+                                if (yMundo % 2 == 0) {
+                                    buffer[yPantalla][xPantalla] = (xMundo % 6 == 0) ? L'|' : L'-';
+                                    bufferColor[yPantalla][xPantalla] = 12;
+                                } else {
+                                    buffer[yPantalla][xPantalla] = L' ';
+                                    bufferColor[yPantalla][xPantalla] = 0;
+                                }
+                            } else if (xMundo >= 385 && xMundo <= 463 && yMundo >= 83 && yMundo <= 123) {
+                                if ((xMundo / 3 + yMundo / 2) % 2 == 0) {
+                                    buffer[yPantalla][xPantalla] = L'.';
+                                    bufferColor[yPantalla][xPantalla] = 3;
+                                } else {
+                                    buffer[yPantalla][xPantalla] = L' ';
+                                    bufferColor[yPantalla][xPantalla] = 0;
+                                }
+                            } else if (xMundo >= 63 && xMundo <= 123 && yMundo >= 148 && yMundo <= 175) {
+                                if (xMundo >= 78 && xMundo <= 108 && yMundo >= 153 && yMundo <= 170) {
+                                    int r = (xMundo + yMundo) % 3;
+                                    buffer[yPantalla][xPantalla] = (r == 0) ? L'~' : ((r == 1) ? L'=' : L'-');
+                                    bufferColor[yPantalla][xPantalla] = 13;
+                                } else {
+                                    buffer[yPantalla][xPantalla] = (xMundo % 4 == 0 && yMundo % 2 == 0) ? L'+' : L' ';
+                                    bufferColor[yPantalla][xPantalla] = 8;
+                                }
+                            } else if (xMundo >= 383 && xMundo <= 458 && yMundo >= 11 && yMundo <= 49) {
+                                int r = (xMundo * 11 + yMundo * 17) % 7;
+                                buffer[yPantalla][xPantalla] = (r == 0) ? L'.' : ((r == 1) ? L',' : L' ');
+                                bufferColor[yPantalla][xPantalla] = 8;
+                            } else {
+                                buffer[yPantalla][xPantalla] = L' ';
+                                bufferColor[yPantalla][xPantalla] = 0;
+                            }
                         } else if (esCaminoFunc != nullptr && esCaminoFunc(xMundo, yMundo)) {
                             unsigned int h = (unsigned int)(xMundo * 374761393u + yMundo * 668265263u);
                             h = (h ^ (h >> 13)) * 1274126177u;
@@ -1212,12 +1336,10 @@ public:
                     int dx = (c - centroX);
                     int dy = (f - centroY) * 2;
                     int dist2 = dx * dx + dy * dy;
-                    if (dist2 > 650) {
-                        buffer[f][c] = (f % 2 == 0 ? (c % 8 == 0 ? L'|' : L'-') : (c % 8 == 4 ? L'|' : L'-'));
-                        bufferColor[f][c] = 8;
-                    } else if (dist2 > 350) {
+                    if (dist2 > 300) {
                         buffer[f][c] = block;
-                        bufferColor[f][c] = 12;
+                        int r = std::abs(c * 7 + f * 13) % 3;
+                        bufferColor[f][c] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
                     } else if (dist2 > 150) {
                         buffer[f][c] = block;
                         bufferColor[f][c] = 8;
@@ -1300,29 +1422,29 @@ public:
             dibujarCaja(xModal, yModal, anchoM, altoM, (frame >= 2) ? 8 : 7);
 
             if (frame == 0) {
-                setTextoJuego(xModal + 16, yModal + 2, "  /\\_/\\  ", 7);
-                setTextoJuego(xModal + 16, yModal + 3, " (     ) ", 7);
-                setTextoJuego(xModal + 16, yModal + 4, "  \\   /  ", 7);
-                setTextoJuego(xModal + 16, yModal + 5, "   \\ /   ", 7);
-                setTextoJuego(xModal + 16, yModal + 6, "    v    ", 7);
+                setTextoJuego(xModal + 17, yModal + 2, "/\\_/\\", 7);
+                setTextoJuego(xModal + 16, yModal + 3, "(     )", 7);
+                setTextoJuego(xModal + 16, yModal + 4, " \\   / ", 7);
+                setTextoJuego(xModal + 17, yModal + 5, " \\ / ", 7);
+                setTextoJuego(xModal + 18, yModal + 6, "  v  ", 7);
             } else if (frame == 1) {
-                setTextoJuego(xModal + 16, yModal + 2, "  /\\|/\\  ", 7);
-                setTextoJuego(xModal + 16, yModal + 3, " ( / \\ ) ", 7);
-                setTextoJuego(xModal + 16, yModal + 4, "  \\/ \\/  ", 7);
-                setTextoJuego(xModal + 16, yModal + 5, "   / \\   ", 7);
-                setTextoJuego(xModal + 16, yModal + 6, "    v    ", 7);
+                setTextoJuego(xModal + 17, yModal + 2, "/\\|/\\", 7);
+                setTextoJuego(xModal + 16, yModal + 3, "( / \\ )", 7);
+                setTextoJuego(xModal + 16, yModal + 4, " \\/ \\/ ", 7);
+                setTextoJuego(xModal + 17, yModal + 5, " | | ", 7);
+                setTextoJuego(xModal + 18, yModal + 6, "  v  ", 7);
             } else if (frame == 2) {
-                setTextoJuego(xModal + 15, yModal + 2, " /\\   /\\ ", 10);
-                setTextoJuego(xModal + 15, yModal + 3, "( /   \\ )", 10);
-                setTextoJuego(xModal + 15, yModal + 4, " \\/   \\/ ", 10);
-                setTextoJuego(xModal + 15, yModal + 5, "  /     \\ ", 10);
-                setTextoJuego(xModal + 15, yModal + 6, " 'v     v'", 10);
+                setTextoJuego(xModal + 14, yModal + 2, "/\\_     _/\\", 10);
+                setTextoJuego(xModal + 13, yModal + 3, "( /       \\ )", 10);
+                setTextoJuego(xModal + 14, yModal + 4, "\\/         \\/", 10);
+                setTextoJuego(xModal + 15, yModal + 5, "/           \\", 10);
+                setTextoJuego(xModal + 16, yModal + 6, "'             '", 10);
             } else {
-                setTextoJuego(xModal + 14, yModal + 2, "/\\     /\\", 8);
-                setTextoJuego(xModal + 14, yModal + 3, "( /     \\ )", 8);
-                setTextoJuego(xModal + 14, yModal + 4, "\\/       \\/", 8);
-                setTextoJuego(xModal + 14, yModal + 5, " /         \\", 8);
-                setTextoJuego(xModal + 14, yModal + 6, "'v         v'", 8);
+                setTextoJuego(xModal + 12, yModal + 3, "/\\         /\\", 8);
+                setTextoJuego(xModal + 11, yModal + 4, "(/           \\)", 8);
+                setTextoJuego(xModal + 12, yModal + 5, "\\/           \\/", 8);
+                setTextoJuego(xModal + 14, yModal + 6, ".             .", 8);
+                setTextoJuego(xModal + 15, yModal + 7, "'             '", 8);
             }
 
             for (int c = 1; c < anchoM - 1; c++) {
@@ -1338,8 +1460,9 @@ public:
 
             dibujar();
 #ifdef _WIN32
-            if (frame == 1) Beep(300, 100);
-            else if (frame == 2) Beep(240, 100);
+            if (frame == 1) Beep(320, 70);
+            else if (frame == 2) Beep(240, 90);
+            else if (frame == 3) Beep(180, 110);
             Sleep(250);
 #else
             std::this_thread::sleep_for(std::chrono::milliseconds(250));

@@ -296,6 +296,22 @@ public:
 							}
 						}
 					}
+
+					Nivel1* n1 = dynamic_cast<Nivel1*>(&nivel);
+					if (n1 != nullptr && n1->debeDibujarMyrphon()) {
+						int mx = n1->getMyrphonX() - camX;
+						int my = n1->getMyrphonY() - camY;
+						const char* myrFila0 = "(o> ";
+						const char* myrFila1 = "/||\\";
+						for (int c = 0; c < 4; c++) {
+							if (mx + c >= 0 && mx + c < pantalla.getAnchoJuego() && my >= 0 && my < pantalla.getAltoTotal()) {
+								pantalla.setPixelJuego(mx + c, my, myrFila0[c], 4);
+							}
+							if (mx + c >= 0 && mx + c < pantalla.getAnchoJuego() && my + 1 >= 0 && my + 1 < pantalla.getAltoTotal()) {
+								pantalla.setPixelJuego(mx + c, my + 1, myrFila1[c], 4);
+							}
+						}
+					}
 				} else {
 					NPC* r = nivel.getRicheh();
 					if (r != nullptr) {
@@ -361,13 +377,20 @@ public:
 				}
 
 				if (nivel.getEnModalPersonajes()) {
+					GestorDialogos* gd = nivel.getGestorDialogos();
+					bool myrphonRescatado = (gd != nullptr && gd->getMyrphonRescatado());
+					bool misionMyrphonActiva = (gd != nullptr && gd->getMisionMyrphonActiva());
+
 					std::vector<std::string> nombres;
 					nombres.push_back("Coco");
 					nombres.push_back("Qifrey");
-					nombres.push_back("Richie");
+					nombres.push_back("Richeh");
 					nombres.push_back("Agott");
 					nombres.push_back("Tetia");
 					nombres.push_back("Olruggio");
+					nombres.push_back("Iguin");
+					nombres.push_back("Restys");
+					nombres.push_back("Myrphon");
 
 					std::vector<std::string> roles;
 					roles.push_back("Aprendiz de Maga");
@@ -376,6 +399,9 @@ public:
 					roles.push_back("Aprendiz");
 					roles.push_back("Aprendiz");
 					roles.push_back("Inspector Mágico");
+					roles.push_back("Mago de Ala Ancha");
+					roles.push_back("Mago de Ala Ancha");
+					roles.push_back(myrphonRescatado ? "Mascota de Richeh" : "Mascota perdida de Richeh");
 
 					std::vector<std::string> desc;
 					desc.push_back("Protagonista del Nivel 1. Descubrió la verdad sobre el dibujo mágico.");
@@ -384,6 +410,9 @@ public:
 					desc.push_back("Compañera disciplinada y exigente. Aspira a la perfección del trazo.");
 					desc.push_back("Compañera alegre y entusiasta. Le fascina la magia que anima vidas.");
 					desc.push_back("Hechicero artesano que protege el atelier contra peligros.");
+					desc.push_back("Líder misterioso de los Sombreros de Ala Ancha. Es quien causó la tragedia de Coco y orquestó el asalto en la cueva.");
+					desc.push_back("Mago proscrito especializado en el uso de magia médica prohibida y en alterar cuerpos para reclutar aliados.");
+					desc.push_back("Pingüino-grifo de cuatro patas propiedad de Richeh. Quedó atrapado en la oscuridad del laberinto Serpentback.");
 
 					std::vector<int> confianzas;
 					confianzas.push_back(2);
@@ -392,6 +421,9 @@ public:
 					confianzas.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getConfianza() : 0);
 					confianzas.push_back(0);
 					confianzas.push_back(0);
+					confianzas.push_back(-1);
+					confianzas.push_back(-1);
+					confianzas.push_back(myrphonRescatado ? 3 : -2);
 
 					std::vector<bool> desbloqueados;
 					desbloqueados.push_back(true);
@@ -400,6 +432,9 @@ public:
 					desbloqueados.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getYaHablo() : false);
 					desbloqueados.push_back(false);
 					desbloqueados.push_back(false);
+					desbloqueados.push_back(true);
+					desbloqueados.push_back(true);
+					desbloqueados.push_back(misionMyrphonActiva || myrphonRescatado);
 
 					pantalla.dibujarModalPersonajes(nivel.getSeleccionModal(), nombres, roles, desc, confianzas, desbloqueados);
 				}

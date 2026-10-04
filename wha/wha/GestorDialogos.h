@@ -333,9 +333,8 @@ public:
 		case 302:
 			lineas.push_back("¿Ayudarme?... No creo que puedas.");
 			lineas.push_back("...Mi Myrphon todavía no regresa. Se quedó atrapado");
-			lineas.push_back("en esa horrible cueva Serpentback tras el ataque de Sombreros de Ala Ancha...");
-			lineas.push_back("...Si de verdad quieres ayudar, trae a Myrphon de vuelta a este cuarto del pozo.");
-			lineas.push_back("A cambio te dare una Pluma Termica creada por Olruggio que ya no utilizo.");
+			lineas.push_back("en esa horrible cueva Serpentback tras el ataque...");
+			lineas.push_back("...Si de verdad quieres ayudar, trae a Myrphon de vuelta a este cuarto.");
 			opciones.push_back("[1] ¡Acepto, traeré a Myrphon de vuelta!");
 			break;
 

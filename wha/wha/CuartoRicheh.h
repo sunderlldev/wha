@@ -24,17 +24,17 @@ public:
 		matriz.push_back("+--------------------------------------------------------------------------------+");
 		matriz.push_back("|                                                                                |");
 		matriz.push_back("|                                                                                |");
-		matriz.push_back("|     +-------+                                                                  |");
-		matriz.push_back("|     |       |                                                                  |");
-		matriz.push_back("|     |  /=/  |                              +-----------------------------+     |");
-		matriz.push_back("|     |  /=/  |                              |                             |     |");
-		matriz.push_back("|     |       |                              |                             |     |");
-		matriz.push_back("|     +       +------------------------------+                             |     |");
+		matriz.push_back("|     +---------+                                                                |");
+		matriz.push_back("|     |  /===/  |                                                                |");
+		matriz.push_back("|     |  /===/  |                            +-----------------------------+     |");
+		matriz.push_back("|     |  /===/  |                            |                             |     |");
+		matriz.push_back("|     |  /===/  |                            |                             |     |");
+		matriz.push_back("|     +         +----------------------------+                             |     |");
 		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     |                                                                    |     |");
-		matriz.push_back("|     |                                                                    |     |");
-		matriz.push_back("|     |                                                                    |     |");
-		matriz.push_back("|     |                                                                    |     |");
+		matriz.push_back("|     |                                      +-----+                       |     |");
+		matriz.push_back("|     |                                      | === |                       |     |");
+		matriz.push_back("|     |                                      +-----+                       |     |");
 		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     +-------------------------------------+                              |     |");
@@ -60,7 +60,7 @@ public:
 		richeh->setConfianza(1);
 		richeh->setYaHablo(false);
 		mapa->setCaracter(22, 11, '['); mapa->setCaracter(23, 11, '!'); mapa->setCaracter(24, 11, ']');
-		mapa->setCaracter(40, 11, '['); mapa->setCaracter(41, 11, '!'); mapa->setCaracter(42, 11, ']');
+		mapa->setCaracter(38, 11, '['); mapa->setCaracter(39, 11, '!'); mapa->setCaracter(40, 11, ']');
 	}
 
 	~CuartoRicheh() {
@@ -90,22 +90,20 @@ public:
 			cargarMatriz(m);
 			mapa->cargarMatriz(m);
 			mapa->setCaracter(22, 11, '['); mapa->setCaracter(23, 11, '!'); mapa->setCaracter(24, 11, ']');
-			mapa->setCaracter(40, 11, '['); mapa->setCaracter(41, 11, '!'); mapa->setCaracter(42, 11, ']');
+			mapa->setCaracter(38, 11, '['); mapa->setCaracter(39, 11, '!'); mapa->setCaracter(40, 11, ']');
 		}
 	}
 
 	void colocarMyrphon() {
 		if (mapa != nullptr) {
 			mapa->setCaracter(64, 12, '(');
-			mapa->setCaracter(65, 12, '\\');
-			mapa->setCaracter(66, 12, ')');
-			mapa->setCaracter(63, 13, '<');
-			mapa->setCaracter(64, 13, '(');
-			mapa->setCaracter(65, 13, 'o');
-			mapa->setCaracter(66, 13, ')');
-			mapa->setCaracter(67, 13, '=');
-			mapa->setCaracter(68, 13, '=');
-			mapa->setCaracter(69, 13, '<');
+			mapa->setCaracter(65, 12, 'o');
+			mapa->setCaracter(66, 12, '>');
+			mapa->setCaracter(67, 12, ' ');
+			mapa->setCaracter(64, 13, '/');
+			mapa->setCaracter(65, 13, '|');
+			mapa->setCaracter(66, 13, '|');
+			mapa->setCaracter(67, 13, '\\');
 		}
 	}
 
@@ -139,7 +137,7 @@ public:
 	}
 
 	bool estaCercaDelPozo(int px, int py) const {
-		return (abs(px - 9) <= 4 && abs(py - 5) <= 4);
+		return (abs(px - 10) <= 5 && abs(py - 6) <= 4);
 	}
 
 	bool estaCercaDeLetreroCuriosidades(int px, int py) const {
@@ -147,7 +145,7 @@ public:
 	}
 
 	bool estaCercaDeLetreroLore(int px, int py) const {
-		return (abs(px - 40) <= 3 && abs(py - 11) <= 2);
+		return (abs(px - 39) <= 3 && abs(py - 11) <= 2);
 	}
 };
 

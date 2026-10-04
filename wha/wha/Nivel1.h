@@ -14,9 +14,10 @@ private:
 	MinijuegoLaberinto* minijuego;
 	bool monologoCruceActivado;
 	bool paredPiedraDestruida;
+	bool myrphonEscapado;
 
 public:
-	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), minijuego(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false) {}
+	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), minijuego(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false), myrphonEscapado(false) {}
 	virtual ~Nivel1() {
 		if (myrphon != nullptr) {
 			delete myrphon;
@@ -36,12 +37,18 @@ public:
 		}
 	}
 
+	bool debeDibujarMyrphon() const {
+		return (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva() &&
+		        myrphon != nullptr && !myrphon->getRescatado() && !myrphonEscapado);
+	}
+	int getMyrphonX() const { return (myrphon != nullptr) ? myrphon->getX() : 0; }
+	int getMyrphonY() const { return (myrphon != nullptr) ? myrphon->getY() : 0; }
+
 	static bool esCuartoEstatico(int px, int py) {
-		if (px >= 59 && px <= 125 && py >= 19 && py <= 45) return true;
-		if (px >= 382 && px <= 457 && py >= 11 && py <= 49) return true;
-		if (px >= 384 && px <= 501 && py >= 62 && py <= 131) return true;
-		if (px >= 382 && px <= 456 && py >= 150 && py <= 178) return true;
-		if (px >= 62 && px <= 122 && py >= 148 && py <= 175) return true;
+		if (px >= 60 && px <= 126 && py >= 19 && py <= 45) return true;
+		if (px >= 383 && px <= 458 && py >= 11 && py <= 49) return true;
+		if (px >= 385 && px <= 463 && py >= 83 && py <= 123) return true;
+		if (px >= 63 && px <= 123 && py >= 148 && py <= 175) return true;
 		return false;
 	}
 
@@ -49,18 +56,18 @@ public:
 		if (px >= 77 && px <= 107 && py >= 45 && py <= 147) return true;
 		if (px >= 108 && px <= 302 && py >= 95 && py <= 110) return true;
 		if (px >= 303 && px <= 319 && py >= 27 && py <= 168) return true;
-		if (px >= 320 && px <= 381 && py >= 27 && py <= 36) return true;
-		if (px >= 320 && px <= 383 && py >= 99 && py <= 107) return true;
-		if (px >= 320 && px <= 381 && py >= 160 && py <= 168) return true;
+		if (px >= 320 && px <= 384 && py >= 27 && py <= 36) return true;
+		if (px >= 320 && px <= 386 && py >= 99 && py <= 107) return true;
+		if (px >= 320 && px <= 394 && py >= 160 && py <= 168) return true;
 		return false;
 	}
 
 	virtual int determinarCuarto(int px, int py) const override {
-		if (px >= 59 && px <= 125 && py >= 19 && py <= 45) return 1;
-		if (px >= 382 && px <= 457 && py >= 11 && py <= 49) return 2;
-		if (px >= 384 && px <= 501 && py >= 62 && py <= 131) return 3;
-		if (px >= 382 && px <= 456 && py >= 150 && py <= 178) return 4;
-		if (px >= 62 && px <= 122 && py >= 148 && py <= 175) return 5;
+		if (px >= 60 && px <= 126 && py >= 19 && py <= 45) return 1;
+		if (px >= 383 && px <= 458 && py >= 11 && py <= 49) return 2;
+		if (px >= 385 && px <= 463 && py >= 83 && py <= 123) return 3;
+		if (px >= 380 && px <= 395 && py >= 160 && py <= 168) return 4;
+		if (px >= 63 && px <= 123 && py >= 148 && py <= 175) return 5;
 		return 0;
 	}
 
@@ -130,9 +137,17 @@ public:
 					setTransicionMinijuego(true);
 					return true;
 				} else {
-					promptFlotante = "¡Myrphon huye hacia las sombras de Serpentback!";
-					if (myrphon != nullptr && px >= myrphon->getX() - 6) {
-						myrphon->setX(px + 6);
+					if (!myrphonEscapado) {
+						promptFlotante = "¡Myrphon huye hacia las sombras de Serpentback!";
+						if (myrphon != nullptr) {
+							if (myrphon->getX() < 392) {
+								myrphon->setX(myrphon->getX() + 2);
+							} else {
+								myrphonEscapado = true;
+							}
+						}
+					} else {
+						promptFlotante = "ENTER: Entrar al laberinto Serpentback";
 					}
 					return true;
 				}
@@ -171,13 +186,6 @@ public:
 		if (res == 1) {
 			if (myrphon != nullptr) {
 				myrphon->setRescatado(true);
-				if (mapa != nullptr) {
-					for (int r = 0; r < myrphon->getAlto(); r++) {
-						for (int c = 0; c < myrphon->getAncho(); c++) {
-							mapa->setCaracter(myrphon->getX() + c, myrphon->getY() + r, ' ');
-						}
-					}
-				}
 			}
 			if (gestorDialogos != nullptr) {
 				gestorDialogos->setMyrphonRescatado(true);
@@ -193,8 +201,10 @@ public:
 			iniciarNivel();
 			audio.reproducirNivel(1);
 		} else {
+			myrphonEscapado = true;
 			protagonista->setX(370);
 			protagonista->setY(163);
+			promptFlotante = "Coco: Myrphon sigue atrapado... Debo intentarlo de nuevo.";
 			audio.reproducirNivel(1);
 		}
 	}
@@ -282,7 +292,7 @@ public:
 			myrphon = nullptr;
 		}
 		myrphon = new Myrphon(375, 163);
-		mapa->agregarObjeto(myrphon);
+		myrphonEscapado = false;
 
 		if (protagonista == nullptr) {
 			protagonista = new Protagonista(88, 32, "Coco", 3);

@@ -238,6 +238,7 @@ public:
 	bool getEnDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEnDialogo() : false; }
 	int getEstadoDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEstadoDialogo() : 0; }
 	std::string getNpcDialogoActual() const { return (gestorDialogos != nullptr) ? gestorDialogos->getNpcDialogoActual() : ""; }
+	GestorDialogos* getGestorDialogos() { return this->gestorDialogos; }
 	int getModalActivo() const { return this->modalActivo; }
 	bool getEnModalPersonajes() const { return this->modalActivo == 1; }
 	bool getEnModalInventario() const { return this->modalActivo == 2; }
@@ -384,15 +385,15 @@ public:
 				return;
 			}
 			if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroCuriosidades(px, py)) {
-				promptFlotante = "[ENTER] Leer: Curiosidades de Richeh";
+				promptFlotante = "[E / ENTER] Leer: Curiosidades de Richeh";
 				return;
 			}
 			if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroLore(px, py)) {
-				promptFlotante = "[ENTER] Leer: Diario del Atelier";
+				promptFlotante = "[E / ENTER] Leer: Diario del Atelier";
 				return;
 			}
 			if (richeh != nullptr && estaCerca(px, py, pw, ph, richeh->getX(), richeh->getY(), richeh->getAncho(), richeh->getAlto(), 2)) {
-				promptFlotante = "[ENTER] Hablar con Richeh";
+				promptFlotante = "[E / ENTER] Hablar con Richeh";
 				return;
 			}
 			return;
@@ -403,12 +404,12 @@ public:
 		}
 
 		if (qifrey != nullptr && estaCerca(px, py, pw, ph, qifrey->getX(), qifrey->getY(), qifrey->getAncho(), qifrey->getAlto(), 2)) {
-			promptFlotante = "[ENTER] Interactuar con Qifrey";
+			promptFlotante = "[E / ENTER] Interactuar con Qifrey";
 			return;
 		}
 
 		if (agott != nullptr && estaCerca(px, py, pw, ph, agott->getX(), agott->getY(), agott->getAncho(), agott->getAlto(), 2)) {
-			promptFlotante = "[ENTER] Hablar con Agott";
+			promptFlotante = "[E / ENTER] Hablar con Agott";
 			return;
 		}
 
@@ -420,7 +421,7 @@ public:
 		for (size_t i = 0; i < itemsSuelo.size(); i++) {
 			if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
 				if (estaCerca(px, py, pw, ph, itemsSuelo[i]->getX(), itemsSuelo[i]->getY(), itemsSuelo[i]->getAncho(), itemsSuelo[i]->getAlto(), 2)) {
-					promptFlotante = "[ENTER] Recoger: " + itemsSuelo[i]->getNombre();
+					promptFlotante = "[E / ENTER] Recoger: " + itemsSuelo[i]->getNombre();
 					return;
 				}
 			}
@@ -491,10 +492,13 @@ public:
 						huboCambio = true;
 					}
 				} else if (tecla == 's' || tecla == 'S') {
-					if (seleccionModal < 5) {
+					if (seleccionModal < 8) {
 						seleccionModal++;
 						huboCambio = true;
 					}
+				} else if (tecla >= '1' && tecla <= '9') {
+					seleccionModal = tecla - '1';
+					huboCambio = true;
 				} else if (tecla == 'p' || tecla == 'P' || tecla == 27 || tecla == 13) {
 					modalActivo = 0;
 					huboCambio = true;
@@ -632,21 +636,16 @@ public:
 			}
 
 			if (getEnCuartoRicheh()) {
-				if (tecla == 'e' || tecla == 'E') {
-					int px = protagonista->getX();
-					int py = protagonista->getY();
-					if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDelPozo(px, py)) {
-						setTransicionSubiendo(true);
-						huboCambio = true;
-						return huboCambio;
-					}
-				}
-
 				if (tecla == 13 || tecla == 'e' || tecla == 'E') {
 					int px = protagonista->getX();
 					int py = protagonista->getY();
 					int pw = protagonista->getAncho();
 					int ph = protagonista->getAlto();
+					if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDelPozo(px, py)) {
+						setTransicionSubiendo(true);
+						huboCambio = true;
+						return huboCambio;
+					}
 					if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroCuriosidades(px, py)) {
 						if (gestorDialogos != nullptr) {
 							int randFact = rand() % 3;
@@ -734,27 +733,17 @@ public:
 				return huboCambio;
 			}
 
-			if (tecla == 'e' || tecla == 'E') {
+			if (tecla == 13 || tecla == 'e' || tecla == 'E') {
 				int px = protagonista->getX();
 				int py = protagonista->getY();
 				int pw = protagonista->getAncho();
 				int ph = protagonista->getAlto();
+
 				if (torreAgott != nullptr && torreAgott->estaCercaDelPozo(px, py)) {
 					setTransicionBajando(true);
 					huboCambio = true;
 					return huboCambio;
 				}
-				if (interactuarLetrero(px, py, pw, ph)) {
-					huboCambio = true;
-					return huboCambio;
-				}
-			}
-
-			if (tecla == 13) {
-				int px = protagonista->getX();
-				int py = protagonista->getY();
-				int pw = protagonista->getAncho();
-				int ph = protagonista->getAlto();
 
 				if (procesarInteraccionEspecial(px, py, pw, ph)) {
 					huboCambio = true;
