@@ -5,19 +5,26 @@
 #include "Arbol.h"
 #include "Gato.h"
 #include "Myrphon.h"
+#include "MinijuegoLaberinto.h"
+#include "GestorAudio.h"
 
 class Nivel1 : public Nivel {
 private:
 	Myrphon* myrphon;
+	MinijuegoLaberinto* minijuego;
 	bool monologoCruceActivado;
 	bool paredPiedraDestruida;
 
 public:
-	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false) {}
+	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), minijuego(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false) {}
 	virtual ~Nivel1() {
 		if (myrphon != nullptr) {
 			delete myrphon;
 			myrphon = nullptr;
+		}
+		if (minijuego != nullptr) {
+			delete minijuego;
+			minijuego = nullptr;
 		}
 		if (cuartoRicheh != nullptr) {
 			delete cuartoRicheh;
@@ -111,21 +118,25 @@ public:
 			}
 			return true;
 		}
-		if (myrphon != nullptr && !myrphon->getRescatado()) {
-			int mx = myrphon->getX();
-			int my = myrphon->getY();
-			int mw = myrphon->getAncho();
-			int mh = myrphon->getAlto();
-			int distX = (px + pw <= mx) ? (mx - (px + pw)) : ((mx + mw <= px) ? (px - (mx + mw)) : 0);
-			int distY = (py + ph <= my) ? (my - (py + ph)) : ((my + mh <= py) ? (py - (my + mh)) : 0);
-				if (distX <= 3 && distY <= 3) {
-					if (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva()) {
-						promptFlotante = "ENTER: Rescatar a Myrphon";
-					} else {
-						promptFlotante = "Coco: Un pequeño pingüino con rasgos de grifo... Parece perdido.";
+		if (px >= 365 && py >= 158 && py <= 170) {
+			if (gestorDialogos != nullptr && !gestorDialogos->getMisionMyrphonActiva()) {
+				if (px >= 380) {
+					protagonista->setX(378);
+				}
+				promptFlotante = "Coco: Esta muy oscuro por aqui... deberia volver.";
+				return true;
+			} else if (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva() && (myrphon == nullptr || !myrphon->getRescatado())) {
+				if (px >= 380) {
+					setTransicionMinijuego(true);
+					return true;
+				} else {
+					promptFlotante = "¡Myrphon huye hacia las sombras de Serpentback!";
+					if (myrphon != nullptr && px >= myrphon->getX() - 6) {
+						myrphon->setX(px + 6);
 					}
 					return true;
 				}
+			}
 		}
 		return false;
 	}
@@ -138,7 +149,9 @@ public:
 				if (mapa != nullptr) {
 					for (int wy = 27; wy <= 36; wy++) {
 						for (int wx = 380; wx <= 386; wx++) {
-							mapa->setCaracter(wx, wy, ' ');
+							if (mapa->getCaracter(wx, wy) == 'O') {
+								mapa->setCaracter(wx, wy, ' ');
+							}
 						}
 					}
 				}
@@ -147,34 +160,43 @@ public:
 				return true;
 			}
 		}
-		if (myrphon != nullptr && !myrphon->getRescatado()) {
-			int mx = myrphon->getX();
-			int my = myrphon->getY();
-			int mw = myrphon->getAncho();
-			int mh = myrphon->getAlto();
-			int distX = (px + pw <= mx) ? (mx - (px + pw)) : ((mx + mw <= px) ? (px - (mx + mw)) : 0);
-			int distY = (py + ph <= my) ? (my - (py + ph)) : ((my + mh <= py) ? (py - (my + mh)) : 0);
-			if (distX <= 3 && distY <= 3) {
+		return false;
+	}
+
+	virtual void ejecutarMinijuego(Pantalla& pantalla, GestorAudio& audio) override {
+		if (minijuego == nullptr) {
+			minijuego = new MinijuegoLaberinto();
+		}
+		int res = minijuego->ejecutar(pantalla, audio, protagonista, gestorMisiones);
+		if (res == 1) {
+			if (myrphon != nullptr) {
 				myrphon->setRescatado(true);
 				if (mapa != nullptr) {
-					for (int r = 0; r < mh; r++) {
-						for (int c = 0; c < mw; c++) {
-							mapa->setCaracter(mx + c, my + r, ' ');
+					for (int r = 0; r < myrphon->getAlto(); r++) {
+						for (int c = 0; c < myrphon->getAncho(); c++) {
+							mapa->setCaracter(myrphon->getX() + c, myrphon->getY() + r, ' ');
 						}
 					}
 				}
-				if (gestorDialogos != nullptr) {
-					gestorDialogos->setMyrphonRescatado(true);
-				}
-				if (gestorMisiones != nullptr) {
-					gestorMisiones->setObjetivoActual("Llevar a Myrphon de regreso con Richeh");
-				}
-				promptFlotante = "¡Rescataste a Myrphon! Llévaselo a Richeh.";
-				mostrarMensajeTemporal("¡Myrphon rescatado! Vuelve al sótano de Richeh", 100);
-				return true;
 			}
+			if (gestorDialogos != nullptr) {
+				gestorDialogos->setMyrphonRescatado(true);
+			}
+			if (gestorMisiones != nullptr) {
+				gestorMisiones->setObjetivoActual("Llevar a Myrphon de regreso con Richeh");
+			}
+			protagonista->setX(370);
+			protagonista->setY(163);
+			promptFlotante = "¡Rescataste a Myrphon! Llévaselo de regreso a Richeh.";
+			audio.reproducirNivel(1);
+		} else if (res == 2) {
+			iniciarNivel();
+			audio.reproducirNivel(1);
+		} else {
+			protagonista->setX(370);
+			protagonista->setY(163);
+			audio.reproducirNivel(1);
 		}
-		return false;
 	}
 
 	virtual void iniciarNivel() override {
@@ -201,6 +223,7 @@ public:
 		this->mensajeTemporal = "";
 		this->ticksMensajeTemporal = 0;
 		this->paredPiedraDestruida = false;
+		this->transicionMinijuego = false;
 
 		if (cuartoRicheh == nullptr) {
 			cuartoRicheh = new CuartoRicheh();
@@ -258,14 +281,14 @@ public:
 			delete myrphon;
 			myrphon = nullptr;
 		}
-		myrphon = new Myrphon(418, 168);
+		myrphon = new Myrphon(375, 163);
 		mapa->agregarObjeto(myrphon);
 
 		if (protagonista == nullptr) {
-			protagonista = new Protagonista(90, 22, "Coco", 3);
+			protagonista = new Protagonista(88, 32, "Coco", 3);
 		} else {
-			protagonista->setX(90);
-			protagonista->setY(22);
+			protagonista->setX(88);
+			protagonista->setY(32);
 			protagonista->setVida(3);
 			protagonista->setVidaMaxima(3);
 		}
@@ -282,10 +305,10 @@ public:
 		}
 
 		if (agott == nullptr) {
-			agott = new NPC(440, 66, "Agott", "Aprendiz de Maga");
+			agott = new NPC(440, 92, "Agott", "Aprendiz de Maga");
 		} else {
 			agott->setX(440);
-			agott->setY(66);
+			agott->setY(92);
 			agott->setConfianza(1);
 			agott->setYaHablo(false);
 		}
@@ -297,7 +320,7 @@ public:
 
 		monologoCruceActivado = false;
 		limpiarLetreros();
-		letreros.push_back(new Letrero(80, 24, "Letrero: Choza de Trazos. Dibuja runas con pasión y cuida tus pergaminos."));
+		letreros.push_back(new Letrero(79, 45, "Letrero: Choza de Trazos. Dibuja runas con pasión y cuida tus pergaminos."));
 		letreros.push_back(new Letrero(140, 102, "Letrero: Historia del Manga. Witch Hat Atelier fue creado por la mangaka Kamome Shirahama e inició su publicación el 22 de julio de 2016. Comenzó a lanzarse de forma mensual en la revista Morning Two de la editorial Kodansha, destacando por su magia basada en el arte del dibujo."));
 		letreros.push_back(new Letrero(265, 102, "Letrero: Enciclopedia Mágica. Las tres sendas del Atelier: hacia el norte el almacén de vestigios antiguos, al este la Torre de Agott, y al sur el sendero hacia el despacho del maestro Qifrey."));
 		letreros.push_back(new Letrero(380, 101, "Letrero: Torre de Agott. Prohibido el paso sin autorización de Agott."));
@@ -308,14 +331,6 @@ public:
 
 		if (torreAgott != nullptr) {
 			torreAgott->reiniciar();
-		}
-
-		if (!paredPiedraDestruida && mapa != nullptr) {
-			for (int wy = 27; wy <= 36; wy++) {
-				for (int wx = 380; wx <= 386; wx++) {
-					mapa->setCaracter(wx, wy, 'O');
-				}
-			}
 		}
 
 		if (gestorMisiones != nullptr) {

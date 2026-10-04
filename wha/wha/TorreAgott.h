@@ -54,7 +54,7 @@ public:
 		pozoY = -1;
 
 		srand((unsigned int)time(0));
-		int numCajas = 8;
+		int numCajas = 6 + (rand() % 3);
 		std::vector<std::pair<int, int>> posicionesUsadas;
 
 		for (int i = 0; i < numCajas; i++) {
@@ -63,20 +63,20 @@ public:
 			bool posValida = false;
 			int intentos = 0;
 
-			while (!posValida && intentos < 100) {
+			while (!posValida && intentos < 200) {
 				intentos++;
-				bx = 405 + (rand() % (480 - 405 + 1));
-				by = 75 + (rand() % (120 - 75 + 1));
+				bx = 394 + (rand() % (448 - 394 + 1));
+				by = 87 + (rand() % (116 - 87 + 1));
 
 				posValida = true;
-				if (abs(bx - 440) < 10 && abs(by - 66) < 6) {
+				if (abs(bx - 440) < 10 && abs(by - 92) < 6) {
 					posValida = false;
 				}
-				if (bx < 405 && by >= 96 && by <= 110) {
+				if (bx <= 405 && by >= 96 && by <= 110) {
 					posValida = false;
 				}
 				for (size_t k = 0; k < posicionesUsadas.size(); k++) {
-					if (abs(bx - posicionesUsadas[k].first) < 9 && abs(by - posicionesUsadas[k].second) < 5) {
+					if (abs(bx - posicionesUsadas[k].first) < 9 && abs(by - posicionesUsadas[k].second) < 6) {
 						posValida = false;
 						break;
 					}
@@ -122,7 +122,7 @@ public:
 		int nby = cajas[indiceCaja]->getY() + dy;
 		bool puedeMover = true;
 
-		if (nbx < 388 || nbx + 7 > 497 || nby < 65 || nby + 4 > 129) {
+		if (nbx < 390 || nbx + 7 > 458 || nby < 86 || nby + 4 > 121) {
 			puedeMover = false;
 		}
 
@@ -160,12 +160,12 @@ public:
 		}
 
 		if (puedeMover && pozoEncontrado) {
-			bool solapadoPrevio = (cajas[indiceCaja]->getX() < pozoX + 3 &&
+			bool solapadoPrevio = (cajas[indiceCaja]->getX() < pozoX + 4 &&
 			                       cajas[indiceCaja]->getX() + 7 > pozoX &&
-			                       cajas[indiceCaja]->getY() < pozoY + 2 &&
+			                       cajas[indiceCaja]->getY() < pozoY + 3 &&
 			                       cajas[indiceCaja]->getY() + 4 > pozoY);
-			bool solapadoNuevo = (nbx < pozoX + 3 && nbx + 7 > pozoX &&
-			                      nby < pozoY + 2 && nby + 4 > pozoY);
+			bool solapadoNuevo = (nbx < pozoX + 4 && nbx + 7 > pozoX &&
+			                      nby < pozoY + 3 && nby + 4 > pozoY);
 			if (!solapadoPrevio && solapadoNuevo) {
 				puedeMover = false;
 			}

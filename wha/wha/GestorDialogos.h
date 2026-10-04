@@ -345,6 +345,14 @@ public:
 			opciones.push_back("[1] Salir...");
 			break;
 
+		case 304:
+			lineas.push_back("(Se seca las lagrimas desesperada con su tunica)");
+			lineas.push_back("¡¿D-De verdad harias eso por mi?! ¡Muchas gracias, por favor!");
+			lineas.push_back("¡Date prisa! Ese laberinto es muy peligroso y Myrphon no sabe defenderse...");
+			lineas.push_back("¡Traelo a salvo, por lo que mas quieras!");
+			opciones.push_back("[1] ¡No te preocupes, lo traere de vuelta!");
+			break;
+
 		case 310:
 			lineas.push_back("¿Un objeto magico?... Tengo la Pluma Termica (Searneedle) de Olruggio.");
 			lineas.push_back("Su punta se calienta al rojo vivo para quebrar roca, pero yo solo dibujo sellos diminutos.");
@@ -675,9 +683,11 @@ public:
 			}
 			puntosMisiones += 15;
 			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
+			estadoDialogo = 304;
+		} else if (estadoDialogo == 303) {
 			enDialogo = false;
 			estadoDialogo = 0;
-		} else if (estadoDialogo == 303) {
+		} else if (estadoDialogo == 304) {
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 310) {
@@ -694,8 +704,7 @@ public:
 			misionMyrphonActiva = true;
 			puntosMisiones += 15;
 			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
-			enDialogo = false;
-			estadoDialogo = 0;
+			estadoDialogo = 304;
 		} else if (estadoDialogo == 312) {
 			enDialogo = false;
 			estadoDialogo = 0;
@@ -711,8 +720,7 @@ public:
 			richehEnojada = false;
 			puntosMisiones += 15;
 			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
-			enDialogo = false;
-			estadoDialogo = 0;
+			estadoDialogo = 304;
 		} else if (estadoDialogo == 330) {
 			estadoDialogo = 331;
 		} else if (estadoDialogo == 331) {

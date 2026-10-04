@@ -17,6 +17,7 @@
 #include "TorreAgott.h"
 #include "Letrero.h"
 #include "Pantalla.h"
+class GestorAudio;
 #ifdef _WIN32
 #include <conio.h>
 #endif
@@ -46,6 +47,7 @@ protected:
 	TorreAgott* torreAgott;
 	GestorDialogos* gestorDialogos;
 	GestorMisiones* gestorMisiones;
+	bool transicionMinijuego;
 
 	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
 		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
@@ -107,7 +109,7 @@ public:
 		  idCuartoActual(0), promptFlotante(""), mensajeTemporal(""),
 		  ticksMensajeTemporal(0), tiempoInicio(0), tiempoFin(0),
 		  modalActivo(0), seleccionModal(0), solicitaSalir(false),
-		  cuartoRicheh(nullptr), torreAgott(nullptr) {
+		  cuartoRicheh(nullptr), torreAgott(nullptr), transicionMinijuego(false) {
 		this->mapa = new Mapa(filasMapa, columnasMapa);
 		this->gestorDialogos = new GestorDialogos();
 		this->gestorMisiones = new GestorMisiones();
@@ -200,6 +202,9 @@ public:
 	void setTransicionSubiendo(bool ts) {
 		if (cuartoRicheh != nullptr) cuartoRicheh->setTransicionSubiendo(ts);
 	}
+	bool getTransicionMinijuego() const { return this->transicionMinijuego; }
+	void setTransicionMinijuego(bool tm) { this->transicionMinijuego = tm; }
+	virtual void ejecutarMinijuego(Pantalla&, GestorAudio&) {}
 
 	Protagonista* getProtagonista() { return this->protagonista; }
 	NPC* getQifrey() { return this->qifrey; }

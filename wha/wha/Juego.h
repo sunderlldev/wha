@@ -116,6 +116,13 @@ public:
 			return;
 		}
 
+		if (nivel.getTransicionMinijuego()) {
+			nivel.setTransicionMinijuego(false);
+			nivel.ejecutarMinijuego(pantalla, audio);
+			redibujarNecesario = true;
+			return;
+		}
+
 		if (nivel.verificarObjetivo()) {
 			cambiarNivel();
 			return;
@@ -175,12 +182,13 @@ public:
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
 					int pox = nivel.getPozoX() - camX;
 					int poy = nivel.getPozoY() - camY;
-					const char* artPozo[2] = {
-						"/=/",
-						"/=/"
+					const char* artPozo[3] = {
+						"/==/",
+						"|==|",
+						"/==/"
 					};
-					for (int r = 0; r < 2; r++) {
-						for (int c = 0; c < 3; c++) {
+					for (int r = 0; r < 3; r++) {
+						for (int c = 0; c < 4; c++) {
 							if (pox + c >= 0 && pox + c < pantalla.getAnchoJuego() && poy + r >= 0 && poy + r < pantalla.getAltoTotal()) {
 								pantalla.setPixelJuego(pox + c, poy + r, artPozo[r][c], 12);
 							}

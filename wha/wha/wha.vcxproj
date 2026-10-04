@@ -115,9 +115,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Test.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MinijuegoLaberinto.h" />
     <ClInclude Include="Arbol.h" />
     <ClInclude Include="Cinematica.h" />
     <ClInclude Include="CuartoRicheh.h" />

@@ -36,6 +36,8 @@ public:
 
     int getX() const { return x; }
     int getY() const { return y; }
+    void setX(int nx) { x = nx; }
+    void setY(int ny) { y = ny; }
     int getAncho() const { return ancho; }
     int getAlto() const { return alto; }
     TipoObjeto getTipo() const { return tipo; }

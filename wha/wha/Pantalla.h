@@ -288,14 +288,15 @@ public:
 
         dibujarCaja(startX, startY, anchoCaja, altoCaja, 4);
 
+        int colTexto = 1;
+        if (texto.find("Coco:") != std::string::npos) colTexto = 6;
+        else if (texto.find("Letrero:") != std::string::npos) colTexto = 4;
+
         if (texto != ultimoPromptTexto && (texto.find("Coco:") != std::string::npos || texto.find("Letrero:") != std::string::npos)) {
             ultimoPromptTexto = texto;
             int freq = (texto.find("Coco:") != std::string::npos) ? 720 : 500;
             for (size_t i = 0; i < lineas.size(); i++) {
                 std::vector<wchar_t> wchars = aWideString(lineas[i]);
-                int colTexto = 1;
-                if (lineas[i].find("Coco:") != std::string::npos) colTexto = 6;
-                else if (lineas[i].find("Letrero:") != std::string::npos) colTexto = 4;
                 for (size_t c = 0; c < wchars.size(); c++) {
                     if (startX + 2 + (int)c < startX + anchoCaja - 2) {
                         buffer[startY + 1 + (int)i][startX + 2 + (int)c] = wchars[c];
@@ -315,9 +316,6 @@ public:
             }
         } else {
             for (size_t i = 0; i < lineas.size(); i++) {
-                int colTexto = 1;
-                if (lineas[i].find("Coco:") != std::string::npos) colTexto = 6;
-                else if (lineas[i].find("Letrero:") != std::string::npos) colTexto = 4;
                 setTextoJuego(startX + 2, startY + 1 + (int)i, lineas[i], colTexto);
             }
             if (texto.find("Coco:") == std::string::npos && texto.find("Letrero:") == std::string::npos) {
@@ -357,11 +355,13 @@ public:
         if (!rol.empty()) encabezado += " - " + rol;
         setTextoJuego(x + 2, y + 1, encabezado, 4);
 
-        std::string confStr = "Confianza: ";
-        if (confianza <= 0) confStr += "Sin confianza";
-        else if (confianza == 1) confStr += "Neutral";
-        else confStr += "Amigos";
-        setTextoJuego(x + ancho - longitudVisible(confStr) - 2, y + 1, confStr, 3);
+        if (hablante != "Letrero") {
+            std::string confStr = "Confianza: ";
+            if (confianza <= 0) confStr += "Sin confianza";
+            else if (confianza == 1) confStr += "Neutral";
+            else confStr += "Amigos";
+            setTextoJuego(x + ancho - longitudVisible(confStr) - 2, y + 1, confStr, 3);
+        }
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 2][x + c] = L'-';
@@ -386,6 +386,10 @@ public:
         for (size_t i = 0; i < lineasProcesadas.size(); i++) {
             textoCompleto += lineasProcesadas[i] + "\n";
         }
+
+        int colTextoDialogo = 1;
+        if (hablante == "Letrero") colTextoDialogo = 4;
+        else if (hablante == "Coco") colTextoDialogo = 6;
 
         bool esNuevo = (hablante != ultimoDialogoHablante || textoCompleto != ultimoDialogoTexto);
 
@@ -414,7 +418,7 @@ public:
                 for (size_t c = 0; c < wchars.size(); c++) {
                     if (x + 3 + (int)c < x + ancho - 3) {
                         buffer[filaActual][x + 3 + (int)c] = wchars[c];
-                        bufferColor[filaActual][x + 3 + (int)c] = 1;
+                        bufferColor[filaActual][x + 3 + (int)c] = colTextoDialogo;
                     }
                     dibujar();
 #ifdef _WIN32
@@ -432,7 +436,7 @@ public:
         } else {
             int filaActual = y + 3;
             for (size_t i = 0; i < lineasProcesadas.size() && filaActual < y + 9; i++) {
-                setTextoJuego(x + 3, filaActual, lineasProcesadas[i], 1);
+                setTextoJuego(x + 3, filaActual, lineasProcesadas[i], colTextoDialogo);
                 filaActual++;
             }
         }
@@ -1058,7 +1062,16 @@ public:
                         }
                     } else {
                         buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
-                        if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
+                        if (ch == '/') {
+                            if (xMundo >= 388 && xMundo <= 396 && yMundo >= 158 && yMundo <= 170) {
+                                if (xMundo == 391) buffer[yPantalla][xPantalla] = L'░';
+                                else if (xMundo == 392) buffer[yPantalla][xPantalla] = L'▒';
+                                else buffer[yPantalla][xPantalla] = L'█';
+                                bufferColor[yPantalla][xPantalla] = 8;
+                            } else {
+                                bufferColor[yPantalla][xPantalla] = 2;
+                            }
+                        } else if (ch == '&' || ch == '#' || ch == '\\') {
                             bufferColor[yPantalla][xPantalla] = 2;
                         } else if (ch == '.' || ch == ':' || ch == '=') {
                             bufferColor[yPantalla][xPantalla] = 4;
@@ -1184,6 +1197,209 @@ public:
             std::this_thread::sleep_for(std::chrono::milliseconds(180));
 #endif
         }
+    }
+
+    void animarCaidaPozoMuerte(int nivelNum, const std::string& nivelNom,
+                              const std::string& protaNom) {
+        wchar_t block = L'█';
+        int totalFrames = 10;
+        int centroX = anchoJuego / 2;
+        int centroY = altoTotal / 2 - 2;
+
+        for (int frame = 0; frame < totalFrames; frame++) {
+            for (int f = 0; f < altoTotal; f++) {
+                for (int c = 0; c < anchoJuego; c++) {
+                    int dx = (c - centroX);
+                    int dy = (f - centroY) * 2;
+                    int dist2 = dx * dx + dy * dy;
+                    if (dist2 > 650) {
+                        buffer[f][c] = (f % 2 == 0 ? (c % 8 == 0 ? L'|' : L'-') : (c % 8 == 4 ? L'|' : L'-'));
+                        bufferColor[f][c] = 8;
+                    } else if (dist2 > 350) {
+                        buffer[f][c] = block;
+                        bufferColor[f][c] = 12;
+                    } else if (dist2 > 150) {
+                        buffer[f][c] = block;
+                        bufferColor[f][c] = 8;
+                    } else {
+                        buffer[f][c] = L' ';
+                        bufferColor[f][c] = 0;
+                    }
+                }
+            }
+
+            int tamCoco = 8 - frame;
+            if (tamCoco < 1) tamCoco = 1;
+            int altoCoco = (tamCoco > 2) ? (tamCoco * 3 / 4) : 1;
+
+            if (frame < 8) {
+                int startX = centroX - tamCoco / 2;
+                int startY = centroY - altoCoco / 2;
+                for (int r = 0; r < altoCoco; r++) {
+                    for (int c = 0; c < tamCoco; c++) {
+                        if (startY + r >= 0 && startY + r < altoTotal && startX + c >= 0 && startX + c < anchoJuego) {
+                            buffer[startY + r][startX + c] = block;
+                            int col = (r == 0) ? 13 : ((r == 1) ? 4 : 6);
+                            bufferColor[startY + r][startX + c] = col;
+                        }
+                    }
+                }
+            }
+
+            std::string msg = "[ ¡Coco cae en el abismo del pozo! ]";
+            int cxMsg = (anchoJuego - longitudVisible(msg)) / 2;
+            setTextoJuego(cxMsg, altoTotal - 3, msg, 7);
+
+            renderizarPanelLateral(nivelNum, nivelNom, protaNom, 0, 3, "Abismo Serpentback");
+            dibujar();
+
+#ifdef _WIN32
+            Beep(520 - frame * 40, 60);
+            Sleep(100);
+#else
+            std::this_thread::sleep_for(std::chrono::milliseconds(150));
+#endif
+        }
+
+        int xModal = 18;
+        int yModal = 12;
+        int anchoM = 48;
+        int altoM = 14;
+        dibujarCaja(xModal, yModal, anchoM, altoM, 7);
+        setTextoJuego(xModal + 16, yModal + 2, "P E R D I S T E", 7);
+        for (int c = 1; c < anchoM - 1; c++) {
+            buffer[yModal + 4][xModal + c] = L'-';
+            bufferColor[yModal + 4][xModal + c] = 7;
+        }
+        setTextoJuego(xModal + 5, yModal + 6, "Coco ha caido en las profundidades", 1);
+        setTextoJuego(xModal + 9, yModal + 7, "del laberinto Serpentback.", 1);
+        setTextoJuego(xModal + 8, yModal + 10, "[ENTER] Intentar de nuevo", 4);
+        dibujar();
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int t = _getch();
+                if (t == 0 || t == 224) t = _getch();
+                if (t == 13 || t == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void animarCorazonRoto(int vidasRestantes) {
+        int xModal = 20;
+        int yModal = 10;
+        int anchoM = 44;
+        int altoM = 18;
+
+        for (int frame = 0; frame < 4; frame++) {
+            dibujarCaja(xModal, yModal, anchoM, altoM, (frame >= 2) ? 8 : 7);
+
+            if (frame == 0) {
+                setTextoJuego(xModal + 16, yModal + 2, "  /\\_/\\  ", 7);
+                setTextoJuego(xModal + 16, yModal + 3, " (     ) ", 7);
+                setTextoJuego(xModal + 16, yModal + 4, "  \\   /  ", 7);
+                setTextoJuego(xModal + 16, yModal + 5, "   \\ /   ", 7);
+                setTextoJuego(xModal + 16, yModal + 6, "    v    ", 7);
+            } else if (frame == 1) {
+                setTextoJuego(xModal + 16, yModal + 2, "  /\\|/\\  ", 7);
+                setTextoJuego(xModal + 16, yModal + 3, " ( / \\ ) ", 7);
+                setTextoJuego(xModal + 16, yModal + 4, "  \\/ \\/  ", 7);
+                setTextoJuego(xModal + 16, yModal + 5, "   / \\   ", 7);
+                setTextoJuego(xModal + 16, yModal + 6, "    v    ", 7);
+            } else if (frame == 2) {
+                setTextoJuego(xModal + 15, yModal + 2, " /\\   /\\ ", 10);
+                setTextoJuego(xModal + 15, yModal + 3, "( /   \\ )", 10);
+                setTextoJuego(xModal + 15, yModal + 4, " \\/   \\/ ", 10);
+                setTextoJuego(xModal + 15, yModal + 5, "  /     \\ ", 10);
+                setTextoJuego(xModal + 15, yModal + 6, " 'v     v'", 10);
+            } else {
+                setTextoJuego(xModal + 14, yModal + 2, "/\\     /\\", 8);
+                setTextoJuego(xModal + 14, yModal + 3, "( /     \\ )", 8);
+                setTextoJuego(xModal + 14, yModal + 4, "\\/       \\/", 8);
+                setTextoJuego(xModal + 14, yModal + 5, " /         \\", 8);
+                setTextoJuego(xModal + 14, yModal + 6, "'v         v'", 8);
+            }
+
+            for (int c = 1; c < anchoM - 1; c++) {
+                buffer[yModal + 8][xModal + c] = L'-';
+                bufferColor[yModal + 8][xModal + c] = 8;
+            }
+
+            setTextoJuego(xModal + 13, yModal + 10, "¡TIEMPO AGOTADO!", 7);
+            setTextoJuego(xModal + 6, yModal + 12, "Myrphon escapo entre las sombras...", 1);
+            std::string vidStr = "-1 Vida  (Vidas restantes: " + std::to_string(vidasRestantes > 0 ? vidasRestantes : 0) + ")";
+            setTextoJuego(xModal + 8, yModal + 13, vidStr, (vidasRestantes > 0) ? 4 : 7);
+            setTextoJuego(xModal + 10, yModal + 15, "[ENTER] Continuar", 3);
+
+            dibujar();
+#ifdef _WIN32
+            if (frame == 1) Beep(300, 100);
+            else if (frame == 2) Beep(240, 100);
+            Sleep(250);
+#else
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+#endif
+        }
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int t = _getch();
+                if (t == 0 || t == 224) t = _getch();
+                if (t == 13 || t == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void dibujarModalVictoriaMyrphon() {
+        int xModal = 18;
+        int yModal = 11;
+        int anchoM = 48;
+        int altoM = 16;
+
+        dibujarCaja(xModal, yModal, anchoM, altoM, 2);
+
+        setTextoJuego(xModal + 14, yModal + 2, "¡¡LO CONSEGUISTE!!", 2);
+        setTextoJuego(xModal + 11, yModal + 3, "¡ATRAPASTE A MYRPHON!", 4);
+
+        for (int c = 1; c < anchoM - 1; c++) {
+            buffer[yModal + 5][xModal + c] = L'-';
+            bufferColor[yModal + 5][xModal + c] = 2;
+        }
+
+        setTextoJuego(xModal + 17, yModal + 7, "( •v• )  *¡piii!*", 6);
+        setTextoJuego(xModal + 5, yModal + 9, "Myrphon ahora esta a salvo contigo.", 1);
+        setTextoJuego(xModal + 6, yModal + 10, "Llevaselo de regreso a Richeh.", 1);
+
+        setTextoJuego(xModal + 13, yModal + 12, "[ +50 PUNTOS DE MISION ]", 4);
+        setTextoJuego(xModal + 14, yModal + 14, "[ENTER] Continuar", 3);
+
+        dibujar();
+
+#ifdef _WIN32
+        Beep(523, 100);
+        Beep(659, 100);
+        Beep(784, 150);
+        while (true) {
+            if (_kbhit()) {
+                int t = _getch();
+                if (t == 0 || t == 224) t = _getch();
+                if (t == 13 || t == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
     }
 
     void dibujar() {

@@ -46,6 +46,13 @@ public:
 		}
 	}
 
+	char getCaracter(int x, int y) const {
+		if (y >= 0 && y < filas && x >= 0 && x < columnas) {
+			return matriz[y][x];
+		}
+		return ' ';
+	}
+
 	void setCaracter(int x, int y, char c) {
 		if (y >= 0 && y < filas && x >= 0 && x < columnas) {
 			matriz[y][x] = c;
