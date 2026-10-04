@@ -10,9 +10,10 @@ private:
 	bool yaHablo;
 	bool dioTinta;
 	bool crafteoCapa;
+	int colorTraje;
 public:
 	NPC(int x, int y, std::string n, std::string rol = "Hechicero")
-		: Personaje(x, y, n, 100), rolPerspectiva(rol), confianza(0), yaHablo(false), dioTinta(false), crafteoCapa(false) {
+		: Personaje(x, y, n, 100), rolPerspectiva(rol), confianza(0), yaHablo(false), dioTinta(false), crafteoCapa(false), colorTraje(7) {
 		ancho = 7;
 		alto = 4;
 		for (int r = 0; r < 4; r++) {
@@ -23,6 +24,7 @@ public:
 		}
 
 		if (n == "Agott") {
+			colorTraje = 5;
 			const char* f1[4] = {
 				"  /  \\ ",
 				" /____\\",
@@ -42,6 +44,7 @@ public:
 				}
 			}
 		} else if (n == "Qifrey") {
+			colorTraje = 3;
 			const char* f1[4] = {
 				"  /  \\ ",
 				" /____\\",
@@ -61,6 +64,7 @@ public:
 				}
 			}
 		} else if (n == "Richeh") {
+			colorTraje = 4;
 			const char* f1[4] = {
 				"  /  \\ ",
 				" /____\\",
@@ -105,6 +109,7 @@ public:
 	bool getYaHablo() const { return this->yaHablo; }
 	bool getDioTinta() const { return this->dioTinta; }
 	bool getCrafteoCapa() const { return this->crafteoCapa; }
+	int getColorTraje() const { return this->colorTraje; }
 
 	void setConfianza(int c) { this->confianza = c; }
 	void setYaHablo(bool yh) { this->yaHablo = yh; }

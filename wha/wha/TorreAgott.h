@@ -160,11 +160,11 @@ public:
 		}
 
 		if (puedeMover && pozoEncontrado) {
-			bool solapadoPrevio = (cajas[indiceCaja]->getX() < pozoX + 2 &&
+			bool solapadoPrevio = (cajas[indiceCaja]->getX() < pozoX + 3 &&
 			                       cajas[indiceCaja]->getX() + 7 > pozoX &&
 			                       cajas[indiceCaja]->getY() < pozoY + 2 &&
 			                       cajas[indiceCaja]->getY() + 4 > pozoY);
-			bool solapadoNuevo = (nbx < pozoX + 2 && nbx + 7 > pozoX &&
+			bool solapadoNuevo = (nbx < pozoX + 3 && nbx + 7 > pozoX &&
 			                      nby < pozoY + 2 && nby + 4 > pozoY);
 			if (!solapadoPrevio && solapadoNuevo) {
 				puedeMover = false;

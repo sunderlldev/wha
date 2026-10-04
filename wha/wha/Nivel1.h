@@ -19,6 +19,15 @@ public:
 		}
 	}
 
+	static bool esCuartoEstatico(int px, int py) {
+		if (px >= 59 && px <= 125 && py >= 19 && py <= 45) return true;
+		if (px >= 382 && px <= 457 && py >= 11 && py <= 49) return true;
+		if (px >= 384 && px <= 501 && py >= 62 && py <= 131) return true;
+		if (px >= 382 && px <= 456 && py >= 150 && py <= 178) return true;
+		if (px >= 62 && px <= 122 && py >= 148 && py <= 175) return true;
+		return false;
+	}
+
 	virtual int determinarCuarto(int px, int py) const override {
 		if (px >= 59 && px <= 125 && py >= 19 && py <= 45) return 1;
 		if (px >= 382 && px <= 457 && py >= 11 && py <= 49) return 2;

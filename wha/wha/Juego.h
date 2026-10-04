@@ -72,13 +72,8 @@ public:
 
 		if (nivel.getTransicionBajando()) {
 			nivel.setTransicionBajando(false);
-			pantalla.dibujarPantallaMensajeCentrado("[Pronto animacion de Coco bajando, xd]");
-			pantalla.dibujar();
-#ifdef _WIN32
-			Sleep(3000);
-#else
-			usleep(3000000);
-#endif
+			Protagonista* prota = nivel.getProtagonista();
+			pantalla.animarEscaleraPozo(true, nivel.getNumeroNivel(), nivel.getNombreNivel(), prota != nullptr ? prota->getNombre() : "Coco", prota != nullptr ? prota->getVida() : 3, prota != nullptr ? prota->getVidaMaxima() : 3);
 			nivel.entrarCuartoRicheh();
 			redibujarNecesario = true;
 			return;
@@ -86,13 +81,8 @@ public:
 
 		if (nivel.getTransicionSubiendo()) {
 			nivel.setTransicionSubiendo(false);
-			pantalla.dibujarPantallaMensajeCentrado("[Pronto animacion de Coco subiendo, xd]");
-			pantalla.dibujar();
-#ifdef _WIN32
-			Sleep(3000);
-#else
-			usleep(3000000);
-#endif
+			Protagonista* prota = nivel.getProtagonista();
+			pantalla.animarEscaleraPozo(false, nivel.getNumeroNivel(), nivel.getNombreNivel(), prota != nullptr ? prota->getNombre() : "Coco", prota != nullptr ? prota->getVida() : 3, prota != nullptr ? prota->getVidaMaxima() : 3);
 			nivel.salirCuartoRicheh();
 			redibujarNecesario = true;
 			return;
@@ -146,15 +136,19 @@ public:
 				}
 
 				pantalla.limpiarBuffer();
-				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim);
+				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), Nivel1::esCuartoEstatico);
 
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
 					int pox = nivel.getPozoX() - camX;
 					int poy = nivel.getPozoY() - camY;
+					const char* artPozo[2] = {
+						"/=/",
+						"/=/"
+					};
 					for (int r = 0; r < 2; r++) {
-						for (int c = 0; c < 2; c++) {
+						for (int c = 0; c < 3; c++) {
 							if (pox + c >= 0 && pox + c < pantalla.getAnchoJuego() && poy + r >= 0 && poy + r < pantalla.getAltoTotal()) {
-								pantalla.setPixelJuego(pox + c, poy + r, '%', 3);
+								pantalla.setPixelJuego(pox + c, poy + r, artPozo[r][c], 12);
 							}
 						}
 					}

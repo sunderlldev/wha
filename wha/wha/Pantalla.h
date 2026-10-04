@@ -32,6 +32,7 @@
 #define BRIGHT_WHITE "\033[97m"
 #define ORANGE "\033[38;5;208m"
 #define DARK_GREEN "\033[38;5;28m"
+#define BROWN "\033[38;5;130m"
 
 class Pantalla {
 private:
@@ -68,6 +69,7 @@ private:
             case 9: return GREEN;
             case 10: return ORANGE;
             case 11: return DARK_GREEN;
+            case 12: return BROWN;
             default: return RESET;
         }
     }
@@ -498,7 +500,29 @@ public:
                 setTextoJuego(x + 4, y + 7, "Estado: " + estados[seleccionado]);
                 for (int c = 4; c < ancho - 4; c++) buffer[y + 9][x + c] = '-';
                 setTextoJuego(x + 4, y + 11, "Descripcion:");
-                setTextoJuego(x + 4, y + 13, descripciones[seleccionado]);
+                std::string desc = descripciones[seleccionado];
+                std::vector<std::string> lineasDesc;
+                std::string lineaActual = "";
+                for (size_t i = 0; i < desc.length(); i++) {
+                    if (desc[i] == '\n') {
+                        lineasDesc.push_back(lineaActual);
+                        lineaActual = "";
+                    } else {
+                        lineaActual += desc[i];
+                        if ((int)lineaActual.length() >= ancho - 10) {
+                            lineasDesc.push_back(lineaActual);
+                            lineaActual = "";
+                        }
+                    }
+                }
+                if (!lineaActual.empty()) {
+                    lineasDesc.push_back(lineaActual);
+                }
+                int filaDesc = y + 13;
+                for (size_t i = 0; i < lineasDesc.size() && filaDesc < y + alto - 4; i++) {
+                    setTextoJuego(x + 4, filaDesc, lineasDesc[i]);
+                    filaDesc += 2;
+                }
             } else {
                 setTextoJuego(x + 4, y + 5, "Mision Bloqueada");
                 setTextoJuego(x + 4, y + 7, "Estado: BLOQUEADA");
@@ -755,7 +779,7 @@ public:
 #endif
     }
 
-    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0) {
+    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0, bool enSubMapa = false, bool (*esCuartoFunc)(int, int) = nullptr) {
         int filasMapa = (int)matrizMapa.size();
         if (filasMapa == 0) return;
         int columnasMapa = (int)matrizMapa[0].size();
@@ -771,6 +795,13 @@ public:
                         char charAgua = (fase == 0) ? '~' : ((fase == 1) ? '-' : '.');
                         buffer[yPantalla][xPantalla] = charAgua;
                         bufferColor[yPantalla][xPantalla] = 3;
+                    } else if (enSubMapa && (ch == '/' || ch == '=')) {
+                        buffer[yPantalla][xPantalla] = ch;
+                        bufferColor[yPantalla][xPantalla] = 12;
+                    } else if (ch == ' ' && !enSubMapa && (esCuartoFunc == nullptr || !esCuartoFunc(xMundo, yMundo))) {
+                        int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
+                        buffer[yPantalla][xPantalla] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
+                        bufferColor[yPantalla][xPantalla] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
                     } else {
                         buffer[yPantalla][xPantalla] = ch;
                         if (ch == '&' || ch == '#' || ch == '/' || ch == '\\') {
@@ -792,11 +823,116 @@ public:
                         }
                     }
                 } else {
-                    int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
-                    buffer[yPantalla][xPantalla] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
-                    bufferColor[yPantalla][xPantalla] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
+                    if (!enSubMapa) {
+                        int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
+                        buffer[yPantalla][xPantalla] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
+                        bufferColor[yPantalla][xPantalla] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
+                    } else {
+                        buffer[yPantalla][xPantalla] = ' ';
+                        bufferColor[yPantalla][xPantalla] = 0;
+                    }
                 }
             }
+        }
+    }
+
+    void animarEscaleraPozo(bool bajando, int nivelNum, const std::string& nivelNom,
+                            const std::string& protaNom, int vida, int vidaMax) {
+        char block = (char)219;
+        int totalFrames = 8;
+        int railIzquierda = 36;
+        int railDerecha = 47;
+        int anchoCoco = 10;
+        int altoCoco = 8;
+
+        for (int frame = 0; frame < totalFrames; frame++) {
+            for (int f = 0; f < altoTotal; f++) {
+                for (int c = 0; c < anchoJuego; c++) {
+                    if (c < 24 || c > 59) {
+                        buffer[f][c] = (f % 2 == 0 ? (c % 8 == 0 ? '|' : '-') : (c % 8 == 4 ? '|' : '-'));
+                        bufferColor[f][c] = 8;
+                    } else {
+                        buffer[f][c] = ' ';
+                        bufferColor[f][c] = 0;
+                    }
+                }
+            }
+
+            for (int f = 0; f < altoTotal; f++) {
+                buffer[f][railIzquierda] = block;
+                buffer[f][railIzquierda + 1] = block;
+                bufferColor[f][railIzquierda] = 12;
+                bufferColor[f][railIzquierda + 1] = 12;
+
+                buffer[f][railDerecha] = block;
+                buffer[f][railDerecha + 1] = block;
+                bufferColor[f][railDerecha] = 12;
+                bufferColor[f][railDerecha + 1] = 12;
+
+                if (f % 3 == 0) {
+                    for (int c = railIzquierda + 2; c < railDerecha; c++) {
+                        buffer[f][c] = block;
+                        bufferColor[f][c] = 12;
+                    }
+                }
+            }
+
+            int yCoco = bajando ? (3 + frame * 3) : (25 - frame * 3);
+            if (yCoco < 1) yCoco = 1;
+            if (yCoco > altoTotal - altoCoco - 2) yCoco = altoTotal - altoCoco - 2;
+            int xCoco = 37;
+
+            int pose = frame % 2;
+
+            int patronCoco[8][10] = {
+                {0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
+                {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+                {0, 0, 0, 4, 4, 4, 4, 0, 0, 0},
+                {0, 6, 6, 6, 6, 6, 6, 6, 6, 0},
+                {0, 0, 0, 6, 6, 6, 6, 0, 0, 0},
+                {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+                {0, 0, 6, 6, 0, 0, 6, 6, 0, 0},
+                {0, 12, 12, 0, 0, 0, 0, 12, 12, 0}
+            };
+
+            if (pose == 0) {
+                patronCoco[4][0] = 12;
+                patronCoco[4][1] = 12;
+                patronCoco[6][2] = 6;
+                patronCoco[6][3] = 6;
+                patronCoco[7][1] = 12;
+                patronCoco[7][2] = 12;
+            } else {
+                patronCoco[4][8] = 12;
+                patronCoco[4][9] = 12;
+                patronCoco[6][6] = 6;
+                patronCoco[6][7] = 6;
+                patronCoco[7][7] = 12;
+                patronCoco[7][8] = 12;
+            }
+
+            for (int r = 0; r < altoCoco; r++) {
+                for (int c = 0; c < anchoCoco; c++) {
+                    int colPx = patronCoco[r][c];
+                    if (colPx != 0 && yCoco + r < altoTotal && xCoco + c < anchoJuego) {
+                        buffer[yCoco + r][xCoco + c] = block;
+                        bufferColor[yCoco + r][xCoco + c] = colPx;
+                    }
+                }
+            }
+
+            std::string msg = bajando ? "[ Bajando al sotano de Richeh... ]" : "[ Subiendo a la torre de Agott... ]";
+            int cxMsg = (anchoJuego - (int)msg.length()) / 2;
+            setTextoJuego(cxMsg, altoTotal - 3, msg, 4);
+
+            renderizarPanelLateral(nivelNum, nivelNom, protaNom, vida, vidaMax);
+            dibujar();
+
+#ifdef _WIN32
+            Sleep(180);
+#else
+            std::this_thread::sleep_for(std::chrono::milliseconds(180));
+#endif
         }
     }
 
