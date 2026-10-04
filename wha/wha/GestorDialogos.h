@@ -184,6 +184,14 @@ public:
 			opciones.push_back("[1] Entendido, Maestro.");
 			break;
 
+		case 35:
+			lineas.push_back("En la hechicería no existe tal cosa como un material 'básico'.");
+			lineas.push_back("Los sellos no despiertan con tinta ordinaria; solo la tinta de plata,");
+			lineas.push_back("nacida de minerales arcanos, canaliza el flujo mágico al pergamino.");
+			lineas.push_back("Es la única que poseo en el taller... ¿Aún deseas aceptarla, Coco?");
+			opciones.push_back("[1] ¡Sí, por favor! Prometo cuidarla y esforzarme al máximo.");
+			break;
+
 		case 40:
 			lineas.push_back("¡Increíble hallazgo, Coco! Esta tinta arcaica es justo lo");
 			lineas.push_back("que necesitábamos en el taller para restaurar pergaminos.");
@@ -536,6 +544,15 @@ public:
 		} else if (estadoDialogo == 30) {
 			if (opcion == 1) {
 				estadoDialogo = 31;
+			} else if (opcion == 2) {
+				estadoDialogo = 35;
+			} else {
+				enDialogo = false;
+				estadoDialogo = 0;
+			}
+		} else if (estadoDialogo == 35) {
+			if (opcion == 1) {
+				estadoDialogo = 32;
 			} else {
 				enDialogo = false;
 				estadoDialogo = 0;
