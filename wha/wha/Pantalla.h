@@ -861,8 +861,10 @@ public:
                             buffer[yPantalla][xPantalla] = L' ';
                             bufferColor[yPantalla][xPantalla] = 0;
                         } else if (esCaminoFunc != nullptr && esCaminoFunc(xMundo, yMundo)) {
-                            int r = std::abs(xMundo * 5 + yMundo * 11) % 5;
-                            wchar_t charCamino = (r == 0) ? L'.' : ((r == 1) ? L':' : L' ');
+                            unsigned int h = (unsigned int)(xMundo * 374761393u + yMundo * 668265263u);
+                            h = (h ^ (h >> 13)) * 1274126177u;
+                            unsigned int r = h % 10u;
+                            wchar_t charCamino = (r < 3) ? L' ' : ((r < 7) ? L'.' : ((r < 9) ? L':' : L','));
                             buffer[yPantalla][xPantalla] = charCamino;
                             bufferColor[yPantalla][xPantalla] = 8;
                         } else {

@@ -29,12 +29,12 @@ public:
 	}
 
 	static bool esCaminoEstatico(int px, int py) {
-		if (px >= 76 && px <= 108 && py >= 46 && py <= 148) return true;
-		if (px >= 108 && px <= 303 && py >= 94 && py <= 111) return true;
-		if (px >= 302 && px <= 321 && py >= 26 && py <= 169) return true;
-		if (px >= 320 && px <= 384 && py >= 98 && py <= 108) return true;
-		if (px >= 320 && px <= 382 && py >= 24 && py <= 54) return true;
-		if (px >= 320 && px <= 382 && py >= 150 && py <= 172) return true;
+		if (px >= 77 && px <= 107 && py >= 45 && py <= 147) return true;
+		if (px >= 108 && px <= 302 && py >= 95 && py <= 110) return true;
+		if (px >= 303 && px <= 319 && py >= 27 && py <= 168) return true;
+		if (px >= 320 && px <= 381 && py >= 27 && py <= 36) return true;
+		if (px >= 320 && px <= 383 && py >= 99 && py <= 107) return true;
+		if (px >= 320 && px <= 381 && py >= 160 && py <= 168) return true;
 		return false;
 	}
 
