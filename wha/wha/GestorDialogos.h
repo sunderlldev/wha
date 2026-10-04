@@ -17,13 +17,14 @@ private:
 	bool misionMyrphonActiva;
 	bool myrphonRescatado;
 	bool dioVaraRicheh;
+	bool agottSabeMyrphon;
 
 public:
 	GestorDialogos()
 		: enDialogo(false), estadoDialogo(0), npcDialogoActual(""),
 		  respuestaInicialAgott(0), richehEnojada(false),
 		  misionMyrphonActiva(false), myrphonRescatado(false),
-		  dioVaraRicheh(false) {}
+		  dioVaraRicheh(false), agottSabeMyrphon(false) {}
 	~GestorDialogos() {}
 
 	bool getEnDialogo() const { return enDialogo; }
@@ -46,8 +47,12 @@ public:
 	}
 
 	void iniciarDialogoAgott() {
-		int estadoIni = (respuestaInicialAgott == 2) ? 220 : 210;
-		iniciarDialogo("Agott", estadoIni);
+		if (agottSabeMyrphon) {
+			iniciarDialogo("Agott", 230);
+		} else {
+			int estadoIni = (respuestaInicialAgott == 2) ? 220 : 210;
+			iniciarDialogo("Agott", estadoIni);
+		}
 	}
 
 	void terminarDialogo() {
@@ -228,6 +233,9 @@ public:
 			} else {
 				opciones.push_back("[1] Sigo buscando el libro, necesito ayuda...");
 			}
+			if (myrphonRescatado) {
+				opciones.push_back("[2] Recupere a su mascota, esta a salvo con Richeh.");
+			}
 			break;
 
 		case 211:
@@ -247,6 +255,9 @@ public:
 			} else {
 				opciones.push_back("[1] Sigo buscando algo, deja de molestar!");
 			}
+			if (myrphonRescatado) {
+				opciones.push_back("[2] Recupere a su mascota, esta a salvo con Richeh.");
+			}
 			break;
 
 		case 221:
@@ -262,6 +273,41 @@ public:
 		case 223:
 			lineas.push_back("...");
 			opciones.push_back("[1] Salir");
+			break;
+
+		case 230:
+			lineas.push_back("El taller ya volvio a la normalidad. Deja de perder el tiempo y concentrate en tu viaje.");
+			opciones.push_back("[1] Salir");
+			break;
+
+		case 231:
+			lineas.push_back("...");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 232:
+			lineas.push_back("(Sus ojos se abren de golpe, perdiendo toda su compostura)");
+			lineas.push_back("Hablas en serio? E-Esa criatura tan adorable esta bien?...");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 233:
+			lineas.push_back("(Se aclara la garganta rapidamente y recupera su postura seria)");
+			lineas.push_back("Quiero decir... Que buena noticia para Richeh.");
+			lineas.push_back("Ella... ha estado muy distraida sin el.");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 234:
+			lineas.push_back("Supongo que tengo que reconocer tu esfuerzo.");
+			lineas.push_back("No cualquiera sobrevive al laberinto Serpentback...");
+			opciones.push_back("[1] Continuar...");
+			break;
+
+		case 235:
+			lineas.push_back("...Gracias por traerlo de vuelta.");
+			lineas.push_back("Has hecho un trabajo aceptable, Coco.");
+			opciones.push_back("[1] De nada, Agott!");
 			break;
 
 		case 300:
@@ -555,7 +601,9 @@ public:
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 210) {
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
+			if (opcion == 2 && myrphonRescatado) {
+				estadoDialogo = 231;
+			} else if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
 				estadoDialogo = 211;
 			} else {
 				estadoDialogo = 212;
@@ -564,7 +612,9 @@ public:
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 220) {
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
+			if (opcion == 2 && myrphonRescatado) {
+				estadoDialogo = 231;
+			} else if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
 				if (agott != nullptr && agott->getConfianza() > 0) {
 					agott->setConfianza(agott->getConfianza() - 1);
 				}
@@ -580,7 +630,16 @@ public:
 				agott->setConfianza(agott->getConfianza() - 1);
 			}
 			estadoDialogo = 223;
-		} else if (estadoDialogo == 223) {
+		} else if (estadoDialogo == 223 || estadoDialogo == 230) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo >= 231 && estadoDialogo <= 234) {
+			estadoDialogo++;
+		} else if (estadoDialogo == 235) {
+			agottSabeMyrphon = true;
+			if (agott != nullptr) {
+				agott->setConfianza(agott->getConfianza() + 1);
+			}
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 300) {
