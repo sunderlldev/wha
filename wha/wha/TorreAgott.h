@@ -193,20 +193,20 @@ public:
 					libroEncontrado = true;
 					int origX = cajas[indiceCaja]->getOrigX();
 					int origY = cajas[indiceCaja]->getOrigY();
-					itemsSuelo.push_back(new ItemMagico(origX + 2, origY + 1, "Libro de hechizos", "Tomo antiguo con instrucciones de trazos arcanos.", "Grimorio Magico", false));
+					itemsSuelo.push_back(new ItemMagico(origX + 2, origY + 1, "Libro de hechizos", "Tomo antiguo con instrucciones de trazos arcanos.", "Grimorio Mágico", false));
 					if (cajasMovidasContador == 1) {
-						mensajeTemporal = "Coco: Pff, a la primera!";
+						mensajeTemporal = "Coco: ¡Pff, a la primera!";
 					} else if (cajasMovidasContador == 2) {
-						mensajeTemporal = "Coco: Bueno, no costo tanto encontrarlo!";
+						mensajeTemporal = "Coco: ¡Bueno, no costó tanto encontrarlo!";
 					} else {
-						mensajeTemporal = "Coco: Por fin, lo encontre!";
+						mensajeTemporal = "Coco: ¡Por fin, lo encontré!";
 					}
 					ticksMensajeTemporal = 100;
 				} else if (indiceCaja == indiceCajaPozo && !pozoEncontrado) {
 					pozoEncontrado = true;
 					pozoX = cajas[indiceCaja]->getOrigX() + 2;
 					pozoY = cajas[indiceCaja]->getOrigY() + 1;
-					mensajeTemporal = "Coco: Un pozo con escaleras?? Quien puede esconderse aqui?";
+					mensajeTemporal = "Coco: ¿Un pozo con escaleras? ¿Quién puede esconderse aquí?";
 					ticksMensajeTemporal = 100;
 				}
 			}

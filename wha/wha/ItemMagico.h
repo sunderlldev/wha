@@ -10,8 +10,8 @@ protected:
 	std::string tipoItem;
 	bool recogido;
 public:
-	ItemMagico() : x(0), y(0), nombre(""), descripcion(""), tipoItem("Item Magico"), recogido(false) {}
-	ItemMagico(int x, int y, std::string n, std::string desc, std::string tipo = "Item Magico", bool r = false)
+	ItemMagico() : x(0), y(0), nombre(""), descripcion(""), tipoItem("Ítem Mágico"), recogido(false) {}
+	ItemMagico(int x, int y, std::string n, std::string desc, std::string tipo = "Ítem Mágico", bool r = false)
 		: x(x), y(y), nombre(n), descripcion(desc), tipoItem(tipo), recogido(r) {}
 	virtual ~ItemMagico() {}
 

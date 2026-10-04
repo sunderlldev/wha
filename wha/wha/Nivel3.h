@@ -4,7 +4,7 @@
 
 class Nivel3 : public Nivel {
 public:
-	Nivel3() : Nivel(3, "Gran Arbol de Plata", 200, 600) {}
+	Nivel3() : Nivel(3, "Gran Árbol de Plata", 200, 600) {}
 	virtual ~Nivel3() {}
 
 	virtual void inciarNivel() override {
@@ -12,7 +12,7 @@ public:
 		this->tiempoFin = 0;
 		this->completado = false;
 		if (gestorMisiones != nullptr) {
-			gestorMisiones->setObjetivoActual("Gran Arbol de Plata - Fase 3");
+			gestorMisiones->setObjetivoActual("Gran Árbol de Plata - Fase 3");
 		}
 	}
 };

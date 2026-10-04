@@ -248,9 +248,9 @@ public:
 		}
 
 		limpiarItemsSuelo();
-		itemsSuelo.push_back(new ItemMagico(405, 20, "Tela", "Trozo de tela arcana resistente y ligera para confeccionar vestiduras.", "Material Magico", false));
-		itemsSuelo.push_back(new ItemMagico(440, 20, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacen antiguo.", "Objeto de Coleccion", false));
-		itemsSuelo.push_back(new ItemMagico(160, 50, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran rio.", "Objeto de Coleccion", false));
+		itemsSuelo.push_back(new ItemMagico(405, 20, "Tela", "Trozo de tela arcana resistente y ligera para confeccionar vestiduras.", "Material Mágico", false));
+		itemsSuelo.push_back(new ItemMagico(440, 20, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacén antiguo.", "Objeto de Colección", false));
+		itemsSuelo.push_back(new ItemMagico(160, 50, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran río.", "Objeto de Colección", false));
 
 		limpiarLetreros();
 		letreros.push_back(new Letrero(75, 22, "Letrero: [CHOZA DE TRAZOS] Dibuja runas con pasión y cuida tus pergaminos."));

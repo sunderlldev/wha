@@ -513,14 +513,14 @@ public:
 					inv->removerItem("Tela");
 					inv->removerItem("Tinta magica");
 					inv->removerItem("Libro de hechizos");
-					inv->agregarItem(new ItemMagico(0, 0, "Capa magica", "Capa magica que otorga la habilidad de planear por los cielos.", "Equipamiento Magico", true));
+					inv->agregarItem(new ItemMagico(0, 0, "Capa Mágica", "Capa mágica que otorga la habilidad de planear por los cielos.", "Equipamiento Mágico", true));
 				}
 				if (qifrey != nullptr) {
 					qifrey->setCrafteoCapa(true);
 					qifrey->setConfianza(2);
 				}
 				puntosMisiones += 100;
-				objetivoActual = "Capa Magica crafteada! Mision Cumplida";
+				objetivoActual = "¡Capa Mágica crafteada! ¡Misión cumplida!";
 				estadoDialogo = 12;
 			}
 		} else if (estadoDialogo == 12) {
@@ -552,7 +552,7 @@ public:
 				if (inv != nullptr) {
 					if (inv->tieneItem("Tinta magica")) {
 						estadoDialogo = 34;
-					} else if (inv->agregarItem(new ItemMagico(0, 0, "Tinta magica", "Tinta de plata otorgada por Qifrey para trazar sellos.", "Consumible Magico", true))) {
+					} else if (inv->agregarItem(new ItemMagico(0, 0, "Tinta magica", "Tinta de plata otorgada por Qifrey para trazar sellos.", "Consumible Mágico", true))) {
 						if (qifrey != nullptr) {
 							qifrey->setDioTinta(true);
 							if (qifrey->getConfianza() < 1) qifrey->setConfianza(1);
@@ -715,16 +715,16 @@ public:
 			this->dioVaraRicheh = true;
 			misionMyrphonActiva = false;
 			if (inv != nullptr && !inv->tieneItem("Vara magica")) {
-				inv->agregarItem(new ItemMagico(0, 0, "Vara magica", "Varita Magica de la Alianza entregada por Richeh tras rescatar a Myrphon. Permite lanzar fuego para derribar muros.", "Herramienta Magica", true));
+				inv->agregarItem(new ItemMagico(0, 0, "Vara magica", "Varita Mágica de la Alianza entregada por Richeh tras rescatar a Myrphon. Permite lanzar fuego para derribar muros.", "Herramienta Mágica", true));
 				puntosMisiones += 50;
-				promptFlotante = "[Recibiste: Vara magica]";
+				promptFlotante = "[Recibiste: Vara mágica]";
 			}
 			if (richeh != nullptr) {
 				richeh->setYaHablo(true);
 				richeh->setConfianza(2);
 				richeh->setExpresion(2);
 			}
-			objetivoActual = "Usar la Vara magica para derribar el muro del almacen";
+			objetivoActual = "Usar la Vara mágica para derribar el muro del almacén";
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 360) {

@@ -129,7 +129,7 @@ public:
 			}
 		}
 		promptFlotante = "";
-		mostrarMensajeTemporal("[SOTANO SECRETO DE RICHEH]", 60);
+		mostrarMensajeTemporal("[SÓTANO SECRETO DE RICHEH]", 60);
 		if (gestorDialogos != nullptr && gestorDialogos->getMyrphonRescatado() && !gestorDialogos->getDioVaraRicheh()) {
 			NPC* richeh = getRicheh();
 			if (richeh != nullptr) richeh->setExpresion(1);
@@ -818,7 +818,7 @@ public:
 									huboCambio = true;
 									return huboCambio;
 								} else {
-									promptFlotante = "[Mochila llena: Max 6 items!]";
+									promptFlotante = "[Mochila llena: ¡Máx. 6 ítems!]";
 									huboCambio = true;
 									return huboCambio;
 								}
