@@ -25,12 +25,19 @@ private:
 	int segundoPrevio;
 	int tickAnimPrevio;
 public:
-	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1) {
+	Juego() : ejecutando(true), nivelActual(1), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1) {
 		pantalla.configurarConsola();
 		listaNivel.push_back(new Nivel1());
 		listaNivel.push_back(new Nivel2());
 		listaNivel.push_back(new Nivel3());
 		listaNivel[nivelActual]->inciarNivel();
+
+		if (nivelActual == 1) {
+			Nivel2* n2 = dynamic_cast<Nivel2*>(listaNivel[1]);
+			if (n2 != nullptr) {
+				n2->mostrarCinematicaIntro(pantalla);
+			}
+		}
 	}
 
 	~Juego() {
@@ -259,7 +266,13 @@ public:
 						if (pantallaX + c >= 0 && pantallaX + c < pantalla.getAnchoJuego() && pantallaY + r >= 0 && pantallaY + r < pantalla.getAltoTotal()) {
 							char ch = prota->getCaracter(r, c);
 							if (ch != ' ') {
-								int colCoco = (r == 2) ? 1 : 6;
+								int colPersonaje = 6; //color azul
+
+								if (nivel.getNumeroNivel() == 2) { //colocar color segun nivel
+									colPersonaje = 2; //color verde
+								}
+
+								int colCoco = (r == 2) ? 1 : colPersonaje;
 								pantalla.setPixelJuego(pantallaX + c, pantallaY + r, ch, colCoco);
 							}
 						}
