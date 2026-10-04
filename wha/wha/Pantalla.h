@@ -30,6 +30,8 @@
 #define BRIGHT_MAGENTA "\033[95m"
 #define BRIGHT_CYAN "\033[96m"
 #define BRIGHT_WHITE "\033[97m"
+#define ORANGE "\033[38;5;208m"
+#define DARK_GREEN "\033[38;5;28m"
 
 class Pantalla {
 private:
@@ -71,6 +73,8 @@ private:
             case 7: return BRIGHT_RED;
             case 8: return BRIGHT_BLACK;
             case 9: return GREEN;
+            case 10: return ORANGE;
+            case 11: return DARK_GREEN;
             default: return RESET;
         }
     }
@@ -131,8 +135,9 @@ public:
                 if (c == anchoJuego) {
                     bufferColor[f][c] = 8;
                 } else if (c < anchoJuego) {
-                    buffer[f][c] = (char)219;
-                    bufferColor[f][c] = ((f + c) % 2 == 0) ? 2 : 9;
+                    int r = std::abs(c * 7 + f * 13) % 3;
+                    buffer[f][c] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
+                    bufferColor[f][c] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
                 } else {
                     bufferColor[f][c] = 0;
                 }
@@ -333,7 +338,13 @@ public:
             filaOpciones++;
         }
 
-        setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1-4] o pulsa ESC para salir", 4);
+        if (opciones.empty()) {
+            setTextoJuego(x + 3, y + alto - 2, "Pulsa ESC o ENTER para continuar", 4);
+        } else if (opciones.size() == 1) {
+            setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1] o pulsa ESC para salir", 4);
+        } else {
+            setTextoJuego(x + 3, y + alto - 2, "Elige una opcion [1-" + std::to_string(opciones.size()) + "] o pulsa ESC para salir", 4);
+        }
         if (esNuevo) {
             dibujar();
         }
@@ -790,8 +801,9 @@ public:
                         }
                     }
                 } else {
-                    buffer[yPantalla][xPantalla] = (char)219;
-                    bufferColor[yPantalla][xPantalla] = ((xPantalla + yPantalla) % 2 == 0) ? 2 : 9;
+                    int r = std::abs(xMundo * 7 + yMundo * 13) % 3;
+                    buffer[yPantalla][xPantalla] = (r == 0) ? '"' : ((r == 1) ? '\'' : ',');
+                    bufferColor[yPantalla][xPantalla] = (r == 0) ? 2 : ((r == 1) ? 9 : 11);
                 }
             }
         }

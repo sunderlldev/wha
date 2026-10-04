@@ -11,7 +11,7 @@ private:
 	bool haSidoMovida;
 public:
 	Caja(int x, int y)
-		: ObjetoMapa(x, y, 4, 3, true, caja), origX(x), origY(y), haSidoMovida(false) {}
+		: ObjetoMapa(x, y, 7, 4, true, caja), origX(x), origY(y), haSidoMovida(false) {}
 
 	virtual ~Caja() {}
 
@@ -28,18 +28,22 @@ public:
 		y += dy;
 	}
 
+	int getColor() const {
+		return haSidoMovida ? 10 : 4;
+	}
+
 	char getCaracter(int r, int c) const {
-		if (r == 0 || r == 2) {
-			if (c == 0 || c == 3) return '+';
+		if (r == 0 || r == 3) {
+			if (c == 0 || c == 6) return '+';
 			return '-';
 		}
-		if (c == 0 || c == 3) return '|';
+		if (c == 0 || c == 6) return '|';
 		return '#';
 	}
 
 	virtual void dibujarEnMatriz(std::vector<std::string>& matriz) {
-		for (int r = 0; r < 3; r++) {
-			for (int c = 0; c < 4; c++) {
+		for (int r = 0; r < 4; r++) {
+			for (int c = 0; c < 7; c++) {
 				int my = y + r;
 				int mx = x + c;
 				if (my >= 0 && my < (int)matriz.size() && mx >= 0 && mx < (int)matriz[my].size()) {
