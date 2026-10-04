@@ -16,6 +16,7 @@
 #include "GestorMisiones.h"
 #include "TorreAgott.h"
 #include "Letrero.h"
+#include "Pantalla.h"
 #ifdef _WIN32
 #include <conio.h>
 #endif
@@ -114,6 +115,9 @@ public:
 		}
 		limpiarItemsSuelo();
 		limpiarLetreros();
+	}
+
+	virtual void mostrarCinematicaIntro(Pantalla& pantalla) {
 	}
 
 	void mostrarMensajeTemporal(const std::string& msg, int ticks) {

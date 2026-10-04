@@ -119,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Arbol.h" />
+    <ClInclude Include="Cinematica.h" />
     <ClInclude Include="CuartoRicheh.h" />
     <ClInclude Include="Gato.h" />
     <ClInclude Include="Habitacion.h" />
@@ -126,6 +127,7 @@
     <ClInclude Include="ItemMagico.h" />
     <ClInclude Include="Juego.h" />
     <ClInclude Include="Mapa.h" />
+    <ClInclude Include="MapaNivel2.h" />
     <ClInclude Include="Nivel.h" />
     <ClInclude Include="Nivel1.h" />
     <ClInclude Include="Nivel2.h" />
@@ -136,6 +138,7 @@
     <ClInclude Include="Protagonista.h" />
     <ClInclude Include="Pantalla.h" />
     <ClInclude Include="MapaNivel1.h" />
+    <ClInclude Include="MatricesNivel2.h" />
     <ClInclude Include="Rio.h" />
     <ClInclude Include="Caja.h" />
     <ClInclude Include="GestorDialogos.h" />
