@@ -124,9 +124,17 @@ public:
 	void entrarCuartoRicheh() {
 		if (cuartoRicheh != nullptr) {
 			cuartoRicheh->entrar(protagonista);
+			if (gestorDialogos != nullptr && gestorDialogos->getDioVaraRicheh()) {
+				cuartoRicheh->colocarMyrphon();
+			}
 		}
 		promptFlotante = "";
 		mostrarMensajeTemporal("[SOTANO SECRETO DE RICHEH]", 60);
+		if (gestorDialogos != nullptr && gestorDialogos->getMyrphonRescatado() && !gestorDialogos->getDioVaraRicheh()) {
+			NPC* richeh = getRicheh();
+			if (richeh != nullptr) richeh->setExpresion(1);
+			gestorDialogos->iniciarDialogo("Richeh", 350);
+		}
 	}
 
 	void salirCuartoRicheh() {
@@ -172,7 +180,6 @@ public:
 
 	int getNumeroNivel() const { return this->numeroNivel; }
 	std::string getNombreNivel() const { return this->nombreNivel; }
-	bool getCompletado() const { return this->completado; }
 	Mapa* getMapa() {
 		if (getEnCuartoRicheh() && cuartoRicheh != nullptr) {
 			return cuartoRicheh->getMapa();
@@ -193,22 +200,7 @@ public:
 	bool getEnDetalleMision() const { return (gestorMisiones != nullptr) ? gestorMisiones->getEnDetalleMision() : false; }
 	int getSeleccionMision() const { return (gestorMisiones != nullptr) ? gestorMisiones->getSeleccionMision() : 0; }
 	int getSeleccionInventario() const { return this->seleccionModal; }
-	std::string getObjetivoActual() const {
-		return (gestorMisiones != nullptr) ? gestorMisiones->getObjetivoActual() : "";
-	}
 	bool getMostrarEstadisticasFin() const { return this->mostrarEstadisticasFin; }
-
-	void setModalActivo(int m) { this->modalActivo = m; }
-	void setEnDialogo(bool ed) { if (gestorDialogos != nullptr) gestorDialogos->setEnDialogo(ed); }
-	void setEstadoDialogo(int ed) { if (gestorDialogos != nullptr) gestorDialogos->setEstadoDialogo(ed); }
-	void setNpcDialogoActual(const std::string& n) { if (gestorDialogos != nullptr) gestorDialogos->setNpcDialogoActual(n); }
-	void setEnModalPersonajes(bool emp) { this->modalActivo = emp ? 1 : 0; }
-	void setEnModalMisiones(bool emm) { this->modalActivo = emm ? 3 : 0; if (gestorMisiones != nullptr) gestorMisiones->setEnModalMisiones(emm); }
-	void setEnDetalleMision(bool edm) { if (gestorMisiones != nullptr) gestorMisiones->setEnDetalleMision(edm); }
-	void setSeleccionMision(int sm) { if (gestorMisiones != nullptr) gestorMisiones->setSeleccionMision(sm); }
-	void setEnModalInventario(bool emi) { this->modalActivo = emi ? 2 : 0; }
-	void setSeleccionInventario(int si) { this->seleccionModal = si; }
-	void setObjetivoActual(const std::string& obj) { if (gestorMisiones != nullptr) gestorMisiones->setObjetivoActual(obj); }
 
 	virtual int determinarCuarto(int px, int py) const {
 		(void)px;
@@ -271,7 +263,10 @@ public:
 	                          std::vector<bool>& desbloqueadas) {
 		if (gestorMisiones != nullptr) {
 			int ed = (gestorDialogos != nullptr) ? gestorDialogos->getEstadoDialogo() : 0;
-			gestorMisiones->obtenerDatosMisiones(protagonista, qifrey, ed, titulos, descripciones, estados, desbloqueadas);
+			bool ma = (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva());
+			bool mr = (gestorDialogos != nullptr && gestorDialogos->getMyrphonRescatado());
+			bool dv = (gestorDialogos != nullptr && gestorDialogos->getDioVaraRicheh());
+			gestorMisiones->obtenerDatosMisiones(protagonista, qifrey, ed, titulos, descripciones, estados, desbloqueadas, ma, mr, dv);
 		}
 	}
 
@@ -327,11 +322,27 @@ public:
 		promptFlotante = "";
 
 		if (getEnCuartoRicheh()) {
+			NPC* richeh = getRicheh();
+			if (gestorDialogos != nullptr && gestorDialogos->getMyrphonRescatado() && !gestorDialogos->getDioVaraRicheh()) {
+				if (!gestorDialogos->getEnDialogo()) {
+					if (richeh != nullptr) richeh->setExpresion(1);
+					gestorDialogos->iniciarDialogo("Richeh", 350);
+					promptFlotante = "";
+					return;
+				}
+			}
 			if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDelPozo(px, py)) {
 				promptFlotante = "[E] Subir a la torre";
 				return;
 			}
-			NPC* richeh = getRicheh();
+			if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroCuriosidades(px, py)) {
+				promptFlotante = "[ENTER] Leer: Curiosidades de Richeh";
+				return;
+			}
+			if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroLore(px, py)) {
+				promptFlotante = "[ENTER] Leer: Diario del Atelier";
+				return;
+			}
 			if (richeh != nullptr) {
 				int pw = protagonista->getAncho();
 				int ph = protagonista->getAlto();
@@ -494,7 +505,7 @@ public:
 								huboCambio = true;
 							}
 						} else if (tecla == 's' || tecla == 'S') {
-							if (sm < 3) {
+							if (sm < 4) {
 								gestorMisiones->setSeleccionMision(sm + 1);
 								huboCambio = true;
 							}
@@ -512,6 +523,10 @@ public:
 							huboCambio = true;
 						} else if (tecla == '4') {
 							gestorMisiones->setSeleccionMision(3);
+							gestorMisiones->setEnDetalleMision(true);
+							huboCambio = true;
+						} else if (tecla == '5') {
+							gestorMisiones->setSeleccionMision(4);
 							gestorMisiones->setEnDetalleMision(true);
 							huboCambio = true;
 						} else if (tecla == 13) {
@@ -619,6 +634,24 @@ public:
 					int py = protagonista->getY();
 					int pw = protagonista->getAncho();
 					int ph = protagonista->getAlto();
+					if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroCuriosidades(px, py)) {
+						if (gestorDialogos != nullptr) {
+							int randFact = rand() % 3;
+							int st = 400;
+							if (randFact == 1) st = 402;
+							else if (randFact == 2) st = 404;
+							gestorDialogos->iniciarDialogo("Letrero", st);
+						}
+						huboCambio = true;
+						return huboCambio;
+					}
+					if (cuartoRicheh != nullptr && cuartoRicheh->estaCercaDeLetreroLore(px, py)) {
+						if (gestorDialogos != nullptr) {
+							gestorDialogos->iniciarDialogo("Letrero", 410);
+						}
+						huboCambio = true;
+						return huboCambio;
+					}
 					NPC* richeh = getRicheh();
 					if (richeh != nullptr) {
 						int rx = richeh->getX();
@@ -629,7 +662,18 @@ public:
 						int distY = (py + ph <= ry) ? (ry - (py + ph)) : ((ry + rh <= py) ? (py - (ry + rh)) : 0);
 						if (distX <= 2 && distY <= 2) {
 							if (gestorDialogos != nullptr) {
-								gestorDialogos->iniciarDialogo("Richeh", 300);
+								if (gestorDialogos->getDioVaraRicheh()) {
+									gestorDialogos->iniciarDialogo("Richeh", 360);
+								} else if (gestorDialogos->getMyrphonRescatado()) {
+									richeh->setExpresion(1);
+									gestorDialogos->iniciarDialogo("Richeh", 350);
+								} else if (gestorDialogos->getMisionMyrphonActiva()) {
+									gestorDialogos->iniciarDialogo("Richeh", 330);
+								} else if (gestorDialogos->getRichehEnojada()) {
+									gestorDialogos->iniciarDialogo("Richeh", 320);
+								} else {
+									gestorDialogos->iniciarDialogo("Richeh", 300);
+								}
 							}
 							huboCambio = true;
 							return huboCambio;

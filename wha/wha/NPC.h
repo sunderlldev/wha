@@ -1,7 +1,6 @@
 #ifndef NPC_h
 #define NPC_h
 #include "Personaje.h"
-#include <iostream>
 #include <string>
 
 class NPC : public Personaje {
@@ -107,17 +106,10 @@ public:
 	bool getDioTinta() const { return this->dioTinta; }
 	bool getCrafteoCapa() const { return this->crafteoCapa; }
 
-	void setRolPerspectiva(const std::string& rP) { this->rolPerspectiva = rP; }
 	void setConfianza(int c) { this->confianza = c; }
 	void setYaHablo(bool yh) { this->yaHablo = yh; }
 	void setDioTinta(bool dt) { this->dioTinta = dt; }
 	void setCrafteoCapa(bool cc) { this->crafteoCapa = cc; }
-
-	std::string getDescripcionConfianza() const {
-		if (confianza == 0) return "Sin confianza";
-		if (confianza == 1) return "Neutral";
-		return "Amigos";
-	}
 
 	void setExpresion(int exp) {
 		if (this->nombre == "Richeh") {

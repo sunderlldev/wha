@@ -1,18 +1,15 @@
 #ifndef Protagonista_h
 #define Protagonista_h
-#include "NPC.h"
+#include "Personaje.h"
 #include "Inventario.h"
-#include <iostream>
 #include <string>
 
 class Protagonista : public Personaje {
 private:
-	int perspectiva;
-	bool tieneCapaVuelo;
 	Inventario* inventario;
 public:
-	Protagonista(int x, int y, std::string n, int v = 3, int p = 1)
-		: Personaje(x, y, n, v), perspectiva(p), tieneCapaVuelo(false) {
+	Protagonista(int x, int y, std::string n, int v = 3)
+		: Personaje(x, y, n, v) {
 		inventario = new Inventario(6);
 		ancho = 5;
 		alto = 4;
@@ -35,12 +32,7 @@ public:
 		}
 	}
 
-	int getPerspectiva() const { return this->perspectiva; }
-	bool getTieneCapaVuelo() const { return this->tieneCapaVuelo; }
 	Inventario* getInventario() { return this->inventario; }
-
-	void setPerspectiva(int p) { this->perspectiva = p; }
-	void setTieneCapaVuelo(bool cv) { this->tieneCapaVuelo = cv; }
 };
 
 #endif

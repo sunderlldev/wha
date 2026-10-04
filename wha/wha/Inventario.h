@@ -3,7 +3,6 @@
 #include "ItemMagico.h"
 #include <vector>
 #include <string>
-#include <iostream>
 
 class Inventario {
 private:
@@ -19,10 +18,6 @@ public:
 		}
 		listaItem.clear();
 	}
-
-	size_t getCantidad() const { return listaItem.size(); }
-	int getCapacidadMaxima() const { return capacidadMaxima; }
-	void setCapacidadMaxima(int cap) { capacidadMaxima = cap; }
 
 	bool agregarItem(ItemMagico* item) {
 		if ((int)listaItem.size() >= capacidadMaxima) {
@@ -57,28 +52,6 @@ public:
 			return listaItem[indice];
 		}
 		return nullptr;
-	}
-
-	void vaciar() {
-		for (size_t i = 0; i < listaItem.size(); i++) {
-			if (listaItem[i] != nullptr) {
-				delete listaItem[i];
-			}
-		}
-		listaItem.clear();
-	}
-
-	void mostarInventario() {
-		if (listaItem.empty()) {
-			std::cout << "[El inventario esta vacio]\n";
-			return;
-		}
-		std::cout << "[INVENTARIO]\n";
-		for (size_t i = 0; i < listaItem.size(); i++) {
-			if (listaItem[i] != nullptr) {
-				std::cout << " [" << i + 1 << "] " << listaItem[i]->getNombre() << "\n";
-			}
-		}
 	}
 };
 

@@ -7,14 +7,11 @@
 #include "Mapa.h"
 #include "NPC.h"
 #include "Protagonista.h"
-#include "Letrero.h"
 
 class CuartoRicheh {
 private:
 	Mapa* mapa;
 	NPC* richeh;
-	Letrero* letreroCuriosidades;
-	Letrero* letreroLore;
 	bool activo;
 	int cocoPrevX;
 	int cocoPrevY;
@@ -52,7 +49,7 @@ public:
 	}
 
 	CuartoRicheh()
-		: mapa(nullptr), richeh(nullptr), letreroCuriosidades(nullptr), letreroLore(nullptr),
+		: mapa(nullptr), richeh(nullptr),
 		  activo(false), cocoPrevX(0), cocoPrevY(0),
 		  transicionBajando(false), transicionSubiendo(false) {
 		mapa = new Mapa(25, 82);
@@ -62,8 +59,6 @@ public:
 		richeh = new NPC(55, 12, "Richeh", "Aprendiz de Maga");
 		richeh->setConfianza(1);
 		richeh->setYaHablo(false);
-		letreroCuriosidades = new Letrero(22, 11, "Curiosidades de Richeh");
-		letreroLore = new Letrero(40, 11, "Diario del Atelier: Myrphon Perdido");
 		mapa->setCaracter(22, 11, '['); mapa->setCaracter(23, 11, '!'); mapa->setCaracter(24, 11, ']');
 		mapa->setCaracter(40, 11, '['); mapa->setCaracter(41, 11, '!'); mapa->setCaracter(42, 11, ']');
 	}
@@ -76,14 +71,6 @@ public:
 		if (richeh != nullptr) {
 			delete richeh;
 			richeh = nullptr;
-		}
-		if (letreroCuriosidades != nullptr) {
-			delete letreroCuriosidades;
-			letreroCuriosidades = nullptr;
-		}
-		if (letreroLore != nullptr) {
-			delete letreroLore;
-			letreroLore = nullptr;
 		}
 	}
 
@@ -121,12 +108,9 @@ public:
 	}
 
 	bool getActivo() const { return activo; }
-	void setActivo(bool a) { activo = a; }
 
 	Mapa* getMapa() { return mapa; }
 	NPC* getRicheh() { return richeh; }
-	Letrero* getLetreroCuriosidades() { return letreroCuriosidades; }
-	Letrero* getLetreroLore() { return letreroLore; }
 
 	bool getTransicionBajando() const { return transicionBajando; }
 	void setTransicionBajando(bool tb) { transicionBajando = tb; }

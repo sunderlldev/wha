@@ -45,13 +45,6 @@ private:
     std::string ultimoDialogoTexto;
     std::string ultimoPromptTexto;
 
-    std::string recortarOPad(const std::string& texto, int ancho) {
-        if ((int)texto.length() >= ancho) {
-            return texto.substr(0, ancho);
-        }
-        return texto + std::string(ancho - texto.length(), ' ');
-    }
-
     std::string encuadrarFilaPanel(const std::string& texto, int ancho) {
         std::string res = " " + texto;
         if ((int)res.length() >= ancho - 1) {
@@ -97,10 +90,8 @@ public:
         ultimoPromptTexto = "";
     }
 
-    int getAnchoTotal() const { return anchoTotal; }
     int getAltoTotal() const { return altoTotal; }
     int getAnchoJuego() const { return anchoJuego; }
-    int getAnchoPanel() const { return anchoPanel; }
 
     void configurarConsola() {
 #ifdef _WIN32

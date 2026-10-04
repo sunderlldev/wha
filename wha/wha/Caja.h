@@ -19,8 +19,6 @@ public:
 	int getOrigY() const { return origY; }
 	bool getHaSidoMovida() const { return haSidoMovida; }
 
-	void setX(int nx) { x = nx; }
-	void setY(int ny) { y = ny; }
 	void setHaSidoMovida(bool hsm) { haSidoMovida = hsm; }
 
 	void mover(int dx, int dy) {

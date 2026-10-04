@@ -6,11 +6,10 @@
 
 class Gato : public ObjetoMapa {
 private:
-    std::string nombre;
     std::vector<std::string> arteAscii;
 public:
-    Gato(int x, int y, std::string nom = "Ok")
-        : ObjetoMapa(x, y, 24, 4, false, gato), nombre(nom) {
+    Gato(int x, int y)
+        : ObjetoMapa(x, y, 24, 4, false, gato) {
         arteAscii = {
             " _._     _,-'\"\"`-._    ",
             "(,-.`._,'(       |\\`-/|",

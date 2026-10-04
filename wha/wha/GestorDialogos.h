@@ -17,35 +17,27 @@ private:
 	bool misionMyrphonActiva;
 	bool myrphonRescatado;
 	bool dioVaraRicheh;
-	int cartelCuriosidad;
 
 public:
 	GestorDialogos()
 		: enDialogo(false), estadoDialogo(0), npcDialogoActual(""),
 		  respuestaInicialAgott(0), richehEnojada(false),
 		  misionMyrphonActiva(false), myrphonRescatado(false),
-		  dioVaraRicheh(false), cartelCuriosidad(0) {}
+		  dioVaraRicheh(false) {}
 	~GestorDialogos() {}
 
 	bool getEnDialogo() const { return enDialogo; }
 	int getEstadoDialogo() const { return estadoDialogo; }
 	std::string getNpcDialogoActual() const { return npcDialogoActual; }
-	int getRespuestaInicialAgott() const { return respuestaInicialAgott; }
 	bool getRichehEnojada() const { return richehEnojada; }
 	bool getMisionMyrphonActiva() const { return misionMyrphonActiva; }
 	bool getMyrphonRescatado() const { return myrphonRescatado; }
 	bool getDioVaraRicheh() const { return dioVaraRicheh; }
-	int getCartelCuriosidad() const { return cartelCuriosidad; }
 
-	void setEnDialogo(bool ed) { enDialogo = ed; }
-	void setEstadoDialogo(int ed) { estadoDialogo = ed; }
-	void setNpcDialogoActual(const std::string& n) { npcDialogoActual = n; }
-	void setRespuestaInicialAgott(int r) { respuestaInicialAgott = r; }
 	void setRichehEnojada(bool re) { richehEnojada = re; }
 	void setMisionMyrphonActiva(bool ma) { misionMyrphonActiva = ma; }
 	void setMyrphonRescatado(bool mr) { myrphonRescatado = mr; }
 	void setDioVaraRicheh(bool dv) { dioVaraRicheh = dv; }
-	void setCartelCuriosidad(int cc) { cartelCuriosidad = cc; }
 
 	void iniciarDialogo(const std::string& npc, int estadoInicial) {
 		enDialogo = true;
@@ -434,17 +426,6 @@ public:
 	                           bool& dioVaraRicheh, bool libroEncontrado,
 	                           std::string& promptFlotante, std::string& objetivoActual,
 	                           int& puntosMisiones, bool& completado, bool& mostrarEstadisticasFin) {
-		procesarOpcionDialogo(opcion, protagonista, qifrey, agott, richeh, dioVaraRicheh, libroEncontrado,
-		                      this->respuestaInicialAgott, promptFlotante, objetivoActual, puntosMisiones,
-		                      completado, mostrarEstadisticasFin);
-	}
-
-	void procesarOpcionDialogo(int opcion, Protagonista* protagonista,
-	                           NPC* qifrey, NPC* agott, NPC* richeh,
-	                           bool& dioVaraRicheh, bool libroEncontrado,
-	                           int& respuestaInicialAgott,
-	                           std::string& promptFlotante, std::string& objetivoActual,
-	                           int& puntosMisiones, bool& completado, bool& mostrarEstadisticasFin) {
 		Inventario* inv = (protagonista != nullptr) ? protagonista->getInventario() : nullptr;
 
 		if (estadoDialogo == 1) {
@@ -487,9 +468,6 @@ public:
 					inv->removerItem("Tinta magica");
 					inv->removerItem("Libro de hechizos");
 					inv->agregarItem(new ItemMagico(0, 0, "Capa magica", "Capa magica que otorga la habilidad de planear por los cielos.", "Equipamiento Magico", true));
-				}
-				if (protagonista != nullptr) {
-					protagonista->setTieneCapaVuelo(true);
 				}
 				if (qifrey != nullptr) {
 					qifrey->setCrafteoCapa(true);

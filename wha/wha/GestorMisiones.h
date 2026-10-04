@@ -52,7 +52,10 @@ public:
 	                          std::vector<std::string>& titulos,
 	                          std::vector<std::string>& descripciones,
 	                          std::vector<std::string>& estados,
-	                          std::vector<bool>& desbloqueadas) {
+	                          std::vector<bool>& desbloqueadas,
+	                          bool misionMyrphonActiva = false,
+	                          bool myrphonRescatado = false,
+	                          bool dioVaraRicheh = false) {
 		titulos.clear();
 		descripciones.clear();
 		estados.clear();
@@ -115,6 +118,22 @@ public:
 			estados.push_back("EN PROGRESO");
 		} else {
 			estados.push_back("DISPONIBLE");
+		}
+
+		titulos.push_back("Rescate de Myrphon");
+		descripciones.push_back("Encuentra y rescata a Myrphon, la mascota de Richeh, atrapada en el laberinto subterraneo Serpentback.");
+		if (misionMyrphonActiva || myrphonRescatado || dioVaraRicheh) {
+			desbloqueadas.push_back(true);
+			if (dioVaraRicheh) {
+				estados.push_back("COMPLETADA");
+			} else if (myrphonRescatado) {
+				estados.push_back("ENTREGAR");
+			} else {
+				estados.push_back("EN PROGRESO");
+			}
+		} else {
+			desbloqueadas.push_back(false);
+			estados.push_back("BLOQUEADA");
 		}
 	}
 };

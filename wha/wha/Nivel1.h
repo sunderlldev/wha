@@ -4,11 +4,20 @@
 #include "MapaNivel1.h"
 #include "Arbol.h"
 #include "Gato.h"
+#include "Myrphon.h"
 
 class Nivel1 : public Nivel {
+private:
+	Myrphon* myrphon;
+
 public:
-	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524) {}
-	virtual ~Nivel1() {}
+	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr) {}
+	virtual ~Nivel1() {
+		if (myrphon != nullptr) {
+			delete myrphon;
+			myrphon = nullptr;
+		}
+	}
 
 	virtual int determinarCuarto(int px, int py) const override {
 		if (px >= 59 && px <= 125 && py >= 19 && py <= 45) return 1;
@@ -36,7 +45,7 @@ public:
 					}
 				}
 			} else if (nuevoCuarto == 4) {
-				mostrarMensajeTemporal("[BOSQUE DE PLATA]", 60);
+				mostrarMensajeTemporal("[LABERINTO SERPENTBACK]", 60);
 			} else if (nuevoCuarto == 5) {
 				mostrarMensajeTemporal("[DESPACHO DE QIFREY]", 60);
 			} else {
@@ -47,8 +56,6 @@ public:
 	}
 
 	virtual bool verificarProximidadEspecial(int px, int py, int pw, int ph) override {
-		(void)pw;
-		(void)ph;
 		if (!paredPiedraDestruida && px >= 365 && px <= 385 && py >= 25 && py <= 38) {
 			Inventario* inv = protagonista->getInventario();
 			bool tieneVara = (inv != nullptr && inv->tieneItem("Vara magica"));
@@ -59,12 +66,26 @@ public:
 			}
 			return true;
 		}
+		if (myrphon != nullptr && !myrphon->getRescatado()) {
+			int mx = myrphon->getX();
+			int my = myrphon->getY();
+			int mw = myrphon->getAncho();
+			int mh = myrphon->getAlto();
+			int distX = (px + pw <= mx) ? (mx - (px + pw)) : ((mx + mw <= px) ? (px - (mx + mw)) : 0);
+			int distY = (py + ph <= my) ? (my - (py + ph)) : ((my + mh <= py) ? (py - (my + mh)) : 0);
+			if (distX <= 3 && distY <= 3) {
+				if (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva()) {
+					promptFlotante = "[ENTER] Rescatar a Myrphon";
+				} else {
+					promptFlotante = "Coco: Un pequeno pinguino con rasgos de grifo... Parece perdido.";
+				}
+				return true;
+			}
+		}
 		return false;
 	}
 
 	virtual bool procesarInteraccionEspecial(int px, int py, int pw, int ph) override {
-		(void)pw;
-		(void)ph;
 		if (!paredPiedraDestruida && px >= 365 && px <= 385 && py >= 25 && py <= 38) {
 			Inventario* inv = protagonista->getInventario();
 			if (inv != nullptr && inv->tieneItem("Vara magica")) {
@@ -81,6 +102,33 @@ public:
 				return true;
 			}
 		}
+		if (myrphon != nullptr && !myrphon->getRescatado()) {
+			int mx = myrphon->getX();
+			int my = myrphon->getY();
+			int mw = myrphon->getAncho();
+			int mh = myrphon->getAlto();
+			int distX = (px + pw <= mx) ? (mx - (px + pw)) : ((mx + mw <= px) ? (px - (mx + mw)) : 0);
+			int distY = (py + ph <= my) ? (my - (py + ph)) : ((my + mh <= py) ? (py - (my + mh)) : 0);
+			if (distX <= 3 && distY <= 3) {
+				myrphon->setRescatado(true);
+				if (mapa != nullptr) {
+					for (int r = 0; r < 4; r++) {
+						for (int c = 0; c < 7; c++) {
+							mapa->setCaracter(mx + c, my + r, ' ');
+						}
+					}
+				}
+				if (gestorDialogos != nullptr) {
+					gestorDialogos->setMyrphonRescatado(true);
+				}
+				if (gestorMisiones != nullptr) {
+					gestorMisiones->setObjetivoActual("Llevar a Myrphon de regreso con Richeh");
+				}
+				promptFlotante = "[Rescataste a Myrphon! Llevaselo a Richeh]";
+				mostrarMensajeTemporal("[¡Myrphon rescatado! Vuelve al sotano de Richeh]", 100);
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -88,7 +136,13 @@ public:
 		this->tiempoInicio = clock();
 		this->tiempoFin = 0;
 		this->completado = false;
-		if (gestorDialogos != nullptr) gestorDialogos->terminarDialogo();
+		if (gestorDialogos != nullptr) {
+			gestorDialogos->terminarDialogo();
+			gestorDialogos->setMyrphonRescatado(false);
+			gestorDialogos->setMisionMyrphonActiva(false);
+			gestorDialogos->setRichehEnojada(false);
+			gestorDialogos->setDioVaraRicheh(false);
+		}
 		if (gestorMisiones != nullptr) {
 			gestorMisiones->setPuntosMisiones(0);
 			gestorMisiones->setEnModalMisiones(false);
@@ -146,10 +200,17 @@ public:
 			mapa->agregarObjeto(new Arbol(gigantesCoords[i][0], gigantesCoords[i][1], arbolGigante));
 		}
 
-		mapa->agregarObjeto(new Gato(416, 181, "Gato"));
+		mapa->agregarObjeto(new Gato(416, 181));
+
+		if (myrphon != nullptr) {
+			delete myrphon;
+			myrphon = nullptr;
+		}
+		myrphon = new Myrphon(418, 168);
+		mapa->agregarObjeto(myrphon);
 
 		if (protagonista == nullptr) {
-			protagonista = new Protagonista(90, 22, "Coco", 3, 1);
+			protagonista = new Protagonista(90, 22, "Coco", 3);
 		} else {
 			protagonista->setX(90);
 			protagonista->setY(22);
@@ -195,9 +256,6 @@ public:
 				mapa->setCaracter(lx, ly, '[');
 				mapa->setCaracter(lx + 1, ly, '!');
 				mapa->setCaracter(lx + 2, ly, ']');
-				mapa->setCaracter(lx, ly + 1, ' ');
-				mapa->setCaracter(lx + 1, ly + 1, '|');
-				mapa->setCaracter(lx + 2, ly + 1, ' ');
 			}
 		}
 

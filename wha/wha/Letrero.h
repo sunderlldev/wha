@@ -15,7 +15,6 @@ public:
 	virtual ~Letrero() {}
 
 	const std::string& getTexto() const { return this->texto; }
-	void setTexto(const std::string& t) { this->texto = t; }
 
 	virtual void dibujarEnMatriz(std::vector<std::string>& matriz) {
 		if (y >= 0 && y < (int)matriz.size()) {

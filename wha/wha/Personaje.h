@@ -1,6 +1,6 @@
 #ifndef Personaje_h
 #define Personaje_h
-#include <iostream>
+#include <string>
 
 class Personaje {
 protected:
@@ -73,18 +73,8 @@ public:
 
     void setX(int newX) { this->x = newX; }
     void setY(int newY) { this->y = newY; }
-    void setNombre(const std::string& newNombre) { this->nombre = newNombre; }
     void setVida(int newVida) { this->vida = newVida; }
     void setVidaMaxima(int newVidaMaxima) { this->vidaMaxima = newVidaMaxima; }
-
-    virtual void mover() {}
-    virtual void recibirDanio(int cantidad) {
-        this->vida -= cantidad;
-        if (this->vida < 0) this->vida = 0;
-    }
-    virtual bool estaVivo() const {
-        return this->vida > 0;
-    }
 };
 
 #endif

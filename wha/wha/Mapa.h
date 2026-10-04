@@ -1,12 +1,8 @@
 #ifndef Mapa_h
 #define Mapa_h
-#include <iostream>
 #include <vector>
 #include <string>
-#include "Arbol.h"
-#include "Habitacion.h"
-#include "Rio.h"
-#include "Gato.h"
+#include "ObjetoMapa.h"
 
 class Mapa {
 private:
@@ -35,9 +31,6 @@ public:
 	int getFilas() const { return this->filas; }
 	int getColumnas() const { return this->columnas; }
 	const std::vector<std::string>& getMatriz() const { return this->matriz; }
-
-	void setFilas(int f) { this->filas = f; }
-	void setColumnas(int c) { this->columnas = c; }
 
 	void cargarMatriz(const std::vector<std::string>& m) {
 		this->matriz = m;
@@ -69,18 +62,6 @@ public:
 		}
 		return true;
 	}
-
-	bool estaEnHabitacion(int px, int py) {
-		for (size_t i = 0; i < objetos.size(); i++) {
-			if (objetos[i] != nullptr && objetos[i]->getTipo() == habitacion && objetos[i]->estaDentro(px, py)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void actualizarNieblaVision(int, int, int) {}
-	void dibujarMapa() {}
 };
 
 #endif

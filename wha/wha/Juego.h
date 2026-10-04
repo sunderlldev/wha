@@ -23,8 +23,9 @@ private:
 	bool redibujarNecesario;
 	int puntajeGlobal;
 	int segundoPrevio;
+	int tickAnimPrevio;
 public:
-	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1) {
+	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1) {
 		pantalla.configurarConsola();
 		listaNivel.push_back(new Nivel1());
 		listaNivel.push_back(new Nivel2());
@@ -44,7 +45,6 @@ public:
 	}
 
 	bool getEjecutando() const { return this->ejecutando; }
-	void setEjecutando(bool estado) { this->ejecutando = estado; }
 	void menuPrincipal() {
 		pantalla.mostrarHistoriaIntro();
 	}
@@ -104,8 +104,10 @@ public:
 		}
 
 		int segActual = nivel.getSegundosTranscurridos();
-		if (segActual != segundoPrevio) {
+		int tickAnim = (int)((clock() * 2) / CLOCKS_PER_SEC);
+		if (segActual != segundoPrevio || tickAnim != tickAnimPrevio) {
 			segundoPrevio = segActual;
+			tickAnimPrevio = tickAnim;
 			huboCambio = true;
 		}
 
@@ -125,19 +127,26 @@ public:
 				int camX = px - centroX;
 				int camY = py - centroY;
 
-				if (camX < 0) camX = 0;
-				if (camY < 0) camY = 0;
-				if (camX + pantalla.getAnchoJuego() > mapa->getColumnas()) {
-					camX = mapa->getColumnas() - pantalla.getAnchoJuego();
+				if (nivel.getEnCuartoRicheh()) {
+					if (mapa->getColumnas() < pantalla.getAnchoJuego()) {
+						camX = (mapa->getColumnas() - pantalla.getAnchoJuego()) / 2;
+					}
+					if (mapa->getFilas() < pantalla.getAltoTotal()) {
+						camY = (mapa->getFilas() - pantalla.getAltoTotal()) / 2;
+					}
+				} else {
+					if (camX < -15) camX = -15;
+					if (camY < -10) camY = -10;
+					if (camX > mapa->getColumnas() - pantalla.getAnchoJuego() + 15) {
+						camX = mapa->getColumnas() - pantalla.getAnchoJuego() + 15;
+					}
+					if (camY > mapa->getFilas() - pantalla.getAltoTotal() + 10) {
+						camY = mapa->getFilas() - pantalla.getAltoTotal() + 10;
+					}
 				}
-				if (camY + pantalla.getAltoTotal() > mapa->getFilas()) {
-					camY = mapa->getFilas() - pantalla.getAltoTotal();
-				}
-				if (camX < 0) camX = 0;
-				if (camY < 0) camY = 0;
 
 				pantalla.limpiarBuffer();
-				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, segActual);
+				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim);
 
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
 					int pox = nivel.getPozoX() - camX;
@@ -178,10 +187,13 @@ public:
 						if (cajas[i] != nullptr) {
 							int cx = cajas[i]->getX() - camX;
 							int cy = cajas[i]->getY() - camY;
-							for (int r = 0; r < 3; r++) {
-								for (int c = 0; c < 4; c++) {
+							int cAncho = cajas[i]->getAncho();
+							int cAlto = cajas[i]->getAlto();
+							int cColor = cajas[i]->getColor();
+							for (int r = 0; r < cAlto; r++) {
+								for (int c = 0; c < cAncho; c++) {
 									if (cx + c >= 0 && cx + c < pantalla.getAnchoJuego() && cy + r >= 0 && cy + r < pantalla.getAltoTotal()) {
-										pantalla.setPixelJuego(cx + c, cy + r, cajas[i]->getCaracter(r, c), 4);
+										pantalla.setPixelJuego(cx + c, cy + r, cajas[i]->getCaracter(r, c), cColor);
 									}
 								}
 							}

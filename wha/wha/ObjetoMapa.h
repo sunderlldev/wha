@@ -1,7 +1,7 @@
 #ifndef ObjetoMapa_h
 #define ObjetoMapa_h
-#include <iostream>
 #include <vector>
+#include <string>
 
 enum TipoObjeto {
     arbolPino,
@@ -11,7 +11,8 @@ enum TipoObjeto {
     rio,
     gato,
     caja,
-    letrero
+    letrero,
+    myrphon
 };
 
 class ObjetoMapa {
@@ -33,17 +34,12 @@ public:
         return (px >= x && px < x + ancho && py >= y && py < y + alto);
     }
 
-    virtual bool estaDentro(int px, int py) const {
-        return (px >= x && px < x + ancho && py >= y && py < y + alto);
-    }
-
     virtual void dibujarEnMatriz(std::vector<std::string>& matriz) = 0;
 
     int getX() const { return x; }
     int getY() const { return y; }
     int getAncho() const { return ancho; }
     int getAlto() const { return alto; }
-    bool getEsSolido() const { return esSolido; }
     TipoObjeto getTipo() const { return tipo; }
 };
 
