@@ -7,8 +7,6 @@ enum TipoObjeto {
     arbolPino,
     arbolFrondoso,
     arbolGigante,
-    habitacion,
-    rio,
     gato,
     caja,
     letrero,

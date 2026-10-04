@@ -53,7 +53,7 @@ public:
 		pozoX = -1;
 		pozoY = -1;
 
-		srand(time(0));
+		srand((unsigned int)time(0));
 		int numCajas = 8;
 		std::vector<std::pair<int, int>> posicionesUsadas;
 
@@ -193,7 +193,7 @@ public:
 					libroEncontrado = true;
 					int origX = cajas[indiceCaja]->getOrigX();
 					int origY = cajas[indiceCaja]->getOrigY();
-					itemsSuelo.push_back(new ItemMagico(origX + 2, origY + 1, "Libro de hechizos", "Tomo antiguo con instrucciones de trazos arcanos.", "Grimorio Mágico", false));
+					itemsSuelo.push_back(new ItemMagico(origX + 2, origY + 1, "Grimorio de Trazos", "Repleto de circulos, flechas y vectores magicos... No se entiende nada si intentas leerlo como un libro ordinario.", "Grimorio de Aprendiz", false));
 					if (cajasMovidasContador == 1) {
 						mensajeTemporal = "Coco: ¡Pff, a la primera!";
 					} else if (cajasMovidasContador == 2) {

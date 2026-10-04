@@ -7,14 +7,17 @@
 class Letrero : public ObjetoMapa {
 private:
 	std::string texto;
+	bool leido;
 
 public:
 	Letrero(int x, int y, const std::string& texto)
-		: ObjetoMapa(x, y, 3, 1, false, TipoObjeto::letrero), texto(texto) {}
+		: ObjetoMapa(x, y, 3, 1, false, TipoObjeto::letrero), texto(texto), leido(false) {}
 
 	virtual ~Letrero() {}
 
 	const std::string& getTexto() const { return this->texto; }
+	bool getLeido() const { return this->leido; }
+	void marcarLeido() { this->leido = true; }
 
 	virtual void dibujarEnMatriz(std::vector<std::string>& matriz) {
 		if (y >= 0 && y < (int)matriz.size()) {

@@ -3,7 +3,7 @@
 #include <string>
 
 class ItemMagico {
-protected:
+private:
 	int x, y;
 	std::string nombre;
 	std::string descripcion;
@@ -13,7 +13,7 @@ public:
 	ItemMagico() : x(0), y(0), nombre(""), descripcion(""), tipoItem("Ítem Mágico"), recogido(false) {}
 	ItemMagico(int x, int y, std::string n, std::string desc, std::string tipo = "Ítem Mágico", bool r = false)
 		: x(x), y(y), nombre(n), descripcion(desc), tipoItem(tipo), recogido(r) {}
-	virtual ~ItemMagico() {}
+	~ItemMagico() {}
 
 	int getX() const { return this->x; }
 	int getY() const { return this->y; }
@@ -24,11 +24,11 @@ public:
 
 	void setRecogido(bool estado) { this->recogido = estado; }
 
-	virtual int getAncho() const { return 3; }
-	virtual int getAlto() const { return 2; }
+	int getAncho() const { return 3; }
+	int getAlto() const { return 2; }
 
-	virtual char getCaracter(int r, int c) const {
-		if (nombre == "Libro de hechizos") {
+	char getCaracter(int r, int c) const {
+		if (nombre == "Grimorio de Trazos") {
 			if (r == 0) {
 				if (c == 0) return '[';
 				if (c == 1) return '=';
@@ -38,13 +38,22 @@ public:
 				if (c == 1) return '_';
 				if (c == 2) return '\\';
 			}
-		} else if (nombre == "Tela") {
+		} else if (nombre == "Fibra de Arbol") {
 			if (r == 0) {
 				if (c == 0) return '(';
 				if (c == 1) return '~';
 				if (c == 2) return ')';
 			} else {
 				return '~';
+			}
+		} else if (nombre == "Pluma Termica") {
+			if (r == 0) {
+				if (c == 1) return '^';
+				return ' ';
+			} else {
+				if (c == 0) return '/';
+				if (c == 1) return '|';
+				if (c == 2) return '\\';
 			}
 		} else if (nombre == "Frasco de Tinta") {
 			if (r == 0) {
@@ -78,9 +87,10 @@ public:
 		return ' ';
 	}
 
-	virtual int getColor() const {
-		if (nombre == "Libro de hechizos") return 3;
-		if (nombre == "Tela") return 1;
+	int getColor() const {
+		if (nombre == "Grimorio de Trazos") return 3;
+		if (nombre == "Fibra de Arbol") return 1;
+		if (nombre == "Pluma Termica") return 7;
 		if (nombre == "Frasco de Tinta") return 5;
 		if (nombre == "Tinta de Viento") return 2;
 		return 4;

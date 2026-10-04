@@ -9,7 +9,7 @@ private:
 	std::vector<ItemMagico*> listaItem;
 	int capacidadMaxima;
 public:
-	Inventario(int capacidad = 6) : capacidadMaxima(capacidad) {}
+	Inventario(int capacidad = 8) : capacidadMaxima(capacidad) {}
 	~Inventario() {
 		for (size_t i = 0; i < listaItem.size(); i++) {
 			if (listaItem[i] != nullptr) {

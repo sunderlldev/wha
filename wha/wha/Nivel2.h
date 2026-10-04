@@ -23,6 +23,21 @@ public:
         return 0;
     }
 
+	virtual std::string getNombreUbicacionActual() const override {
+		switch (idCuartoActual) {
+			case 1: return "Hogar Abandonado";
+			case 2: return "Casa del Panadero";
+			case 3: return "Casa Sospechosa";
+			case 4: return "Refugio de Mago";
+			case 5: return "Banos del Pueblo";
+			case 6: return "Cuartel Moralis";
+			case 7: return "Choza del Pueblo";
+			case 8: return "Taberna de Kaln";
+			case 9: return "Botica del Pueblo";
+			default: return "Pueblo de Kaln";
+		}
+	}
+
 	virtual void actualizarCuartoActual(int px, int py) override {
 		int nuevoCuarto = determinarCuarto(px, py);
 		if (nuevoCuarto != idCuartoActual) {
@@ -66,7 +81,7 @@ public:
 		pantalla.mostrarHistoriaNivel2();
 	}
 
-	virtual void inciarNivel() override {
+	virtual void iniciarNivel() override {
 		this->tiempoInicio = clock();
 		this->tiempoFin = 0;
 		this->completado = false;
@@ -122,15 +137,7 @@ public:
 
 		limpiarItemsSuelo();
 
-		for (size_t i = 0; i < letreros.size(); i++) {
-			if (letreros[i] != nullptr && mapa != nullptr) {
-				int lx = letreros[i]->getX();
-				int ly = letreros[i]->getY();
-				mapa->setCaracter(lx, ly, '[');
-				mapa->setCaracter(lx + 1, ly, '!');
-				mapa->setCaracter(lx + 2, ly, ']');
-			}
-		}
+		dibujarLetrerosEnMapa();
 
 		if (protagonista != nullptr) {
 			actualizarCuartoActual(protagonista->getX(), protagonista->getY());

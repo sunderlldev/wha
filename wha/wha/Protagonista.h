@@ -10,7 +10,7 @@ private:
 public:
 	Protagonista(int x, int y, std::string n, int v = 3)
 		: Personaje(x, y, n, v) {
-		inventario = new Inventario(6);
+		inventario = new Inventario();
 		ancho = 5;
 		alto = 4;
 

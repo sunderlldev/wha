@@ -28,6 +28,12 @@ public:
 		nuevoObjeto->dibujarEnMatriz(matriz);
 	}
 
+	void dibujarObjeto(ObjetoMapa* nuevoObjeto) {
+		if (nuevoObjeto != nullptr) {
+			nuevoObjeto->dibujarEnMatriz(matriz);
+		}
+	}
+
 	int getFilas() const { return this->filas; }
 	int getColumnas() const { return this->columnas; }
 	const std::vector<std::string>& getMatriz() const { return this->matriz; }
@@ -50,7 +56,7 @@ public:
 		if (x < 0 || x >= columnas || y < 0 || y >= filas) return false;
 
 		for (size_t i = 0; i < objetos.size(); i++) {
-			if (objetos[i]->getTipo() != habitacion && objetos[i]->colisionaCon(x, y)) {
+			if (objetos[i] != nullptr && objetos[i]->colisionaCon(x, y)) {
 				return false;
 			}
 		}

@@ -48,26 +48,21 @@ public:
 		return puntosMisiones + getBonoTiempo(seg);
 	}
 
-	void obtenerDatosMisiones(Protagonista* protagonista, NPC* qifrey, int estadoDialogo,
+	void cargarMisionesNivel1(Protagonista* protagonista, NPC* qifrey, int estadoDialogo,
 	                          std::vector<std::string>& titulos,
 	                          std::vector<std::string>& descripciones,
 	                          std::vector<std::string>& estados,
 	                          std::vector<bool>& desbloqueadas,
-	                          bool misionMyrphonActiva = false,
-	                          bool myrphonRescatado = false,
-	                          bool dioVaraRicheh = false) {
-		titulos.clear();
-		descripciones.clear();
-		estados.clear();
-		desbloqueadas.clear();
-
+	                          bool misionMyrphonActiva,
+	                          bool myrphonRescatado,
+	                          bool dioVaraRicheh) {
 		Inventario* inv = (protagonista != nullptr) ? protagonista->getInventario() : nullptr;
 		bool habloConQifrey = (qifrey != nullptr && (qifrey->getDioTinta() || qifrey->getCrafteoCapa() || estadoDialogo > 1));
-		bool tieneTela = (inv != nullptr && inv->tieneItem("Tela"));
+		bool tieneFibra = (inv != nullptr && inv->tieneItem("Fibra de Arbol"));
 		bool tieneTinta = (inv != nullptr && inv->tieneItem("Tinta magica"));
-		bool tieneLibro = (inv != nullptr && inv->tieneItem("Libro de hechizos"));
+		bool tieneLibro = (inv != nullptr && inv->tieneItem("Grimorio de Trazos"));
 		bool crafteoCapa = (qifrey != nullptr && qifrey->getCrafteoCapa());
-		bool tieneMateriales = (tieneTela && tieneTinta && tieneLibro) || crafteoCapa;
+		bool tieneMateriales = (tieneFibra && tieneTinta && tieneLibro) || crafteoCapa;
 
 		titulos.push_back("Hablar con Qifrey");
 		descripciones.push_back("Encuentra al Maestro Qifrey en el atelier y dialoga\ncon él sobre la confección de la Capa Mágica.");
@@ -79,7 +74,7 @@ public:
 		}
 
 		titulos.push_back("Conseguir Materiales");
-		descripciones.push_back("Recolecta en el atelier los 3 materiales indispensables:\nTela, Libro de hechizos y Tinta mágica.");
+		descripciones.push_back("Recolecta en el atelier los 3 materiales indispensables:\nFibra de Arbol, Grimorio de Trazos y Tinta magica.");
 		if (habloConQifrey) {
 			desbloqueadas.push_back(true);
 			if (tieneMateriales) {
@@ -121,7 +116,7 @@ public:
 		}
 
 		titulos.push_back("Rescate de Myrphon");
-		descripciones.push_back("Encuentra y rescata a Myrphon, la mascota de Richeh,\natrapada en el laberinto subterráneo Serpentback.");
+		descripciones.push_back("Encuentra y rescata a Myrphon, la mascota de Richeh,\nperdida tras el ataque de Sombreros de Ala Ancha en Serpentback.");
 		if (misionMyrphonActiva || myrphonRescatado || dioVaraRicheh) {
 			desbloqueadas.push_back(true);
 			if (dioVaraRicheh) {
@@ -134,6 +129,77 @@ public:
 		} else {
 			desbloqueadas.push_back(false);
 			estados.push_back("BLOQUEADA");
+		}
+	}
+
+	void cargarMisionesNivel2(Protagonista* protagonista,
+	                          std::vector<std::string>& titulos,
+	                          std::vector<std::string>& descripciones,
+	                          std::vector<std::string>& estados,
+	                          std::vector<bool>& desbloqueadas) {
+		(void)protagonista;
+		titulos.push_back("Explorar el Pueblo");
+		descripciones.push_back("Recorre el laberinto de calles, casas y callejones\nde Kaln buscando pistas sobre Coustas.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+
+		titulos.push_back("Testimonios de Aldeanos");
+		descripciones.push_back("Lee los letreros y testimonios dispersos en el pueblo\npara comprender los recientes disturbios.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+
+		titulos.push_back("Rastro de Ininia");
+		descripciones.push_back("Sigue las huellas y susurros de la hechicera Ininia\npara descubrir su intervencion en Kaln.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+
+		titulos.push_back("Camino al Arbol de Plata");
+		descripciones.push_back("Localiza el pasaje que conecta el pueblo con el sendero\nhacia el Gran Arbol de Plata.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+	}
+
+	void cargarMisionesNivel3(std::vector<std::string>& titulos,
+	                          std::vector<std::string>& descripciones,
+	                          std::vector<std::string>& estados,
+	                          std::vector<bool>& desbloqueadas) {
+		titulos.push_back("El Gran Arbol");
+		descripciones.push_back("Asciende por las ramas ancestrales del Arbol de Plata\nenfrentando la hechiceria prohibida.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+
+		titulos.push_back("El Contrahechizo");
+		descripciones.push_back("Halla el grabado arcano primordial para revertir\nla petrificacion y sellar el pacto.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+	}
+
+	void obtenerDatosMisiones(int numeroNivel, Protagonista* protagonista, NPC* qifrey, int estadoDialogo,
+	                          std::vector<std::string>& titulos,
+	                          std::vector<std::string>& descripciones,
+	                          std::vector<std::string>& estados,
+	                          std::vector<bool>& desbloqueadas,
+	                          bool misionMyrphonActiva = false,
+	                          bool myrphonRescatado = false,
+	                          bool dioVaraRicheh = false) {
+		titulos.clear();
+		descripciones.clear();
+		estados.clear();
+		desbloqueadas.clear();
+
+		switch (numeroNivel) {
+		case 1:
+			cargarMisionesNivel1(protagonista, qifrey, estadoDialogo, titulos, descripciones, estados, desbloqueadas, misionMyrphonActiva, myrphonRescatado, dioVaraRicheh);
+			break;
+		case 2:
+			cargarMisionesNivel2(protagonista, titulos, descripciones, estados, desbloqueadas);
+			break;
+		case 3:
+			cargarMisionesNivel3(titulos, descripciones, estados, desbloqueadas);
+			break;
+		default:
+			cargarMisionesNivel1(protagonista, qifrey, estadoDialogo, titulos, descripciones, estados, desbloqueadas, misionMyrphonActiva, myrphonRescatado, dioVaraRicheh);
+			break;
 		}
 	}
 };

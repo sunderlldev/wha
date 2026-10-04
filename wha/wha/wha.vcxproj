@@ -122,7 +122,6 @@
     <ClInclude Include="Cinematica.h" />
     <ClInclude Include="CuartoRicheh.h" />
     <ClInclude Include="Gato.h" />
-    <ClInclude Include="Habitacion.h" />
     <ClInclude Include="Inventario.h" />
     <ClInclude Include="ItemMagico.h" />
     <ClInclude Include="Juego.h" />
@@ -139,12 +138,10 @@
     <ClInclude Include="Pantalla.h" />
     <ClInclude Include="MapaNivel1.h" />
     <ClInclude Include="MatricesNivel2.h" />
-    <ClInclude Include="Rio.h" />
     <ClInclude Include="Caja.h" />
     <ClInclude Include="GestorDialogos.h" />
     <ClInclude Include="GestorMisiones.h" />
     <ClInclude Include="TorreAgott.h" />
-    <ClInclude Include="Animacion.h" />
     <ClInclude Include="Letrero.h" />
     <ClInclude Include="Myrphon.h" />
     <ClInclude Include="GestorAudio.h" />

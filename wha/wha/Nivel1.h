@@ -9,13 +9,23 @@
 class Nivel1 : public Nivel {
 private:
 	Myrphon* myrphon;
+	bool monologoCruceActivado;
+	bool paredPiedraDestruida;
 
 public:
-	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr) {}
+	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false) {}
 	virtual ~Nivel1() {
 		if (myrphon != nullptr) {
 			delete myrphon;
 			myrphon = nullptr;
+		}
+		if (cuartoRicheh != nullptr) {
+			delete cuartoRicheh;
+			cuartoRicheh = nullptr;
+		}
+		if (torreAgott != nullptr) {
+			delete torreAgott;
+			torreAgott = nullptr;
 		}
 	}
 
@@ -47,16 +57,26 @@ public:
 		return 0;
 	}
 
+	virtual std::string getNombreUbicacionActual() const override {
+		if (getEnCuartoRicheh()) return "Sotano de Richeh";
+		if (idCuartoActual == 1) return "Choza de Hechizos";
+		if (idCuartoActual == 2) return "Almacen Abandonado";
+		if (idCuartoActual == 3) return "Torre de Agott";
+		if (idCuartoActual == 4) return "Laberinto Serpentback";
+		if (idCuartoActual == 5) return "Despacho de Qifrey";
+		return "Atelier de Qifrey";
+	}
+
 	virtual void actualizarCuartoActual(int px, int py) override {
 		int nuevoCuarto = determinarCuarto(px, py);
 		if (nuevoCuarto != idCuartoActual) {
 			idCuartoActual = nuevoCuarto;
 			if (nuevoCuarto == 1) {
-				mostrarMensajeTemporal("[LA CHOZA DE HECHIZOS]", 60);
+				mostrarMensajeTemporal("La Choza de Hechizos", 60);
 			} else if (nuevoCuarto == 2) {
-				mostrarMensajeTemporal("[EL ALMACEN ABANDONADO]", 60);
+				mostrarMensajeTemporal("El Almacen Abandonado", 60);
 			} else if (nuevoCuarto == 3) {
-				mostrarMensajeTemporal("[TORRE DE AGOTT]", 60);
+				mostrarMensajeTemporal("Torre de Agott", 60);
 				if (agott != nullptr && !agott->getYaHablo()) {
 					agott->setYaHablo(true);
 					if (gestorDialogos != nullptr) {
@@ -64,24 +84,30 @@ public:
 					}
 				}
 			} else if (nuevoCuarto == 4) {
-				mostrarMensajeTemporal("[LABERINTO SERPENTBACK]", 60);
+				mostrarMensajeTemporal("Laberinto Serpentback", 60);
 			} else if (nuevoCuarto == 5) {
-				mostrarMensajeTemporal("[DESPACHO DE QIFREY]", 60);
+				mostrarMensajeTemporal("Despacho de Qifrey", 60);
 			} else {
 				mensajeTemporal = "";
 				ticksMensajeTemporal = 0;
 			}
+		}
+
+		if (!monologoCruceActivado && px >= 295 && px <= 315 && py >= 96 && py <= 108) {
+			monologoCruceActivado = true;
+			promptFlotante = "Coco: ¡Vaya...! Tres caminos se abren ante mí... ¿Hacia dónde debería dirigirme ahora?";
+			mostrarMensajeTemporal(promptFlotante, 120);
 		}
 	}
 
 	virtual bool verificarProximidadEspecial(int px, int py, int pw, int ph) override {
 		if (!paredPiedraDestruida && px >= 365 && px <= 385 && py >= 25 && py <= 38) {
 			Inventario* inv = protagonista->getInventario();
-			bool tieneVara = (inv != nullptr && inv->tieneItem("Vara magica"));
-			if (tieneVara) {
-				promptFlotante = "[ENTER] Usar Vara mágica para derribar pared";
+			bool tienePluma = (inv != nullptr && inv->tieneItem("Pluma Termica"));
+			if (tienePluma) {
+				promptFlotante = "ENTER: Usar Pluma Termica para quebrar la pared de roca";
 			} else {
-				promptFlotante = "Coco: Este lugar parece estar bloqueado, puedo derribarlo pero necesito magia...";
+				promptFlotante = "Coco: La pared de roca esta agrietada... Necesito una pluma termica para quebrarla.";
 			}
 			return true;
 		}
@@ -94,7 +120,7 @@ public:
 			int distY = (py + ph <= my) ? (my - (py + ph)) : ((my + mh <= py) ? (py - (my + mh)) : 0);
 				if (distX <= 3 && distY <= 3) {
 					if (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva()) {
-						promptFlotante = "[ENTER] Rescatar a Myrphon";
+						promptFlotante = "ENTER: Rescatar a Myrphon";
 					} else {
 						promptFlotante = "Coco: Un pequeño pingüino con rasgos de grifo... Parece perdido.";
 					}
@@ -107,7 +133,7 @@ public:
 	virtual bool procesarInteraccionEspecial(int px, int py, int pw, int ph) override {
 		if (!paredPiedraDestruida && px >= 365 && px <= 385 && py >= 25 && py <= 38) {
 			Inventario* inv = protagonista->getInventario();
-			if (inv != nullptr && inv->tieneItem("Vara magica")) {
+			if (inv != nullptr && inv->tieneItem("Pluma Termica")) {
 				paredPiedraDestruida = true;
 				if (mapa != nullptr) {
 					for (int wy = 27; wy <= 36; wy++) {
@@ -116,8 +142,8 @@ public:
 						}
 					}
 				}
-				inv->removerItem("Vara magica");
-				promptFlotante = "[¡Lanzaste bola de fuego! Pared destruida (Vara consumida)]";
+				inv->removerItem("Pluma Termica");
+				promptFlotante = "Punta incandescente aplicada: La pared de roca se quebro.";
 				return true;
 			}
 		}
@@ -143,15 +169,15 @@ public:
 				if (gestorMisiones != nullptr) {
 					gestorMisiones->setObjetivoActual("Llevar a Myrphon de regreso con Richeh");
 				}
-				promptFlotante = "[¡Rescataste a Myrphon! Llévaselo a Richeh]";
-				mostrarMensajeTemporal("[¡Myrphon rescatado! Vuelve al sótano de Richeh]", 100);
+				promptFlotante = "¡Rescataste a Myrphon! Llévaselo a Richeh.";
+				mostrarMensajeTemporal("¡Myrphon rescatado! Vuelve al sótano de Richeh", 100);
 				return true;
 			}
 		}
 		return false;
 	}
 
-	virtual void inciarNivel() override {
+	virtual void iniciarNivel() override {
 		this->tiempoInicio = clock();
 		this->tiempoFin = 0;
 		this->completado = false;
@@ -176,8 +202,15 @@ public:
 		this->ticksMensajeTemporal = 0;
 		this->paredPiedraDestruida = false;
 
-		if (cuartoRicheh != nullptr) {
+		if (cuartoRicheh == nullptr) {
+			cuartoRicheh = new CuartoRicheh();
+		} else {
 			cuartoRicheh->reiniciar();
+		}
+		if (torreAgott == nullptr) {
+			torreAgott = new TorreAgott();
+		} else {
+			torreAgott->reiniciar();
 		}
 
 		if (mapa != nullptr) {
@@ -258,25 +291,20 @@ public:
 		}
 
 		limpiarItemsSuelo();
-		itemsSuelo.push_back(new ItemMagico(405, 20, "Tela", "Trozo de tela arcana resistente y ligera para confeccionar vestiduras.", "Material Mágico", false));
+		itemsSuelo.push_back(new ItemMagico(405, 20, "Fibra de Arbol", "Fibras del Arbol de Plata para tejer el manto de aprendiz.", "Material Textil Arcano", false));
 		itemsSuelo.push_back(new ItemMagico(440, 20, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacén antiguo.", "Objeto de Colección", false));
 		itemsSuelo.push_back(new ItemMagico(160, 50, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran río.", "Objeto de Colección", false));
 
+		monologoCruceActivado = false;
 		limpiarLetreros();
-		letreros.push_back(new Letrero(75, 22, "Letrero: [CHOZA DE TRAZOS] Dibuja runas con pasión y cuida tus pergaminos."));
-		letreros.push_back(new Letrero(355, 30, "Letrero: ALMACÉN ABANDONADO. Peligro: Derrumbe. Usa magia ígnea."));
-		letreros.push_back(new Letrero(400, 70, "Letrero: TORRE DE AGOTT. Prohibido el paso sin autorización de Agott."));
-		letreros.push_back(new Letrero(75, 152, "Letrero: DESPACHO DE QIFREY. Maestro del atelier y protector del agua."));
+		letreros.push_back(new Letrero(80, 24, "Letrero: Choza de Trazos. Dibuja runas con pasión y cuida tus pergaminos."));
+		letreros.push_back(new Letrero(140, 102, "Letrero: Historia del Manga. Witch Hat Atelier fue creado por la mangaka Kamome Shirahama e inició su publicación el 22 de julio de 2016. Comenzó a lanzarse de forma mensual en la revista Morning Two de la editorial Kodansha, destacando por su magia basada en el arte del dibujo."));
+		letreros.push_back(new Letrero(265, 102, "Letrero: Enciclopedia Mágica. Las tres sendas del Atelier: hacia el norte el almacén de vestigios antiguos, al este la Torre de Agott, y al sur el sendero hacia el despacho del maestro Qifrey."));
+		letreros.push_back(new Letrero(380, 101, "Letrero: Torre de Agott. Prohibido el paso sin autorización de Agott."));
+		letreros.push_back(new Letrero(355, 32, "Letrero: Almacén Abandonado. Peligro: Derrumbe. Usa magia ígnea."));
+		letreros.push_back(new Letrero(75, 152, "Letrero: Despacho de Qifrey. Maestro del atelier y protector del agua."));
 
-		for (size_t i = 0; i < letreros.size(); i++) {
-			if (letreros[i] != nullptr && mapa != nullptr) {
-				int lx = letreros[i]->getX();
-				int ly = letreros[i]->getY();
-				mapa->setCaracter(lx, ly, '[');
-				mapa->setCaracter(lx + 1, ly, '!');
-				mapa->setCaracter(lx + 2, ly, ']');
-			}
-		}
+		dibujarLetrerosEnMapa();
 
 		if (torreAgott != nullptr) {
 			torreAgott->reiniciar();

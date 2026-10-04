@@ -33,7 +33,6 @@ protected:
 	NPC* agott;
 	std::vector<ItemMagico*> itemsSuelo;
 	std::vector<Letrero*> letreros;
-	bool paredPiedraDestruida;
 	int idCuartoActual;
 	std::string promptFlotante;
 	std::string mensajeTemporal;
@@ -42,10 +41,37 @@ protected:
 	clock_t tiempoFin;
 	int modalActivo;
 	int seleccionModal;
+	bool solicitaSalir;
 	CuartoRicheh* cuartoRicheh;
 	TorreAgott* torreAgott;
 	GestorDialogos* gestorDialogos;
 	GestorMisiones* gestorMisiones;
+
+	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
+		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
+		int distY = (y1 + h1 <= y2) ? (y2 - (y1 + h1)) : ((y2 + h2 <= y1) ? (y1 - (y2 + h2)) : 0);
+		return (distX <= maxDist && distY <= maxDist);
+	}
+
+	bool colisionaConNPC(int nx, int ny, int pw, int ph, NPC* npc) const {
+		if (npc == nullptr) return false;
+		return (nx < npc->getX() + npc->getAncho() && nx + pw > npc->getX() &&
+		        ny < npc->getY() + npc->getAlto() && ny + ph > npc->getY());
+	}
+
+	bool interactuarLetrero(int px, int py, int pw, int ph) {
+		for (size_t i = 0; i < letreros.size(); i++) {
+			if (letreros[i] != nullptr && estaCerca(px, py, pw, ph, letreros[i]->getX(), letreros[i]->getY(), letreros[i]->getAncho(), letreros[i]->getAlto(), 3)) {
+				letreros[i]->marcarLeido();
+				mensajeTemporal = letreros[i]->getTexto();
+				ticksMensajeTemporal = 100;
+				promptFlotante = mensajeTemporal;
+				actualizarProximidad();
+				return true;
+			}
+		}
+		return false;
+	}
 
 	void limpiarItemsSuelo() {
 		for (size_t i = 0; i < itemsSuelo.size(); i++) {
@@ -65,17 +91,24 @@ protected:
 		letreros.clear();
 	}
 
+	void dibujarLetrerosEnMapa() {
+		for (size_t i = 0; i < letreros.size(); i++) {
+			if (letreros[i] != nullptr && mapa != nullptr) {
+				mapa->dibujarObjeto(letreros[i]);
+			}
+		}
+	}
+
 public:
 	Nivel(int numeroN, std::string nombreN, int filasMapa, int columnasMapa)
 		: numeroNivel(numeroN), nombreNivel(nombreN), completado(false),
 		  mostrarEstadisticasFin(false), mapa(nullptr), protagonista(nullptr),
-		  qifrey(nullptr), agott(nullptr), paredPiedraDestruida(false),
+		  qifrey(nullptr), agott(nullptr),
 		  idCuartoActual(0), promptFlotante(""), mensajeTemporal(""),
 		  ticksMensajeTemporal(0), tiempoInicio(0), tiempoFin(0),
-		  modalActivo(0), seleccionModal(0) {
+		  modalActivo(0), seleccionModal(0), solicitaSalir(false),
+		  cuartoRicheh(nullptr), torreAgott(nullptr) {
 		this->mapa = new Mapa(filasMapa, columnasMapa);
-		this->cuartoRicheh = new CuartoRicheh();
-		this->torreAgott = new TorreAgott();
 		this->gestorDialogos = new GestorDialogos();
 		this->gestorMisiones = new GestorMisiones();
 	}
@@ -191,7 +224,11 @@ public:
 		return this->mapa;
 	}
 	const std::vector<ItemMagico*>& getItemsSuelo() const { return this->itemsSuelo; }
+	const std::vector<Letrero*>& getLetreros() const { return this->letreros; }
 	const std::string& getPromptFlotante() const { return this->promptFlotante; }
+	virtual std::string getNombreUbicacionActual() const { return this->nombreNivel; }
+	bool getSolicitaSalir() const { return this->solicitaSalir; }
+	void setSolicitaSalir(bool ss) { this->solicitaSalir = ss; }
 
 	bool getEnDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEnDialogo() : false; }
 	int getEstadoDialogo() const { return (gestorDialogos != nullptr) ? gestorDialogos->getEstadoDialogo() : 0; }
@@ -233,7 +270,7 @@ public:
 		return false;
 	}
 
-	virtual void inciarNivel() = 0;
+	virtual void iniciarNivel() = 0;
 
 	int getSegundosTranscurridos() const {
 		if (tiempoInicio == 0) return 0;
@@ -270,7 +307,7 @@ public:
 			bool ma = (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva());
 			bool mr = (gestorDialogos != nullptr && gestorDialogos->getMyrphonRescatado());
 			bool dv = (gestorDialogos != nullptr && gestorDialogos->getDioVaraRicheh());
-			gestorMisiones->obtenerDatosMisiones(protagonista, qifrey, ed, titulos, descripciones, estados, desbloqueadas, ma, mr, dv);
+			gestorMisiones->obtenerDatosMisiones(numeroNivel, protagonista, qifrey, ed, titulos, descripciones, estados, desbloqueadas, ma, mr, dv);
 		}
 	}
 
@@ -322,6 +359,8 @@ public:
 
 		int px = protagonista->getX();
 		int py = protagonista->getY();
+		int pw = protagonista->getAncho();
+		int ph = protagonista->getAlto();
 
 		promptFlotante = "";
 
@@ -347,54 +386,25 @@ public:
 				promptFlotante = "[ENTER] Leer: Diario del Atelier";
 				return;
 			}
-			if (richeh != nullptr) {
-				int pw = protagonista->getAncho();
-				int ph = protagonista->getAlto();
-				int rx = richeh->getX();
-				int ry = richeh->getY();
-				int rw = richeh->getAncho();
-				int rh = richeh->getAlto();
-				int distX = (px + pw <= rx) ? (rx - (px + pw)) : ((rx + rw <= px) ? (px - (rx + rw)) : 0);
-				int distY = (py + ph <= ry) ? (ry - (py + ph)) : ((ry + rh <= py) ? (py - (ry + rh)) : 0);
-				if (distX <= 2 && distY <= 2) {
-					promptFlotante = "[ENTER] Hablar con Richeh";
-					return;
-				}
+			if (richeh != nullptr && estaCerca(px, py, pw, ph, richeh->getX(), richeh->getY(), richeh->getAncho(), richeh->getAlto(), 2)) {
+				promptFlotante = "[ENTER] Hablar con Richeh";
+				return;
 			}
 			return;
 		}
-
-		int pw = protagonista->getAncho();
-		int ph = protagonista->getAlto();
 
 		if (verificarProximidadEspecial(px, py, pw, ph)) {
 			return;
 		}
 
-		if (qifrey != nullptr) {
-			int qx = qifrey->getX();
-			int qy = qifrey->getY();
-			int qw = qifrey->getAncho();
-			int qh = qifrey->getAlto();
-			int distX = (px + pw <= qx) ? (qx - (px + pw)) : ((qx + qw <= px) ? (px - (qx + qw)) : 0);
-			int distY = (py + ph <= qy) ? (qy - (py + ph)) : ((qy + qh <= py) ? (py - (qy + qh)) : 0);
-			if (distX <= 2 && distY <= 2) {
-				promptFlotante = "[ENTER] Interactuar con Qifrey";
-				return;
-			}
+		if (qifrey != nullptr && estaCerca(px, py, pw, ph, qifrey->getX(), qifrey->getY(), qifrey->getAncho(), qifrey->getAlto(), 2)) {
+			promptFlotante = "[ENTER] Interactuar con Qifrey";
+			return;
 		}
 
-		if (agott != nullptr) {
-			int ax = agott->getX();
-			int ay = agott->getY();
-			int aw = agott->getAncho();
-			int ah = agott->getAlto();
-			int distX = (px + pw <= ax) ? (ax - (px + pw)) : ((ax + aw <= px) ? (px - (ax + aw)) : 0);
-			int distY = (py + ph <= ay) ? (ay - (py + ph)) : ((ay + ah <= py) ? (py - (ay + ah)) : 0);
-			if (distX <= 2 && distY <= 2) {
-				promptFlotante = "[ENTER] Hablar con Agott";
-				return;
-			}
+		if (agott != nullptr && estaCerca(px, py, pw, ph, agott->getX(), agott->getY(), agott->getAncho(), agott->getAlto(), 2)) {
+			promptFlotante = "[ENTER] Hablar con Agott";
+			return;
 		}
 
 		if (torreAgott != nullptr && torreAgott->estaCercaDelPozo(px, py)) {
@@ -404,13 +414,7 @@ public:
 
 		for (size_t i = 0; i < itemsSuelo.size(); i++) {
 			if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
-				int ix = itemsSuelo[i]->getX();
-				int iy = itemsSuelo[i]->getY();
-				int iw = itemsSuelo[i]->getAncho();
-				int ih = itemsSuelo[i]->getAlto();
-				int distX = (px + pw <= ix) ? (ix - (px + pw)) : ((ix + iw <= px) ? (px - (ix + iw)) : 0);
-				int distY = (py + ph <= iy) ? (iy - (py + ph)) : ((iy + ih <= py) ? (py - (iy + ih)) : 0);
-				if (distX <= 2 && distY <= 2) {
+				if (estaCerca(px, py, pw, ph, itemsSuelo[i]->getX(), itemsSuelo[i]->getY(), itemsSuelo[i]->getAncho(), itemsSuelo[i]->getAlto(), 2)) {
 					promptFlotante = "[ENTER] Recoger: " + itemsSuelo[i]->getNombre();
 					return;
 				}
@@ -418,17 +422,9 @@ public:
 		}
 
 		for (size_t i = 0; i < letreros.size(); i++) {
-			if (letreros[i] != nullptr) {
-				int lx = letreros[i]->getX();
-				int ly = letreros[i]->getY();
-				int lw = letreros[i]->getAncho();
-				int lh = letreros[i]->getAlto();
-				int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
-				int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
-				if (distX <= 3 && distY <= 3) {
-					promptFlotante = "[E / ENTER] Leer letrero";
-					return;
-				}
+			if (letreros[i] != nullptr && estaCerca(px, py, pw, ph, letreros[i]->getX(), letreros[i]->getY(), letreros[i]->getAncho(), letreros[i]->getAlto(), 3)) {
+				promptFlotante = "[E / ENTER] Leer letrero";
+				return;
 			}
 		}
 	}
@@ -561,11 +557,11 @@ public:
 						huboCambio = true;
 					}
 				} else if (tecla == 's' || tecla == 'S') {
-					if (seleccionModal < 5) {
+					if (seleccionModal < 7) {
 						seleccionModal++;
 						huboCambio = true;
 					}
-				} else if (tecla >= '1' && tecla <= '6') {
+				} else if (tecla >= '1' && tecla <= '8') {
 					seleccionModal = tecla - '1';
 					huboCambio = true;
 				} else if (tecla == 'i' || tecla == 'I' || tecla == 27 || tecla == 13) {
@@ -596,6 +592,12 @@ public:
 					huboCambio = true;
 				}
 				actualizarProximidad();
+				return huboCambio;
+			}
+
+			if (tecla == 27) {
+				solicitaSalir = true;
+				huboCambio = true;
 				return huboCambio;
 			}
 
@@ -710,14 +712,8 @@ public:
 								}
 								if (colision) break;
 							}
-							NPC* richeh = getRicheh();
-							if (!colision && richeh != nullptr) {
-								int rx = richeh->getX();
-								int ry = richeh->getY();
-								if (nx < rx + richeh->getAncho() && nx + protagonista->getAncho() > rx &&
-								    ny < ry + richeh->getAlto() && ny + protagonista->getAlto() > ry) {
-									colision = true;
-								}
+							if (!colision && colisionaConNPC(nx, ny, protagonista->getAncho(), protagonista->getAlto(), getRicheh())) {
+								colision = true;
 							}
 							if (!colision) {
 								protagonista->setX(nx);
@@ -743,23 +739,9 @@ public:
 					huboCambio = true;
 					return huboCambio;
 				}
-				for (size_t i = 0; i < letreros.size(); i++) {
-					if (letreros[i] != nullptr) {
-						int lx = letreros[i]->getX();
-						int ly = letreros[i]->getY();
-						int lw = letreros[i]->getAncho();
-						int lh = letreros[i]->getAlto();
-						int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
-						int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
-						if (distX <= 3 && distY <= 3) {
-							mensajeTemporal = letreros[i]->getTexto();
-							ticksMensajeTemporal = 100;
-							promptFlotante = mensajeTemporal;
-							actualizarProximidad();
-							huboCambio = true;
-							return huboCambio;
-						}
-					}
+				if (interactuarLetrero(px, py, pw, ph)) {
+					huboCambio = true;
+					return huboCambio;
 				}
 			}
 
@@ -774,47 +756,25 @@ public:
 					return huboCambio;
 				}
 
-				if (qifrey != nullptr) {
-					int qx = qifrey->getX();
-					int qy = qifrey->getY();
-					int qw = qifrey->getAncho();
-					int qh = qifrey->getAlto();
-					int distX = (px + pw <= qx) ? (qx - (px + pw)) : ((qx + qw <= px) ? (px - (qx + qw)) : 0);
-					int distY = (py + ph <= qy) ? (qy - (py + ph)) : ((qy + qh <= py) ? (py - (qy + qh)) : 0);
-					if (distX <= 2 && distY <= 2) {
-						if (gestorDialogos != nullptr) {
-							gestorDialogos->iniciarDialogo("Qifrey", 1);
-						}
-						huboCambio = true;
-						return huboCambio;
+				if (qifrey != nullptr && estaCerca(px, py, pw, ph, qifrey->getX(), qifrey->getY(), qifrey->getAncho(), qifrey->getAlto(), 2)) {
+					if (gestorDialogos != nullptr) {
+						gestorDialogos->iniciarDialogo("Qifrey", 1);
 					}
+					huboCambio = true;
+					return huboCambio;
 				}
 
-				if (agott != nullptr) {
-					int ax = agott->getX();
-					int ay = agott->getY();
-					int aw = agott->getAncho();
-					int ah = agott->getAlto();
-					int distX = (px + pw <= ax) ? (ax - (px + pw)) : ((ax + aw <= px) ? (px - (ax + aw)) : 0);
-					int distY = (py + ph <= ay) ? (ay - (py + ph)) : ((ay + ah <= py) ? (py - (ay + ah)) : 0);
-					if (distX <= 2 && distY <= 2) {
-						if (gestorDialogos != nullptr) {
-							gestorDialogos->iniciarDialogoAgott();
-						}
-						huboCambio = true;
-						return huboCambio;
+				if (agott != nullptr && estaCerca(px, py, pw, ph, agott->getX(), agott->getY(), agott->getAncho(), agott->getAlto(), 2)) {
+					if (gestorDialogos != nullptr) {
+						gestorDialogos->iniciarDialogoAgott();
 					}
+					huboCambio = true;
+					return huboCambio;
 				}
 
 				for (size_t i = 0; i < itemsSuelo.size(); i++) {
 					if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
-						int ix = itemsSuelo[i]->getX();
-						int iy = itemsSuelo[i]->getY();
-						int iw = itemsSuelo[i]->getAncho();
-						int ih = itemsSuelo[i]->getAlto();
-						int distX = (px + pw <= ix) ? (ix - (px + pw)) : ((ix + iw <= px) ? (px - (ix + iw)) : 0);
-						int distY = (py + ph <= iy) ? (iy - (py + ph)) : ((iy + ih <= py) ? (py - (iy + ih)) : 0);
-						if (distX <= 2 && distY <= 2) {
+						if (estaCerca(px, py, pw, ph, itemsSuelo[i]->getX(), itemsSuelo[i]->getY(), itemsSuelo[i]->getAncho(), itemsSuelo[i]->getAlto(), 2)) {
 							Inventario* inv = protagonista->getInventario();
 							if (inv != nullptr) {
 								if (inv->agregarItem(new ItemMagico(0, 0, itemsSuelo[i]->getNombre(), itemsSuelo[i]->getDescripcion(), itemsSuelo[i]->getTipoItem(), true))) {
@@ -824,7 +784,7 @@ public:
 									huboCambio = true;
 									return huboCambio;
 								} else {
-									promptFlotante = "[Mochila llena: ¡Máx. 6 ítems!]";
+									promptFlotante = "[Mochila llena: ¡Máx. 8 ítems!]";
 									huboCambio = true;
 									return huboCambio;
 								}
@@ -833,23 +793,9 @@ public:
 					}
 				}
 
-				for (size_t i = 0; i < letreros.size(); i++) {
-					if (letreros[i] != nullptr) {
-						int lx = letreros[i]->getX();
-						int ly = letreros[i]->getY();
-						int lw = letreros[i]->getAncho();
-						int lh = letreros[i]->getAlto();
-						int distX = (px + pw <= lx) ? (lx - (px + pw)) : ((lx + lw <= px) ? (px - (lx + lw)) : 0);
-						int distY = (py + ph <= ly) ? (ly - (py + ph)) : ((ly + lh <= py) ? (py - (ly + lh)) : 0);
-						if (distX <= 3 && distY <= 3) {
-							mensajeTemporal = letreros[i]->getTexto();
-							ticksMensajeTemporal = 100;
-							promptFlotante = mensajeTemporal;
-							actualizarProximidad();
-							huboCambio = true;
-							return huboCambio;
-						}
-					}
+				if (interactuarLetrero(px, py, pw, ph)) {
+					huboCambio = true;
+					return huboCambio;
 				}
 			}
 
@@ -888,22 +834,12 @@ public:
 							if (colision) break;
 						}
 
-						if (!colision && qifrey != nullptr) {
-							int qx = qifrey->getX();
-							int qy = qifrey->getY();
-							if (nx < qx + qifrey->getAncho() && nx + protagonista->getAncho() > qx &&
-							    ny < qy + qifrey->getAlto() && ny + protagonista->getAlto() > qy) {
-								colision = true;
-							}
+						if (!colision && colisionaConNPC(nx, ny, protagonista->getAncho(), protagonista->getAlto(), qifrey)) {
+							colision = true;
 						}
 
-						if (!colision && agott != nullptr) {
-							int ax = agott->getX();
-							int ay = agott->getY();
-							if (nx < ax + agott->getAncho() && nx + protagonista->getAncho() > ax &&
-							    ny < ay + agott->getAlto() && ny + protagonista->getAlto() > ay) {
-								colision = true;
-							}
+						if (!colision && colisionaConNPC(nx, ny, protagonista->getAncho(), protagonista->getAlto(), agott)) {
+							colision = true;
 						}
 
 						if (!colision) {

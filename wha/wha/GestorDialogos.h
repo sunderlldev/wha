@@ -91,7 +91,7 @@ public:
 		switch (estadoDialogo) {
 		case 1:
 			lineas.push_back("Hola, Coco. ¿Qué necesitas en el taller hoy?");
-			opciones.push_back("[1] Maestro Qifrey, ¿podrías ayudarme a confeccionar la Capa Mágica?");
+			opciones.push_back("[1] Maestro Qifrey, ¿podrias ayudarme a confeccionar mi Manto de Aprendiz?");
 			opciones.push_back("[2] Solo venía a explorar el taller y ver tus libros.");
 			opciones.push_back("[3] Maestro, necesito materiales especiales para mis prácticas.");
 			if (inv != nullptr && (inv->tieneItem("Frasco de Tinta") || inv->tieneItem("Tinta de Viento"))) {
@@ -101,21 +101,22 @@ public:
 
 		case 10:
 			if (inv != nullptr) {
-				bool tieneTela = inv->tieneItem("Tela");
+				bool tieneFibra = inv->tieneItem("Fibra de Arbol");
 				bool tieneTinta = inv->tieneItem("Tinta magica");
-				bool tieneLibro = inv->tieneItem("Libro de hechizos");
-				int total = (tieneTela ? 1 : 0) + (tieneTinta ? 1 : 0) + (tieneLibro ? 1 : 0);
+				bool tieneLibro = inv->tieneItem("Grimorio de Trazos");
+				int total = (tieneFibra ? 1 : 0) + (tieneTinta ? 1 : 0) + (tieneLibro ? 1 : 0);
 
 				if (total == 0) {
-					lineas.push_back("Para la Capa Mágica necesito 3 objetos: Tela, Tinta mágica y Libro.");
-					lineas.push_back("Aún no tienes ninguno.\n¡Busca en el taller y en el almacén abandonado!");
+					lineas.push_back("Para confeccionar tu Manto de Aprendiz necesito 3 elementos del atelier:");
+					lineas.push_back("Fibra del Arbol de Plata, Tinta magica de conjuracion y el Grimorio de Trazos.");
+					lineas.push_back("¡Explora el taller, el almacen exterior y la torre este para reunirlos!");
 					opciones.push_back("[1] Está bien, iré a buscarlos por el atelier.");
 				} else {
-					lineas.push_back("Te faltan materiales para confeccionar la Capa Mágica.");
+					lineas.push_back("Te faltan materiales para confeccionar tu Manto de Aprendiz.");
 					std::string faltantes = "Aún necesitas encontrar: ";
-					if (!tieneTela) faltantes += "[Tela] ";
-					if (!tieneTinta) faltantes += "[Tinta mágica] ";
-					if (!tieneLibro) faltantes += "[Libro de hechizos] ";
+					if (!tieneFibra) faltantes += "[Fibra de Arbol] ";
+					if (!tieneTinta) faltantes += "[Tinta magica] ";
+					if (!tieneLibro) faltantes += "[Grimorio de Trazos] ";
 					lineas.push_back(faltantes);
 					lineas.push_back("¡Vuelve cuando tengas los 3 ingredientes completos!");
 					opciones.push_back("[1] Entendido, buscaré lo que falta.");
@@ -124,18 +125,16 @@ public:
 			break;
 
 		case 11:
-			lineas.push_back("¡Está bien, te haré la capa!");
-			lineas.push_back("");
-			lineas.push_back("Confeccionando capa mágica...");
-			lineas.push_back("");
-			lineas.push_back("¡Aquí está! Te daré esta capa, pero úsala responsablemente.");
+			lineas.push_back("¡Excelente trabajo! Has reunido los componentes arcanos indispensables.");
+			lineas.push_back("Tratando las fibras del Arbol de Plata y trazando los sellos protectores...");
+			lineas.push_back("¡Aqui esta tu Capa de Aprendiz! Recuerda que su forro repele la hechiceria exterior.");
 			opciones.push_back("[1] ¡Entendido!");
 			break;
 
 		case 12:
-			lineas.push_back("[CONFECCIÓN EXITOSA: Capa Mágica obtenida]");
-			lineas.push_back("Se consumieron: Tela, Tinta mágica y Libro de hechizos.");
-			lineas.push_back("La Capa Mágica ha sido equipada y agregada a tu inventario.");
+			lineas.push_back("[CONFECCION EXITOSA: Capa Magica obtenida]");
+			lineas.push_back("Se consumieron: Fibra de Arbol, Tinta magica y Grimorio de Trazos.");
+			lineas.push_back("La Capa Magica ha sido equipada y agregada a tu inventario.");
 			opciones.push_back("[1] ¡Muchas gracias, Maestro Qifrey!");
 			break;
 
@@ -186,8 +185,8 @@ public:
 
 		case 35:
 			lineas.push_back("En la hechicería no existe tal cosa como un material 'básico'.");
-			lineas.push_back("Los sellos no despiertan con tinta ordinaria; solo la tinta de plata,");
-			lineas.push_back("nacida de minerales arcanos, canaliza el flujo mágico al pergamino.");
+			lineas.push_back("Los sellos no despiertan con tinta ordinaria; solo la tinta de conjuracion,");
+			lineas.push_back("nacida de la savia del Arbol de Plata, canaliza el flujo magico al pergamino.");
 			lineas.push_back("Es la única que poseo en el taller... ¿Aún deseas aceptarla, Coco?");
 			opciones.push_back("[1] ¡Sí, por favor! Prometo cuidarla y esforzarme al máximo.");
 			break;
@@ -208,7 +207,7 @@ public:
 			break;
 
 		case 99:
-			lineas.push_back("[INVENTARIO LLENO: Capacidad máxima 6 objetos alcanzada]");
+			lineas.push_back("[INVENTARIO LLENO: Capacidad máxima 8 objetos alcanzada]");
 			lineas.push_back("No puedes recibir más objetos en este momento.");
 			opciones.push_back("[1] Volver");
 			break;
@@ -220,7 +219,7 @@ public:
 
 		case 201:
 			lineas.push_back("A la joven y pequeña Coco, ¿por qué entraste a mi torre?");
-			opciones.push_back("[1] Necesito encontrar un libro.");
+			opciones.push_back("[1] Necesito encontrar un Grimorio de Trazos que perdi.");
 			opciones.push_back("[2] ¿A ti qué te importa, Agott?");
 			break;
 
@@ -236,10 +235,10 @@ public:
 
 		case 210:
 			lineas.push_back("¿Qué pasó ahora, niña?");
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
-				opciones.push_back("[1] Solo pasaba por aquí, ya encontré el libro, Agott.");
+			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Grimorio de Trazos"))) {
+				opciones.push_back("[1] Solo pasaba por aqui, ya recupere el Grimorio de Trazos, Agott.");
 			} else {
-				opciones.push_back("[1] Sigo buscando el libro, necesito ayuda...");
+				opciones.push_back("[1] Sigo buscando el Grimorio de Trazos, necesito ayuda...");
 			}
 			if (myrphonRescatado) {
 				opciones.push_back("[2] Recuperé a su mascota, está a salvo con Richeh.");
@@ -252,13 +251,13 @@ public:
 			break;
 
 		case 212:
-			lineas.push_back("Sabía que no eras útil para eso, jajaja.\nPrueba empujando las cajas de la torre.");
+			lineas.push_back("Sabia que te costaria trabajo... Prueba empujando las cajas de mi torre.");
 			opciones.push_back("[1] Gracias por nada...");
 			break;
 
 		case 220:
 			lineas.push_back("¿Por qué sigues aquí, Coco? No eres bienvenida.");
-			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
+			if (libroEncontrado || (inv != nullptr && inv->tieneItem("Grimorio de Trazos"))) {
 				opciones.push_back("[1] Nada, solo quería burlarme de tu cara.");
 			} else {
 				opciones.push_back("[1] ¡Sigo buscando algo, deja de molestar!");
@@ -334,9 +333,9 @@ public:
 		case 302:
 			lineas.push_back("¿Ayudarme?... No creo que puedas.");
 			lineas.push_back("...Mi Myrphon todavía no regresa. Se quedó atrapado");
-			lineas.push_back("en esa horrible cueva Serpentback cuando nos atacaron los magos oscuros...");
-			lineas.push_back("...Si de verdad quieres ayudar, tráelo de vuelta a este cuarto.");
-			lineas.push_back("A cambio te daré una Varita Mágica que ya no uso.");
+			lineas.push_back("en esa horrible cueva Serpentback tras el ataque de Sombreros de Ala Ancha...");
+			lineas.push_back("...Si de verdad quieres ayudar, trae a Myrphon de vuelta a este cuarto del pozo.");
+			lineas.push_back("A cambio te dare una Pluma Termica creada por Olruggio que ya no utilizo.");
 			opciones.push_back("[1] ¡Acepto, traeré a Myrphon de vuelta!");
 			break;
 
@@ -347,20 +346,16 @@ public:
 			break;
 
 		case 310:
-			lineas.push_back("¿Un objeto mágico? Qué persistentes son los viajeros...");
-			lineas.push_back("...Tengo una Varita Mágica que ya no quiero usar.");
-			lineas.push_back("No me interesa la magia tradicional de la Alianza...");
-			lineas.push_back("...Pero no te la daré gratis. Mi mente no está para negociar");
-			lineas.push_back("mientras mi pobre Myrphon siga perdido en la oscuridad.");
+			lineas.push_back("¿Un objeto magico?... Tengo la Pluma Termica (Searneedle) de Olruggio.");
+			lineas.push_back("Su punta se calienta al rojo vivo para quebrar roca, pero yo solo dibujo sellos diminutos.");
+			lineas.push_back("...No te la dare gratis mientras mi pobre Myrphon siga atrapado en la oscuridad.");
 			opciones.push_back("[1] Lamento escuchar eso... ¿Cómo te puedo ayudar a recuperarlo?");
 			opciones.push_back("[2] Vaya, qué mal, y... ¿por un simple animal te pones a llorar?");
 			break;
 
 		case 311:
-			lineas.push_back("Mi Myrphon se asustó por el ataque de unos magos oscuros");
-			lineas.push_back("en el laberinto subterráneo Serpentback...");
-			lineas.push_back("...Si entras allí y lo traes a salvo a este cuarto del pozo,");
-			lineas.push_back("la Varita Mágica será tuya. ¿Trato?");
+			lineas.push_back("Mi Myrphon se asusto por el ataque de los Sombreros de Ala Ancha en Serpentback...");
+			lineas.push_back("Si entras alli y lo rescatas, la Pluma Termica sera tuya. ¿Aceptas?");
 			opciones.push_back("[1] Sí.");
 			break;
 
@@ -378,9 +373,9 @@ public:
 
 		case 321:
 			lineas.push_back("(Te mira de reojo de forma desconfiada) ...¿De verdad?...");
-			lineas.push_back("...Está bien. Se perdió en el laberinto Serpentback por culpa");
-			lineas.push_back("de unos magos oscuros. Tráelo de vuelta a este cuarto.");
-			lineas.push_back("Si lo logras, te daré la Varita Mágica que buscas. No me falles.");
+			lineas.push_back("...Está bien. Se perdió en el laberinto Serpentback tras el ataque");
+			lineas.push_back("de Sombreros de Ala Ancha. Tráelo de vuelta a este cuarto.");
+			lineas.push_back("Traelo sano y salvo. Si lo logras, te entregare la Pluma Termica. No me falles.");
 			opciones.push_back("[1] ¡Haré lo mejor que pueda y te lo traeré!");
 			break;
 
@@ -403,10 +398,8 @@ public:
 		case 351:
 			lineas.push_back("(Abraza fuertemente a su mascota mientras llora de alegría)");
 			lineas.push_back("¡Muchas gracias! Pensé que no volvería a verlo...");
-			lineas.push_back("...Lo prometido es deuda. Toma esto, es la Varita Mágica");
-			lineas.push_back("de la Alianza. A mí no me sirve para mi tipo de magia,");
-			lineas.push_back("pero a ti te será muy útil... Gracias de nuevo, aventurero.");
-			lineas.push_back("Ahora, si me disculpas, pasaré tiempo con mi amigo.");
+			lineas.push_back("Lo prometido es deuda. Toma la Pluma Termica Searneedle de Olruggio.");
+			lineas.push_back("Usa su calor para fracturar y fundir el muro de roca del almacen exterior.");
 			opciones.push_back("[1] ¡Muchas gracias, Richeh!");
 			break;
 
@@ -418,15 +411,14 @@ public:
 
 		case 400:
 			lineas.push_back("[DATO CURIOSO DE RICHEH #1]");
-			lineas.push_back("Richeh es hermana mayor de Eini, uno de los mejores estudiantes");
-			lineas.push_back("de la estricta academia de magos (la Alianza)...");
+			lineas.push_back("Richeh es hermana de Riliphin; ambos estudiaron en la estricta");
+			lineas.push_back("Gran Sala de los Hechiceros...");
 			opciones.push_back("[1] Continuar...");
 			break;
 
 		case 401:
-			lineas.push_back("...Mientras él es perfeccionista, sigue todas las reglas");
-			lineas.push_back("y se preocupa por el estatus, Richeh lo ignora activamente");
-			lineas.push_back("y considera que la academia es una cárcel que destruye la creatividad.");
+			lineas.push_back("...Richeh rechaza la rigidez de la Gran Sala y prefiere");
+			lineas.push_back("dibujar unicamente la magia que nace de su propio corazon.");
 			opciones.push_back("[1] Cerrar");
 			break;
 
@@ -487,10 +479,10 @@ public:
 				if (qifrey != nullptr && qifrey->getCrafteoCapa()) {
 					estadoDialogo = 15;
 				} else if (inv != nullptr) {
-					bool tieneTela = inv->tieneItem("Tela");
+					bool tieneFibra = inv->tieneItem("Fibra de Arbol");
 					bool tieneTinta = inv->tieneItem("Tinta magica");
-					bool tieneLibro = inv->tieneItem("Libro de hechizos");
-					if (tieneTela && tieneTinta && tieneLibro) {
+					bool tieneLibro = inv->tieneItem("Grimorio de Trazos");
+					if (tieneFibra && tieneTinta && tieneLibro) {
 						estadoDialogo = 11;
 					} else {
 						estadoDialogo = 10;
@@ -518,10 +510,10 @@ public:
 		} else if (estadoDialogo == 11) {
 			if (opcion == 1) {
 				if (inv != nullptr) {
-					inv->removerItem("Tela");
+					inv->removerItem("Fibra de Arbol");
 					inv->removerItem("Tinta magica");
-					inv->removerItem("Libro de hechizos");
-					inv->agregarItem(new ItemMagico(0, 0, "Capa Mágica", "Capa mágica que otorga la habilidad de planear por los cielos.", "Equipamiento Mágico", true));
+					inv->removerItem("Grimorio de Trazos");
+					inv->agregarItem(new ItemMagico(0, 0, "Capa Magica", "Manto de aprendiz tejido con fibras del Arbol de Plata. Protege y repele la hechiceria.", "Equipamiento Magico", true));
 				}
 				if (qifrey != nullptr) {
 					qifrey->setCrafteoCapa(true);
@@ -575,7 +567,7 @@ public:
 							if (qifrey->getConfianza() < 1) qifrey->setConfianza(1);
 						}
 						puntosMisiones += 50;
-						objetivoActual = "Buscar Tela y Libro de hechizos";
+						objetivoActual = "Buscar Fibra de Arbol y Grimorio de Trazos";
 						estadoDialogo = 33;
 					} else {
 						estadoDialogo = 99;
@@ -589,7 +581,8 @@ public:
 			if (inv != nullptr) {
 				if (inv->tieneItem("Frasco de Tinta")) {
 					inv->removerItem("Frasco de Tinta");
-				} else if (inv->tieneItem("Tinta de Viento")) {
+				}
+				if (inv->tieneItem("Tinta de Viento")) {
 					inv->removerItem("Tinta de Viento");
 				}
 			}
@@ -620,7 +613,7 @@ public:
 		} else if (estadoDialogo == 210) {
 			if (opcion == 2 && myrphonRescatado) {
 				estadoDialogo = 231;
-			} else if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
+			} else if (libroEncontrado || (inv != nullptr && inv->tieneItem("Grimorio de Trazos"))) {
 				estadoDialogo = 211;
 			} else {
 				estadoDialogo = 212;
@@ -631,7 +624,7 @@ public:
 		} else if (estadoDialogo == 220) {
 			if (opcion == 2 && myrphonRescatado) {
 				estadoDialogo = 231;
-			} else if (libroEncontrado || (inv != nullptr && inv->tieneItem("Libro de hechizos"))) {
+			} else if (libroEncontrado || (inv != nullptr && inv->tieneItem("Grimorio de Trazos"))) {
 				if (agott != nullptr && agott->getConfianza() > 0) {
 					agott->setConfianza(agott->getConfianza() - 1);
 				}
@@ -731,17 +724,17 @@ public:
 			dioVaraRicheh = true;
 			this->dioVaraRicheh = true;
 			misionMyrphonActiva = false;
-			if (inv != nullptr && !inv->tieneItem("Vara magica")) {
-				inv->agregarItem(new ItemMagico(0, 0, "Vara magica", "Varita Mágica de la Alianza entregada por Richeh tras rescatar a Myrphon. Permite lanzar fuego para derribar muros.", "Herramienta Mágica", true));
+			if (inv != nullptr && !inv->tieneItem("Pluma Termica")) {
+				inv->agregarItem(new ItemMagico(0, 0, "Pluma Termica", "Pluma Searneedle creada por Olruggio. Calienta su punta al rojo vivo, fundiendo y quebrando roca solida.", "Herramienta Arcana", true));
 				puntosMisiones += 50;
-				promptFlotante = "[Recibiste: Vara mágica]";
+				promptFlotante = "[Recibiste: Pluma Termica]";
 			}
 			if (richeh != nullptr) {
 				richeh->setYaHablo(true);
 				richeh->setConfianza(2);
 				richeh->setExpresion(2);
 			}
-			objetivoActual = "Usar la Vara mágica para derribar el muro del almacén";
+			objetivoActual = "Usar la Pluma Termica para quebrar la pared del almacen";
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 360) {

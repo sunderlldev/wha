@@ -8,7 +8,6 @@
 #include <thread>
 #include <chrono>
 #include <clocale>
-#include "Animacion.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -243,35 +242,84 @@ public:
         }
     }
 
+    std::vector<std::string> dividirEnLineas(const std::string& texto, int maxLongitud) const {
+        std::vector<std::string> lineas;
+        if (texto.empty()) return lineas;
+        std::string actual = "";
+        size_t i = 0;
+        while (i < texto.length()) {
+            size_t proxEspacio = texto.find(' ', i);
+            std::string palabra = (proxEspacio == std::string::npos) ? texto.substr(i) : texto.substr(i, proxEspacio - i);
+            if (actual.empty()) {
+                actual = palabra;
+            } else if (longitudVisible(actual) + 1 + longitudVisible(palabra) <= maxLongitud) {
+                actual += " " + palabra;
+            } else {
+                lineas.push_back(actual);
+                actual = palabra;
+            }
+            if (proxEspacio == std::string::npos) break;
+            i = proxEspacio + 1;
+        }
+        if (!actual.empty()) {
+            lineas.push_back(actual);
+        }
+        return lineas;
+    }
+
     void dibujarPromptFlotante(const std::string& texto) {
-        int anchoCaja = longitudVisible(texto) + 4;
+        if (texto.empty()) return;
+        int maxTexto = anchoJuego - 8;
+        std::vector<std::string> lineas = dividirEnLineas(texto, maxTexto);
+        if (lineas.empty()) return;
+
+        int maxVis = 0;
+        for (size_t i = 0; i < lineas.size(); i++) {
+            int lv = longitudVisible(lineas[i]);
+            if (lv > maxVis) maxVis = lv;
+        }
+        int anchoCaja = maxVis + 4;
         if (anchoCaja > anchoJuego - 4) anchoCaja = anchoJuego - 4;
+        if (anchoCaja < 30) anchoCaja = 30;
+        int altoCaja = (int)lineas.size() + 2;
         int startX = (anchoJuego - anchoCaja) / 2;
-        int startY = altoTotal - 4;
-        dibujarCaja(startX, startY, anchoCaja, 3, 4);
+        int startY = altoTotal - altoCaja - 1;
+        if (startY < 0) startY = 0;
+
+        dibujarCaja(startX, startY, anchoCaja, altoCaja, 4);
 
         if (texto != ultimoPromptTexto && (texto.find("Coco:") != std::string::npos || texto.find("Letrero:") != std::string::npos)) {
             ultimoPromptTexto = texto;
-            std::vector<wchar_t> wchars = aWideString(texto);
-            for (size_t i = 0; i < wchars.size(); i++) {
-                if (startX + 2 + (int)i < anchoJuego - 2) {
-                    buffer[startY + 1][startX + 2 + (int)i] = wchars[i];
-                    bufferColor[startY + 1][startX + 2 + (int)i] = 1;
-                }
-                dibujar();
+            int freq = (texto.find("Coco:") != std::string::npos) ? 720 : 500;
+            for (size_t i = 0; i < lineas.size(); i++) {
+                std::vector<wchar_t> wchars = aWideString(lineas[i]);
+                int colTexto = 1;
+                if (lineas[i].find("Coco:") != std::string::npos) colTexto = 6;
+                else if (lineas[i].find("Letrero:") != std::string::npos) colTexto = 4;
+                for (size_t c = 0; c < wchars.size(); c++) {
+                    if (startX + 2 + (int)c < startX + anchoCaja - 2) {
+                        buffer[startY + 1 + (int)i][startX + 2 + (int)c] = wchars[c];
+                        bufferColor[startY + 1 + (int)i][startX + 2 + (int)c] = colTexto;
+                    }
+                    dibujar();
 #ifdef _WIN32
-                if (wchars[i] != L' ' && i % 3 == 0) {
-                    int freq = (texto.find("Coco:") != std::string::npos) ? 720 : 500;
-                    Beep(freq, 10);
-                } else {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(12));
-                }
+                    if (wchars[c] != L' ' && c % 4 == 0) {
+                        Beep(freq, 8);
+                    } else {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(8));
+                    }
 #else
-                std::this_thread::sleep_for(std::chrono::milliseconds(12));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(8));
 #endif
+                }
             }
         } else {
-            setTextoJuego(startX + 2, startY + 1, texto, 1);
+            for (size_t i = 0; i < lineas.size(); i++) {
+                int colTexto = 1;
+                if (lineas[i].find("Coco:") != std::string::npos) colTexto = 6;
+                else if (lineas[i].find("Letrero:") != std::string::npos) colTexto = 4;
+                setTextoJuego(startX + 2, startY + 1 + (int)i, lineas[i], colTexto);
+            }
             if (texto.find("Coco:") == std::string::npos && texto.find("Letrero:") == std::string::npos) {
                 ultimoPromptTexto = texto;
             }
@@ -279,11 +327,21 @@ public:
     }
 
     void animarTexto(const std::string& texto, int velocidadMs = 25) {
-        Animacion::animarTexto(texto, velocidadMs);
+        for (size_t i = 0; i < texto.length(); i++) {
+            std::cout << texto[i] << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(velocidadMs));
+        }
+        std::cout << std::endl;
     }
 
     void animarDialogo(const std::string& hablante, const std::string& texto, int velocidadMs = 25) {
-        Animacion::animarDialogo(hablante, texto, velocidadMs);
+        std::cout << "[" << hablante << "]: ";
+        std::cout.flush();
+        for (size_t i = 0; i < texto.length(); i++) {
+            std::cout << texto[i] << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(velocidadMs));
+        }
+        std::cout << std::endl;
     }
 
     void dibujarCuadroDialogo(const std::string& hablante, const std::string& rol, int confianza,
@@ -468,7 +526,7 @@ public:
         for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
 
         int fila = y + 3;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 8; i++) {
             std::string prefijo = (i == seleccionado) ? "-> " : "   ";
             std::string entrada = prefijo + "[" + std::to_string(i + 1) + "] ";
             if (i < (int)nombres.size() && !nombres[i].empty()) {
@@ -483,25 +541,25 @@ public:
             fila += 1;
         }
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 10][x + c] = L'-';
-        setTextoJuego(x + 4, y + 11, "[DETALLES DEL ÍTEM]");
+        for (int c = 1; c < ancho - 1; c++) buffer[y + 12][x + c] = L'-';
+        setTextoJuego(x + 4, y + 13, "[DETALLES DEL ÍTEM]");
 
         if (seleccionado >= 0 && seleccionado < (int)nombres.size() && !nombres[seleccionado].empty()) {
-            setTextoJuego(x + 5, y + 13, "Nombre:      " + nombres[seleccionado]);
+            setTextoJuego(x + 5, y + 15, "Nombre:      " + nombres[seleccionado]);
             if (seleccionado < (int)tipos.size()) {
-                setTextoJuego(x + 5, y + 15, "Tipo:        " + tipos[seleccionado]);
+                setTextoJuego(x + 5, y + 17, "Tipo:        " + tipos[seleccionado]);
             }
             if (seleccionado < (int)descripciones.size()) {
-                setTextoJuego(x + 5, y + 17, "Descripción: ");
-                setTextoJuego(x + 5, y + 19, descripciones[seleccionado]);
+                setTextoJuego(x + 5, y + 19, "Descripción: ");
+                setTextoJuego(x + 5, y + 21, descripciones[seleccionado]);
             }
         } else {
-            setTextoJuego(x + 5, y + 13, "Ranura de mochila sin ítem asignado.");
-            setTextoJuego(x + 5, y + 15, "Capacidad máxima: 6 ítems en este nivel.");
+            setTextoJuego(x + 5, y + 15, "Ranura de mochila sin ítem asignado.");
+            setTextoJuego(x + 5, y + 17, "Capacidad máxima: 8 ítems en este nivel.");
         }
 
         for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 3][x + c] = L'-';
-        setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [1-6] Elegir   [I/ESC] Cerrar");
+        setTextoJuego(x + 5, y + alto - 2, "[W/S] Navegar   [1-8] Elegir   [I/ESC] Cerrar");
     }
 
     void dibujarModalMisiones(int seleccionado, bool verDetalle,
@@ -644,7 +702,8 @@ public:
     }
 
     void renderizarPanelLateral(int nivel, const std::string& nombreNivel,
-                               const std::string& protagonista, int vida, int vidaMax) {
+                               const std::string& protagonista, int vida, int vidaMax,
+                               const std::string& ubicacion = "") {
         std::vector<std::wstring> lineasPanel(altoTotal, std::wstring(anchoPanel, L' '));
 
         std::wstring separador = std::wstring(anchoPanel - 1, L'-') + L"|";
@@ -681,7 +740,16 @@ public:
         lineasPanel[22] = encuadrarFilaPanelW("", anchoPanel);
         lineasPanel[23] = separador;
 
-        for (int f = 24; f < altoTotal - 1; f++) {
+        std::string ubiTexto = ubicacion.empty() ? nombreNivel : ubicacion;
+        lineasPanel[24] = encuadrarFilaPanelW("[UBICACION]", anchoPanel);
+        lineasPanel[25] = separador;
+        lineasPanel[26] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[27] = encuadrarFilaPanelW("Lugar:", anchoPanel);
+        lineasPanel[28] = encuadrarFilaPanelW(" " + ubiTexto, anchoPanel);
+        lineasPanel[29] = encuadrarFilaPanelW("", anchoPanel);
+        lineasPanel[30] = separador;
+
+        for (int f = 31; f < altoTotal - 1; f++) {
             lineasPanel[f] = encuadrarFilaPanelW("", anchoPanel);
         }
         lineasPanel[altoTotal - 1] = bordeCaja;
@@ -690,7 +758,7 @@ public:
         for (int f = 0; f < altoTotal; f++) {
             for (int c = 0; c < anchoPanel; c++) {
                 buffer[f][colInicioPanel + c] = lineasPanel[f][c];
-                if (f == 0 || f == 3 || f == 7 || f == 9 || f == 23 || f == altoTotal - 1 || c == anchoPanel - 1) {
+                if (f == 0 || f == 3 || f == 7 || f == 9 || f == 23 || f == 25 || f == 30 || f == altoTotal - 1 || c == anchoPanel - 1) {
                     bufferColor[f][colInicioPanel + c] = 8;
                 } else if (f == 1) {
                     bufferColor[f][colInicioPanel + c] = 3;
@@ -698,8 +766,10 @@ public:
                     bufferColor[f][colInicioPanel + c] = 4;
                 } else if (f == 6) {
                     bufferColor[f][colInicioPanel + c] = 7;
-                } else if (f == 8) {
+                } else if (f == 8 || f == 24) {
                     bufferColor[f][colInicioPanel + c] = 4;
+                } else if (f == 28) {
+                    bufferColor[f][colInicioPanel + c] = 2;
                 } else {
                     bufferColor[f][colInicioPanel + c] = 1;
                 }
@@ -769,55 +839,66 @@ public:
         dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
 
         std::string tit1 = "W I T C H   H A T   A T E L I E R";
-        std::string tit2 = "E L   Á R B O L   D E   P L A T A";
+        std::string tit2 = "E L   A R B O L   D E   P L A T A";
         int cx1 = x + (ancho - longitudVisible(tit1)) / 2;
         int cx2 = x + (ancho - longitudVisible(tit2)) / 2;
-        setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
-        setTextoPantallaCompleta(cx2, y + 3, tit2, 3);
+        setTextoPantallaCompleta(cx1, y + 1, tit1, 4);
+        setTextoPantallaCompleta(cx2, y + 2, tit2, 3);
 
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + 5][x + c] = L'=';
-            bufferColor[y + 5][x + c] = 8;
+            buffer[y + 3][x + c] = L'=';
+            bufferColor[y + 3][x + c] = 8;
         }
 
-        std::string sub1 = "=== PRÓLOGO: EL SECRETO DE LA MAGIA ===";
-        int cxSub1 = x + (ancho - longitudVisible(sub1)) / 2;
-        setTextoPantallaCompleta(cxSub1, y + 7, sub1, 4);
+        std::vector<std::string> arteAtelier = {
+            R"(         /\                        .------.                        /\         )",
+            R"(        /  \          /\          /  _()_  \          /\          /  \        )",
+            R"(       /____\        /  \        |  (____)  |        /  \        /____\       )",
+            R"(      |  __  |      /____\     .--\________/--.     /____\      |  __  |      )",
+            R"(    .-| |  | |     |  __  |    |  [ ATELIER ] |    |  __  |     | |  | |-.    )",
+            R"(   /  | |__| |     | |  | |    |  .---..---.  |    | |  | |     | |__| |  \   )",
+            R"(  | ()|______|     | |__| |    |  |===|| * |  |    | |__| |     |______|() |  )",
+            R"( _|___|______|_____|______|____|__|___||___|__|____|______|_____|______|___|__)",
+            R"(/  / |   ||   / \      ||       |              |       ||      / \   ||   | \ \ )",
+            R"(|  /  |   ||  /   \     ||       |  _        _  |       ||     /   \  ||   |  \ |)",
+            R"(~^~^~^~^~^~^~/_____\~^~^~^~^~^~^~| [_]  []  [_] |~^~^~^~^~^~^~/_____\~^~^~^~^~)"
+        };
 
-        setTextoPantallaCompleta(x + 5, y + 9,  "En un mundo donde la hechicería parece un don reservado para unos pocos elegidos,", 1);
-        setTextoPantallaCompleta(x + 5, y + 10, "la verdad prohibida es que cualquier ser humano es capaz de hacer magia: solo se", 1);
-        setTextoPantallaCompleta(x + 5, y + 11, "necesita tinta mágica y trazar con suma precisión los sellos y círculos arcanos.", 1);
+        for (size_t r = 0; r < arteAtelier.size(); r++) {
+            int cxArt = x + (ancho - longitudVisible(arteAtelier[r])) / 2;
+            setTextoPantallaCompleta(cxArt, y + 4 + (int)r, arteAtelier[r], 2);
+        }
 
-        setTextoPantallaCompleta(x + 5, y + 13, "Coco, una humilde joven fascinada por los magos, recibió un día un libro prohibido", 1);
-        setTextoPantallaCompleta(x + 5, y + 14, "de un misterioso hechicero con sombrero de ala ancha. Al intentar recrear los trazos", 1);
-        setTextoPantallaCompleta(x + 5, y + 15, "a escondidas en su habitación, desató un hechizo oscuro que petrificó a su madre.", 1);
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 15][x + c] = L'-';
+            bufferColor[y + 15][x + c] = 8;
+        }
 
-        setTextoPantallaCompleta(x + 5, y + 17, "Rescatada por el hechicero Qifrey, Coco fue acogida en su atelier como aprendiz.", 1);
-        setTextoPantallaCompleta(x + 5, y + 18, "Para descubrir el contrahechizo capaz de salvar a su madre, Coco deberá dominar", 1);
-        setTextoPantallaCompleta(x + 5, y + 19, "el arte del dibujo mágico y superar las rigurosas pruebas de los hechiceros.", 1);
+        setTextoPantallaCompleta(x + 4, y + 16, "=== PROLOGO: EL SECRETO DE LA MAGIA ===", 4);
+        setTextoPantallaCompleta(x + 4, y + 17, "En este mundo, la magia no es un don de nacimiento: se traza en silencio con tinta de plata y sellos.", 1);
+        setTextoPantallaCompleta(x + 4, y + 18, "Eres Coco, una humilde joven acogida en el atelier del sabio hechicero Qifrey tras una tragedia.", 6);
+        setTextoPantallaCompleta(x + 4, y + 19, "Tu mision: encontrar el contrahechizo prohibido para revertir la petrificacion de tu madre.", 3);
+        setTextoPantallaCompleta(x + 4, y + 20, "Para lograrlo, deberas dominar el arte del dibujo magico y confeccionar tu propio Manto de Aprendiz.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 21][x + c] = L'-';
             bufferColor[y + 21][x + c] = 8;
         }
 
-        std::string sub2 = "=== OBJETIVOS DEL NIVEL 1: EL ATELIER DE QIFREY ===";
-        int cxSub2 = x + (ancho - longitudVisible(sub2)) / 2;
-        setTextoPantallaCompleta(cxSub2, y + 23, sub2, 2);
-
-        setTextoPantallaCompleta(x + 5, y + 25, "* Explora el atelier, la choza de trazos y la misteriosa torre de Agott.", 1);
-        setTextoPantallaCompleta(x + 5, y + 26, "* Recolecta los materiales para tu Capa Mágica: Tela, Tinta mágica y Libro.", 1);
-        setTextoPantallaCompleta(x + 5, y + 27, "* Conversa con Maestro Qifrey, interactúa con Agott y descubre el sótano de Richeh.", 1);
-        setTextoPantallaCompleta(x + 5, y + 28, "* Busca frascos de tinta arcaica perdidos para ganarte la plena confianza del maestro.", 1);
+        setTextoPantallaCompleta(x + 4, y + 22, "=== OBJETIVOS DEL NIVEL 1: EL ATELIER DE QIFREY ===", 2);
+        setTextoPantallaCompleta(x + 4, y + 23, "* Habla con Maestro Qifrey en su despacho al sur para recibir instrucciones y tu primera leccion arcana.", 1);
+        setTextoPantallaCompleta(x + 4, y + 24, "* Reune los 3 componentes del taller: Fibra del Arbol de Plata, Tinta de Conjuracion y Grimorio de Trazos.", 1);
+        setTextoPantallaCompleta(x + 4, y + 25, "* Visita la Choza de Trazos, la Torre de Agott y ayuda a Richeh a rescatar a su pinguino Myrphon.", 1);
+        setTextoPantallaCompleta(x + 4, y + 26, "* Recolecta frascos de tinta arcaica perdidos para forjar una profunda amistad y confianza con tu maestro.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + 30][x + c] = L'=';
-            bufferColor[y + 30][x + c] = 8;
+            buffer[y + 28][x + c] = L'=';
+            bufferColor[y + 28][x + c] = 8;
         }
 
-        std::string pie = "[ Presiona ENTER para iniciar el viaje ]";
+        std::string pie = "[ Presiona ENTER o ESPACIO para iniciar la aventura con Coco ]";
         int cxPie = x + (ancho - longitudVisible(pie)) / 2;
-        setTextoPantallaCompleta(cxPie, y + 32, pie, 4);
+        setTextoPantallaCompleta(cxPie, y + 31, pie, 4);
 
         dibujar();
 

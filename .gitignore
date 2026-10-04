@@ -9,3 +9,8 @@ Debug/
 Release/
 ipch/
 archivos/
+*.log
+*log.txt
+audio_log.txt
+audit_log.txt
+*.vbs

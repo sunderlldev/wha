@@ -30,11 +30,10 @@ private:
 public:
 	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1), tickLluviaPrevio(-1) {
 		pantalla.configurarConsola();
-		audio.reproducirNivel(nivelActual + 1);
 		listaNivel.push_back(new Nivel1());
 		listaNivel.push_back(new Nivel2());
 		listaNivel.push_back(new Nivel3());
-		listaNivel[nivelActual]->inciarNivel();
+		listaNivel[nivelActual]->iniciarNivel();
 
 		if (nivelActual == 1) {
 			listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
@@ -42,6 +41,7 @@ public:
 	}
 
 	~Juego() {
+		ejecutando = false;
 		audio.detenerMusica();
 		for (size_t i = 0; i < listaNivel.size(); i++) {
 			delete listaNivel[i];
@@ -56,17 +56,20 @@ public:
 	bool getEjecutando() const { return this->ejecutando; }
 	void menuPrincipal() {
 		pantalla.mostrarHistoriaIntro();
+		audio.reproducirNivel(nivelActual + 1);
 	}
 
 	void cambiarNivel() {
 		if (nivelActual + 1 < (int)listaNivel.size()) {
+			audio.detenerMusica();
 			puntajeGlobal += listaNivel[nivelActual]->getPuntajeTotalNivel();
 			nivelActual++;
 			redibujarNecesario = true;
-			listaNivel[nivelActual]->inciarNivel();
-			audio.reproducirNivel(nivelActual + 1);
+			listaNivel[nivelActual]->iniciarNivel();
 			listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
+			audio.reproducirNivel(nivelActual + 1);
 		} else {
+			audio.detenerMusica();
 			mostrarDesenlaceFinal();
 		}
 	}
@@ -88,6 +91,11 @@ public:
 		audio.actualizar();
 
 		Nivel& nivel = getNivelActualObj();
+		if (nivel.getSolicitaSalir()) {
+			ejecutando = false;
+			audio.detenerMusica();
+			return;
+		}
 		bool huboCambio = nivel.actualizar();
 
 		if (nivel.getTransicionBajando()) {
@@ -220,6 +228,33 @@ public:
 						}
 					}
 
+					const std::vector<Letrero*>& lets = nivel.getLetreros();
+					int segReloj = (int)(clock() / CLOCKS_PER_SEC);
+					bool parpadeoAlerta = (segReloj % 2 != 0);
+					for (size_t i = 0; i < lets.size(); i++) {
+						if (lets[i] != nullptr) {
+							int lx = lets[i]->getX() - camX;
+							int ly = lets[i]->getY() - camY;
+							if (lx + 2 >= 0 && lx < pantalla.getAnchoJuego() && ly >= 0 && ly < pantalla.getAltoTotal()) {
+								if (lets[i]->getLeido()) {
+									pantalla.setPixelJuego(lx, ly, '[', 10);
+									pantalla.setPixelJuego(lx + 1, ly, '!', 10);
+									pantalla.setPixelJuego(lx + 2, ly, ']', 10);
+								} else {
+									if (parpadeoAlerta) {
+										pantalla.setPixelJuego(lx, ly, '[', 10);
+										pantalla.setPixelJuego(lx + 1, ly, '!', 7);
+										pantalla.setPixelJuego(lx + 2, ly, ']', 10);
+									} else {
+										pantalla.setPixelJuego(lx, ly, '[', 8);
+										pantalla.setPixelJuego(lx + 1, ly, '!', 4);
+										pantalla.setPixelJuego(lx + 2, ly, ']', 8);
+									}
+								}
+							}
+						}
+					}
+
 					NPC* q = nivel.getQifrey();
 					if (q != nullptr) {
 						int qx = q->getX() - camX;
@@ -297,7 +332,8 @@ public:
 					nivel.getNombreNivel(),
 					prota->getNombre(),
 					prota->getVida(),
-					prota->getVidaMaxima()
+					prota->getVidaMaxima(),
+					nivel.getNombreUbicacionActual()
 				);
 
 				if (!nivel.getPromptFlotante().empty() && !nivel.getEnDialogo() && nivel.getModalActivo() == 0 && !nivel.getMostrarEstadisticasFin()) {
