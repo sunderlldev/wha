@@ -319,7 +319,7 @@ public:
 
         if (texto != ultimoPromptTexto && (texto.find("Coco:") != std::string::npos || texto.find("Letrero:") != std::string::npos)) {
             ultimoPromptTexto = texto;
-            int freq = (texto.find("Coco:") != std::string::npos) ? 800 : 500;
+            int freq = (texto.find("Coco:") != std::string::npos) ? 1250 : 520;
             for (size_t i = 0; i < lineas.size(); i++) {
                 std::vector<wchar_t> wchars = aWideString(lineas[i]);
                 for (size_t c = 0; c < wchars.size(); c++) {
@@ -430,11 +430,11 @@ public:
             }
 
 #ifdef _WIN32
-            int freqHablante = 480;
-            if (hablante == "Coco") freqHablante = 800;
-            else if (hablante == "Qifrey") freqHablante = 280;
-            else if (hablante == "Agott") freqHablante = 540;
-            else if (hablante == "Richeh") freqHablante = 660;
+            int freqHablante = 520;
+            if (hablante == "Coco") freqHablante = 1250;
+            else if (hablante == "Richeh") freqHablante = 1600;
+            else if (hablante == "Agott") freqHablante = 900;
+            else if (hablante == "Qifrey") freqHablante = 320;
 #endif
 
             int filaActual = y + 3;
