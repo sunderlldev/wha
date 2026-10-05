@@ -961,6 +961,565 @@ public:
         }
     }
 
+    void mostrarEasterEggTrollface() {
+        limpiarBufferCompleto();
+        std::vector<std::string> troll = {
+            u8"⠀⠀⠀⠀⠀⠀⠀⣠⣤⣤⣤⡤⢤⣤⣤⣤⣤⣤⣄⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀",
+            u8"⠀⠀⠀⠀⠀⣠⣿⡿⣟⠯⡒⢯⣽⣓⣒⢾⣯⣭⣿⣿⠿⠭⠭⣯⣷⣦⡀⠀⠀⠀",
+            u8"⠀⠀⠀⠀⣰⣿⣯⣞⣕⣽⠾⠿⠿⠿⢿⣏⣿⣿⣿⡗⣽⣿⣿⣷⡝⣿⣿⡆⠀⠀",
+            u8"⠀⠀⠀⣀⣛⠛⢿⣛⢝⢁⣀⣀⣀⠓⠶⠈⣿⣿⡿⠗⠉⠁⢀⣀⣹⣛⣛⣳⢄⠀",
+            u8"⠀⡔⡾⢁⣴⡆⢦⣬⣙⣛⣋⣤⣿⣿⣷⣾⣿⣿⣿⡆⢿⣿⡟⠻⠛⡉⣍⣲⢱⠁",
+            u8"⠀⣇⣇⢸⣉⡀⢦⣌⡙⠻⠿⣯⣭⣥⠡⡤⠿⢿⣿⣿⡆⠉⡻⢿⣿⠇⢻⣟⠼⠀",
+            u8"⠀⠈⠪⣴⣿⣧⡀⢉⠛⠘⢶⣦⣬⠉⣀⠓⠿⠿⠯⢉⣴⠿⠿⠓⡁⡄⠀⣿⠃⠀",
+            u8"⠀⠀⠀⠙⣿⣿⣷⣌⠻⢠⣤⣀⠉⠐⠛⠿⠿⠰⠶⠦⠰⠶⠇⠘⠃⠁⠀⣿⠀⠀",
+            u8"⠀⠀⠀⠀⠘⢿⣿⣿⣷⣌⠻⢿⠇⣼⣶⣶⣶⣶⣶⣶⣶⣶⣦⡀⠀⢀⣼⠇⠀⠀",
+            u8"⠀⠀⠀⠀⠀⠀⠉⠻⢿⣿⣷⣮⣑⠪⠭⠭⠭⠭⠭⠭⠭⠿⢻⣵⣾⠟⠁⠀⠀⠀",
+            u8"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⠀"
+        };
+        int yStart = 10;
+        for (size_t r = 0; r < troll.size(); r++) {
+            std::vector<wchar_t> wchars = aWideString(troll[r]);
+            int xStart = (anchoTotal - (int)wchars.size()) / 2;
+            for (size_t c = 0; c < wchars.size(); c++) {
+                int px = xStart + (int)c;
+                int py = yStart + (int)r;
+                if (px >= 0 && px < anchoTotal && py >= 0 && py < altoTotal) {
+                    buffer[py][px] = wchars[c];
+                    bufferColor[py][px] = 1;
+                }
+            }
+        }
+        std::string textoSub = "... ¿Esperabas un secreto magico ancestral aqui? ...";
+        int cxSub = (anchoTotal - longitudVisible(textoSub)) / 2;
+        setTextoPantallaCompleta(cxSub, yStart + 14, textoSub, 8);
+
+        std::string btn = "[ Presiona ENTER o E para volver al taller ]";
+        int cxBtn = (anchoTotal - longitudVisible(btn)) / 2;
+        setTextoPantallaCompleta(cxBtn, yStart + 17, btn, 4);
+
+        dibujar();
+
+#ifdef _WIN32
+        Beep(500, 80);
+        Beep(700, 80);
+        Beep(450, 120);
+        while (true) {
+            if (_kbhit()) {
+                int t = _getch();
+                if (t == 0 || t == 224) t = _getch();
+                if (t == 13 || t == 'e' || t == 'E' || t == 27 || t == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    int mostrarMenuPrincipal() {
+        int seleccion = 0;
+        int totalOpciones = 4;
+
+        while (true) {
+            limpiarBufferCompleto();
+            int x = 6;
+            int y = 2;
+            int ancho = 108;
+            int alto = 36;
+            dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+            std::string t1 = "==========================================================================";
+            std::string t2 = "              W I T C H   H A T   A T E L I E R               ";
+            std::string t3 = "                    E L   A R B O L   D E   P L A T A                     ";
+            int cxT1 = x + (ancho - longitudVisible(t1)) / 2;
+            int cxT2 = x + (ancho - longitudVisible(t2)) / 2;
+            int cxT3 = x + (ancho - longitudVisible(t3)) / 2;
+            setTextoPantallaCompleta(cxT1, y + 2, t1, 8);
+            setTextoPantallaCompleta(cxT2, y + 3, t2, 4);
+            setTextoPantallaCompleta(cxT3, y + 4, t3, 3);
+            setTextoPantallaCompleta(cxT1, y + 5, t1, 8);
+
+            std::vector<std::string> arteGorro = {
+                R"(                     / \                     )",
+                R"(                    /   \                    )",
+                R"(                   /  _  \                   )",
+                R"(                  /  / \  \                  )",
+                R"(                 /  | * |  \                 )",
+                R"(             .--'    \_/    '--.             )",
+                R"(            (___________________)            )"
+            };
+            for (size_t r = 0; r < arteGorro.size(); r++) {
+                int cxGorro = x + (ancho - longitudVisible(arteGorro[r])) / 2;
+                setTextoPantallaCompleta(cxGorro, y + 7 + (int)r, arteGorro[r], 6);
+            }
+
+            std::string cita = "\"La verdadera magia no reside en el linaje, sino en el trazo del corazon.\"";
+            int cxCita = x + (ancho - longitudVisible(cita)) / 2;
+            setTextoPantallaCompleta(cxCita, y + 15, cita, 2);
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 17][x + c] = L'-';
+                bufferColor[y + 17][x + c] = 8;
+            }
+
+            std::string opcTexto[4] = {
+                "1. INICIAR JUEGO",
+                "2. CREDITOS",
+                "3. LORE DE LA OBRA",
+                "4. SALIR"
+            };
+
+            for (int i = 0; i < totalOpciones; i++) {
+                int yOpc = y + 19 + i * 2;
+                std::string lineaOpc;
+                int colOpc;
+                if (seleccion == i) {
+                    lineaOpc = "==>  [ " + opcTexto[i] + " ]  <==";
+                    colOpc = 4;
+                } else {
+                    lineaOpc = "       " + opcTexto[i] + "       ";
+                    colOpc = 1;
+                }
+                int cxOpc = x + (ancho - longitudVisible(lineaOpc)) / 2;
+                setTextoPantallaCompleta(cxOpc, yOpc, lineaOpc, colOpc);
+            }
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 28][x + c] = L'-';
+                bufferColor[y + 28][x + c] = 8;
+            }
+
+            std::string controles = "[W / S] Mover seleccion   |   [ENTER / E] Confirmar   |   [1..4] Acceso rapido";
+            int cxCtrl = x + (ancho - longitudVisible(controles)) / 2;
+            setTextoPantallaCompleta(cxCtrl, y + 30, controles, 3);
+
+            std::string subPie = "Algoritmos (1ACC0265) - UPC 2026-2  |  Grupo 4";
+            int cxSub = x + (ancho - longitudVisible(subPie)) / 2;
+            setTextoPantallaCompleta(cxSub, y + 32, subPie, 8);
+
+            dibujar();
+
+#ifdef _WIN32
+            while (true) {
+                if (_kbhit()) {
+                    int tecla = _getch();
+                    if (tecla == 0 || tecla == 224) {
+                        tecla = _getch();
+                    }
+                    if (tecla == 'w' || tecla == 'W') {
+                        seleccion = (seleccion - 1 + totalOpciones) % totalOpciones;
+                        Beep(850, 18);
+                        break;
+                    } else if (tecla == 's' || tecla == 'S') {
+                        seleccion = (seleccion + 1) % totalOpciones;
+                        Beep(850, 18);
+                        break;
+                    } else if (tecla == '1') {
+                        seleccion = 0;
+                        Beep(1200, 35);
+                        return 0;
+                    } else if (tecla == '2') {
+                        seleccion = 1;
+                        Beep(1200, 35);
+                        return 1;
+                    } else if (tecla == '3') {
+                        seleccion = 2;
+                        Beep(1200, 35);
+                        return 2;
+                    } else if (tecla == '4') {
+                        seleccion = 3;
+                        Beep(1200, 35);
+                        return 3;
+                    } else if (tecla == 13 || tecla == 'e' || tecla == 'E') {
+                        Beep(1200, 35);
+                        return seleccion;
+                    }
+                }
+                Sleep(20);
+            }
+#else
+            char c;
+            std::cin >> c;
+            if (c == 'w') seleccion = (seleccion - 1 + totalOpciones) % totalOpciones;
+            else if (c == 's') seleccion = (seleccion + 1) % totalOpciones;
+            else if (c == '1') return 0;
+            else if (c == '2') return 1;
+            else if (c == '3') return 2;
+            else if (c == '4') return 3;
+            else return seleccion;
+#endif
+        }
+    }
+
+    int mostrarSelectorNivel() {
+        int seleccion = 0;
+        int totalOpciones = 4;
+        std::string mensajeAlerta = "";
+        int colorAlerta = 7;
+
+        while (true) {
+            limpiarBufferCompleto();
+            int x = 6;
+            int y = 2;
+            int ancho = 108;
+            int alto = 36;
+            dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+            std::string t1 = "==========================================================================";
+            std::string t2 = "              S E L E C C I O N   D E   N I V E L              ";
+            int cxT1 = x + (ancho - longitudVisible(t1)) / 2;
+            int cxT2 = x + (ancho - longitudVisible(t2)) / 2;
+            setTextoPantallaCompleta(cxT1, y + 2, t1, 8);
+            setTextoPantallaCompleta(cxT2, y + 3, t2, 4);
+            setTextoPantallaCompleta(cxT1, y + 4, t1, 8);
+
+            std::string desc = "Selecciona el nivel de la aventura que deseas jugar:";
+            int cxDesc = x + (ancho - longitudVisible(desc)) / 2;
+            setTextoPantallaCompleta(cxDesc, y + 6, desc, 1);
+
+            std::string itemsNivel[4] = {
+                "[1] Nivel 1: Coco   — El Atelier de Qifrey      [DESBLOQUEADO]",
+                "[2] Nivel 2: Tartah — El Laberinto de Kaln      [BLOQUEADO]",
+                "[3] Nivel 3: Qifrey — El Gran Arbol de Plata    [BLOQUEADO]",
+                "[4] Volver al Menu Principal"
+            };
+
+            for (int i = 0; i < totalOpciones; i++) {
+                int yOpc = y + 10 + i * 3;
+                std::string lineaOpc;
+                int colOpc;
+                if (seleccion == i) {
+                    lineaOpc = "==>  " + itemsNivel[i] + "  <==";
+                    colOpc = (i == 0) ? 2 : ((i == 3) ? 3 : 7);
+                } else {
+                    lineaOpc = "       " + itemsNivel[i] + "       ";
+                    colOpc = (i == 0) ? 1 : ((i == 3) ? 8 : 8);
+                }
+                int cxOpc = x + (ancho - longitudVisible(lineaOpc)) / 2;
+                setTextoPantallaCompleta(cxOpc, yOpc, lineaOpc, colOpc);
+            }
+
+            if (!mensajeAlerta.empty()) {
+                int cxAlert = x + (ancho - longitudVisible(mensajeAlerta)) / 2;
+                setTextoPantallaCompleta(cxAlert, y + 24, mensajeAlerta, colorAlerta);
+            }
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 27][x + c] = L'-';
+                bufferColor[y + 27][x + c] = 8;
+            }
+
+            std::string controles = "[W / S] Mover   |   [ENTER / E] Seleccionar   |   [1..4] Acceso rapido   |   [ESC] Volver";
+            int cxCtrl = x + (ancho - longitudVisible(controles)) / 2;
+            setTextoPantallaCompleta(cxCtrl, y + 29, controles, 3);
+
+            dibujar();
+
+#ifdef _WIN32
+            while (true) {
+                if (_kbhit()) {
+                    int tecla = _getch();
+                    if (tecla == 0 || tecla == 224) tecla = _getch();
+
+                    if (tecla == 'w' || tecla == 'W') {
+                        seleccion = (seleccion - 1 + totalOpciones) % totalOpciones;
+                        mensajeAlerta = "";
+                        Beep(850, 18);
+                        break;
+                    } else if (tecla == 's' || tecla == 'S') {
+                        seleccion = (seleccion + 1) % totalOpciones;
+                        mensajeAlerta = "";
+                        Beep(850, 18);
+                        break;
+                    } else if (tecla == '1') {
+                        Beep(1200, 35);
+                        return 0;
+                    } else if (tecla == '2' || tecla == '3') {
+                        Beep(300, 100);
+                        mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
+                        break;
+                    } else if (tecla == '4' || tecla == 27) {
+                        Beep(800, 25);
+                        return -1;
+                    } else if (tecla == 13 || tecla == 'e' || tecla == 'E') {
+                        if (seleccion == 0) {
+                            Beep(1200, 35);
+                            return 0;
+                        } else if (seleccion == 1 || seleccion == 2) {
+                            Beep(300, 100);
+                            mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
+                            break;
+                        } else {
+                            Beep(800, 25);
+                            return -1;
+                        }
+                    }
+                }
+                Sleep(20);
+            }
+#else
+            return 0;
+#endif
+        }
+    }
+
+    void mostrarCreditos() {
+        limpiarBufferCompleto();
+        int x = 6;
+        int y = 2;
+        int ancho = 108;
+        int alto = 36;
+        dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+        std::string t1 = "==========================================================================";
+        std::string t2 = "                      C R E D I T O S   D E L   J U E G O                 ";
+        int cxT1 = x + (ancho - longitudVisible(t1)) / 2;
+        int cxT2 = x + (ancho - longitudVisible(t2)) / 2;
+        setTextoPantallaCompleta(cxT1, y + 2, t1, 8);
+        setTextoPantallaCompleta(cxT2, y + 3, t2, 4);
+        setTextoPantallaCompleta(cxT1, y + 4, t1, 8);
+
+        std::string infoUniv = "UNIVERSIDAD PERUANA DE CIENCIAS APLICADAS (UPC)";
+        std::string infoCurso = "CURSO: Algoritmos (1ACC0265) - Ciclo 2026-2";
+        std::string infoDoc = "DOCENTE: Luis Alberto Raymundo Chacaltana";
+        std::string infoObra = "OBRA ORIGINAL: Witch Hat Atelier (Kamome Shirahama, 2016)";
+        setTextoPantallaCompleta(x + (ancho - longitudVisible(infoUniv)) / 2, y + 6, infoUniv, 2);
+        setTextoPantallaCompleta(x + (ancho - longitudVisible(infoCurso)) / 2, y + 7, infoCurso, 3);
+        setTextoPantallaCompleta(x + (ancho - longitudVisible(infoDoc)) / 2, y + 8, infoDoc, 1);
+        setTextoPantallaCompleta(x + (ancho - longitudVisible(infoObra)) / 2, y + 9, infoObra, 8);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 11][x + c] = L'=';
+            bufferColor[y + 11][x + c] = 8;
+        }
+
+        std::string eq = "EQUIPO DE DESARROLLO — GRUPO 4";
+        setTextoPantallaCompleta(x + (ancho - longitudVisible(eq)) / 2, y + 13, eq, 4);
+
+        std::vector<std::string> arteJuan = {
+            R"(       /\       )",
+            R"(      /  \      )",
+            R"(     /____\     )",
+            R"(    ( * . * )   )",
+            R"(    / |===| \   )",
+            R"(   /  |   |  \  )",
+            R"(      d   b     )"
+        };
+
+        std::vector<std::string> arteKiana = {
+            R"(      .---.     )",
+            R"(     / ~ ~ \    )",
+            R"(    ( * u * )   )",
+            R"(    <| === |>   )",
+            R"(    / |   | \   )",
+            R"(   /  |   |  \  )",
+            R"(      d   b     )"
+        };
+
+        int xJuan = x + 20;
+        int xKiana = x + 64;
+        int yArte = y + 15;
+
+        for (size_t r = 0; r < arteJuan.size(); r++) {
+            setTextoPantallaCompleta(xJuan, yArte + (int)r, arteJuan[r], 6);
+        }
+        for (size_t r = 0; r < arteKiana.size(); r++) {
+            setTextoPantallaCompleta(xKiana, yArte + (int)r, arteKiana[r], 5);
+        }
+
+        std::string nomJuan = "Juan Blas";
+        std::string codJuan = "Codigo: U20261B980";
+        std::string rolJuan = "Diseno de Sistema y Mecanicas";
+        setTextoPantallaCompleta(xJuan + (17 - longitudVisible(nomJuan)) / 2, yArte + 8, nomJuan, 4);
+        setTextoPantallaCompleta(xJuan + (17 - longitudVisible(codJuan)) / 2, yArte + 9, codJuan, 3);
+        setTextoPantallaCompleta(xJuan + (17 - longitudVisible(rolJuan)) / 2, yArte + 10, rolJuan, 8);
+
+        std::string nomKiana = "Kiana Arancibia";
+        std::string codKiana = "Codigo: U202619105";
+        std::string rolKiana = "Entornos y Arquitectura Visual";
+        setTextoPantallaCompleta(xKiana + (17 - longitudVisible(nomKiana)) / 2, yArte + 8, nomKiana, 4);
+        setTextoPantallaCompleta(xKiana + (17 - longitudVisible(codKiana)) / 2, yArte + 9, codKiana, 3);
+        setTextoPantallaCompleta(xKiana + (17 - longitudVisible(rolKiana)) / 2, yArte + 10, rolKiana, 8);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 29][x + c] = L'-';
+            bufferColor[y + 29][x + c] = 8;
+        }
+
+        std::string pie = "[ Presiona ENTER o ESC para volver al menu principal ]";
+        int cxPie = x + (ancho - longitudVisible(pie)) / 2;
+        setTextoPantallaCompleta(cxPie, y + 31, pie, 4);
+
+        dibujar();
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int tecla = _getch();
+                if (tecla == 0 || tecla == 224) tecla = _getch();
+                if (tecla == 13 || tecla == 27 || tecla == 'e' || tecla == 'E' || tecla == 32) {
+                    Beep(900, 25);
+                    break;
+                }
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void mostrarLore() {
+        int pagina = 0;
+        int totalPaginas = 4;
+
+        while (true) {
+            limpiarBufferCompleto();
+            int x = 6;
+            int y = 2;
+            int ancho = 108;
+            int alto = 36;
+            dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+            std::string t1 = "==========================================================================";
+            std::string t2 = "     W I T C H   H A T   A T E L I E R :   E L   A R B O L   D E   P L A T A     ";
+            std::string t3 = "                       --- SINOPSIS Y LORE ---                            ";
+            int cxT1 = x + (ancho - longitudVisible(t1)) / 2;
+            int cxT2 = x + (ancho - longitudVisible(t2)) / 2;
+            int cxT3 = x + (ancho - longitudVisible(t3)) / 2;
+            setTextoPantallaCompleta(cxT1, y + 1, t1, 8);
+            setTextoPantallaCompleta(cxT2, y + 2, t2, 4);
+            setTextoPantallaCompleta(cxT3, y + 3, t3, 3);
+            setTextoPantallaCompleta(cxT1, y + 4, t1, 8);
+
+            if (pagina == 0) {
+                std::string tPag = "PAGINA 1 / 4: SINOPSIS & EL GRAN ENGANO DE LA MAGIA";
+                setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 4);
+
+                setTextoPantallaCompleta(x + 5, y + 8, "En este mundo la magia no es un don innato: se dibuja en secreto con sellos y tinta.", 1);
+                setTextoPantallaCompleta(x + 5, y + 9, "Tres personajes viviran el mismo conflicto desde perspectivas totalmente opuestas:", 3);
+
+                setTextoPantallaCompleta(x + 5, y + 11, "=== EL GRAN ENGANO DE LA MAGIA ===", 4);
+                setTextoPantallaCompleta(x + 5, y + 12, "La verdad es mucho mas simple y peligrosa: la magia se dibuja. Cualquier persona", 1);
+                setTextoPantallaCompleta(x + 5, y + 13, "que sostenga un compas de punta de plata, papel arcano y tinta magica puede invocar", 1);
+                setTextoPantallaCompleta(x + 5, y + 14, "el poder del viento, del fuego o del agua simplemente trazando circulos, flechas", 1);
+                setTextoPantallaCompleta(x + 5, y + 15, "y sellos runicos. Precisamente porque cualquiera podria hacerlo, en el pasado remoto", 1);
+                setTextoPantallaCompleta(x + 5, y + 16, "los hombres abusaron de los conjuros, alterando cuerpos humanos y desatando guerras.", 1);
+
+                setTextoPantallaCompleta(x + 5, y + 18, "Para evitar la aniquilacion, la asamblea magica prohibio cualquier hechizo aplicado", 1);
+                setTextoPantallaCompleta(x + 5, y + 19, "sobre el cuerpo humano, borro la memoria de la humanidad mediante magia de olvido y", 1);
+                setTextoPantallaCompleta(x + 5, y + 20, "fundo la orden de los Caballeros Moralis (la policia inquisitorial de los brujos).", 1);
+                setTextoPantallaCompleta(x + 5, y + 21, "Los hechiceros ocultaron sus rostros tras sombreros puntiagudos de ala estrecha,", 1);
+                setTextoPantallaCompleta(x + 5, y + 22, "jurando que nadie fuera del circulo veria jamas el acto de dibujar un sello.", 1);
+
+                setTextoPantallaCompleta(x + 5, y + 24, "Sin embargo, en las sombras aguardan los Sombreros de Ala Ancha (Brimmed Caps),", 6);
+                setTextoPantallaCompleta(x + 5, y + 25, "una faccion proscrita que busca destruir esta mentira, reivindicando que la magia", 6);
+                setTextoPantallaCompleta(x + 5, y + 26, "prohibida pertenece a todos y sembrando el caos para hacer caer el orden establecido.", 6);
+            } else if (pagina == 1) {
+                std::string tPag = "PAGINA 2 / 4: NIVEL 1 — COCO (EL ATELIER DE QIFREY)";
+                setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 2);
+
+                setTextoPantallaCompleta(x + 5, y + 8, "=== QUIEN ES ===", 4);
+                setTextoPantallaCompleta(x + 5, y + 9, "Una humilde aprendiz que petrifico accidentalmente a su madre tras copiar un hechizo", 1);
+                setTextoPantallaCompleta(x + 5, y + 10, "prohibido. Su maestro Qifrey la acoge para que aprenda el contrahechizo que la salve.", 1);
+
+                setTextoPantallaCompleta(x + 5, y + 12, "=== QUE HACE PARA GANAR ===", 2);
+                setTextoPantallaCompleta(x + 5, y + 13, "Debe confeccionar su Manto de Aprendiz (Capa Magica):", 3);
+                setTextoPantallaCompleta(x + 7, y + 15, "* Recibe la Tinta magica de Qifrey en su despacho al sur.", 1);
+                setTextoPantallaCompleta(x + 7, y + 17, "* Mueve las cajas en la Torre de Agott para hallar el Grimorio de Trazos y el pozo.", 1);
+                setTextoPantallaCompleta(x + 7, y + 19, "* Rescata al pinguino Myrphon en el laberinto de Serpentback para recibir", 1);
+                setTextoPantallaCompleta(x + 9, y + 20, "la Pluma Termica de Richeh.", 1);
+                setTextoPantallaCompleta(x + 7, y + 22, "* Quiebra la pared de roca de la cueva con la pluma y recoge la Fibra de Plata.", 1);
+                setTextoPantallaCompleta(x + 7, y + 24, "* Entrega los 3 materiales a Qifrey para tejer la capa y consagrarse como bruja.", 1);
+            } else if (pagina == 2) {
+                std::string tPag = "PAGINA 3 / 4: NIVEL 2 — TARTAH (EL LABERINTO DE KALN)";
+                setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 6);
+
+                setTextoPantallaCompleta(x + 5, y + 8, "=== QUIEN ES ===", 4);
+                setTextoPantallaCompleta(x + 5, y + 9, "Un timido orfebre que sufre de 'vision de plata' (daltonismo magico). Busca", 1);
+                setTextoPantallaCompleta(x + 5, y + 10, "desesperadamente a su amigo Coustas, un chico invalido tentado por las artes oscuras.", 1);
+
+                setTextoPantallaCompleta(x + 5, y + 12, "=== QUE HACE PARA GANAR ===", 6);
+                setTextoPantallaCompleta(x + 5, y + 13, "Debe encontrar el rastro de su amigo en el pueblo bajo la lluvia:", 3);
+                setTextoPantallaCompleta(x + 7, y + 15, "* Recorre las calles empedradas esquivando a las patrullas inquisitoriales", 1);
+                setTextoPantallaCompleta(x + 9, y + 16, "de los Caballeros Moralis.", 1);
+                setTextoPantallaCompleta(x + 7, y + 18, "* Interroga a los aldeanos en la panaderia, botica y taberna reuniendo pistas", 1);
+                setTextoPantallaCompleta(x + 9, y + 19, "y piezas ortopedicas de la silla de ruedas.", 1);
+                setTextoPantallaCompleta(x + 7, y + 21, "* Descubre el escondite de la hechicera Ininia antes de que ejecuten a Coustas", 1);
+                setTextoPantallaCompleta(x + 9, y + 22, "por el uso de magia prohibida.", 1);
+            } else if (pagina == 3) {
+                std::string tPag = "PAGINA 4 / 4: NIVEL 3 — QIFREY (EL GRAN ARBOL DE PLATA)";
+                setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 5);
+
+                setTextoPantallaCompleta(x + 5, y + 8, "=== QUIEN ES ===", 4);
+                setTextoPantallaCompleta(x + 5, y + 9, "El maestro sabio del atelier que oculta un oscuro trauma: de nino le arrancaron", 1);
+                setTextoPantallaCompleta(x + 5, y + 10, "el ojo derecho con un ritual prohibido y vive obsesionado con cazar a los", 1);
+                setTextoPantallaCompleta(x + 5, y + 11, "Sombreros de Ala Ancha para cobrar venganza.", 1);
+
+                setTextoPantallaCompleta(x + 5, y + 13, "=== QUE HACE PARA GANAR ===", 5);
+                setTextoPantallaCompleta(x + 5, y + 14, "Desata su poder en el santuario milenario del Arbol de Plata:", 3);
+                setTextoPantallaCompleta(x + 7, y + 16, "* Utiliza magia de agua profunda y sellos de combate para abrirse paso", 1);
+                setTextoPantallaCompleta(x + 9, y + 17, "entre las raices teluricas.", 1);
+                setTextoPantallaCompleta(x + 7, y + 19, "* Enfrenta a los cabecillas de la conspiracion que orquestaron la desgracia", 1);
+                setTextoPantallaCompleta(x + 9, y + 20, "de Coco y la tentacion de Coustas.", 1);
+                setTextoPantallaCompleta(x + 7, y + 22, "* Decision final: Renuncia a su venganza ciega para romper el ciclo de odio", 1);
+                setTextoPantallaCompleta(x + 9, y + 23, "y sellar el arbol, protegiendo el futuro de sus jovenes aprendices.", 1);
+            }
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 27][x + c] = L'=';
+                bufferColor[y + 27][x + c] = 8;
+            }
+
+            std::string frase1 = "\"Un mismo trazo magico puede ser una esperanza (Coco), una barrera injusta (Tartah)";
+            std::string frase2 = " o un arma de venganza (Qifrey): todo depende de la mirada de quien empuna la pluma.\"";
+            int cxFrase1 = x + (ancho - longitudVisible(frase1)) / 2;
+            int cxFrase2 = x + (ancho - longitudVisible(frase2)) / 2;
+            setTextoPantallaCompleta(cxFrase1, y + 28, frase1, 4);
+            setTextoPantallaCompleta(cxFrase2, y + 29, frase2, 4);
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 30][x + c] = L'=';
+                bufferColor[y + 30][x + c] = 8;
+            }
+
+            std::string nav = "[A] Pagina Anterior   |   [D] Pagina Siguiente   |   [1..4] Ir a Pagina   |   [ESC / ENTER] Volver";
+            int cxNav = x + (ancho - longitudVisible(nav)) / 2;
+            setTextoPantallaCompleta(cxNav, y + 32, nav, 3);
+
+            dibujar();
+
+#ifdef _WIN32
+            while (true) {
+                if (_kbhit()) {
+                    int tecla = _getch();
+                    if (tecla == 0 || tecla == 224) tecla = _getch();
+                    if (tecla == 'a' || tecla == 'A') {
+                        pagina = (pagina - 1 + totalPaginas) % totalPaginas;
+                        Beep(900, 20);
+                        break;
+                    } else if (tecla == 'd' || tecla == 'D') {
+                        pagina = (pagina + 1) % totalPaginas;
+                        Beep(900, 20);
+                        break;
+                    } else if (tecla >= '1' && tecla <= '4') {
+                        pagina = tecla - '1';
+                        Beep(900, 20);
+                        break;
+                    } else if (tecla == 13 || tecla == 27 || tecla == 'e' || tecla == 'E') {
+                        Beep(800, 25);
+                        return;
+                    }
+                }
+                Sleep(20);
+            }
+#else
+            std::cin.get();
+            return;
+#endif
+        }
+    }
+
     void mostrarHistoriaIntro() {
         limpiarBufferCompleto();
         int x = 7;
@@ -1251,6 +1810,10 @@ public:
         std::string finMsg = "¡Felicidades por completar la travesia del Arbol de Plata!";
         int cxFin = x + (ancho - longitudVisible(finMsg)) / 2;
         setTextoPantallaCompleta(cxFin, y + 25, finMsg, 1);
+
+        std::string finMsg2 = "Gracias a las decisiones tomadas, el secreto fue protegido y los aprendices estan a salvo.";
+        int cxFin2 = x + (ancho - longitudVisible(finMsg2)) / 2;
+        setTextoPantallaCompleta(cxFin2, y + 26, finMsg2, 3);
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 28][x + c] = L'=';

@@ -116,6 +116,10 @@ public:
 	}
 
 	virtual bool verificarProximidadEspecial(int px, int py, int pw, int ph) override {
+		if (px >= 75 && px <= 80 && py >= 68 && py <= 72) {
+			promptFlotante = "[E / ENTER] Investigar grieta en la pared";
+			return true;
+		}
 		if (!paredPiedraDestruida && px >= 365 && px <= 385 && py >= 25 && py <= 38) {
 			Inventario* inv = protagonista->getInventario();
 			bool tienePluma = (inv != nullptr && inv->tieneItem("Pluma Termica"));
@@ -158,6 +162,10 @@ public:
 	}
 
 	virtual bool procesarInteraccionEspecial(int px, int py, int pw, int ph) override {
+		if (px >= 75 && px <= 80 && py >= 68 && py <= 72) {
+			setTransicionEasterEgg(true);
+			return true;
+		}
 		if (!paredPiedraDestruida && px >= 365 && px <= 385 && py >= 25 && py <= 38) {
 			Inventario* inv = protagonista->getInventario();
 			if (inv != nullptr && inv->tieneItem("Pluma Termica")) {

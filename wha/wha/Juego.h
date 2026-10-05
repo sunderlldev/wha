@@ -55,8 +55,27 @@ public:
 
 	bool getEjecutando() const { return this->ejecutando; }
 	void menuPrincipal() {
-		pantalla.mostrarHistoriaIntro();
-		audio.reproducirNivel(nivelActual + 1);
+		while (ejecutando) {
+			int opcion = pantalla.mostrarMenuPrincipal();
+			if (opcion == 0) {
+				int nivelSel = pantalla.mostrarSelectorNivel();
+				if (nivelSel == 0) {
+					nivelActual = 0;
+					listaNivel[nivelActual]->iniciarNivel();
+					pantalla.mostrarHistoriaIntro();
+					audio.reproducirNivel(nivelActual + 1);
+					redibujarNecesario = true;
+					break;
+				}
+			} else if (opcion == 1) {
+				pantalla.mostrarCreditos();
+			} else if (opcion == 2) {
+				pantalla.mostrarLore();
+			} else if (opcion == 3) {
+				ejecutando = false;
+				break;
+			}
+		}
 	}
 
 	void cambiarNivel() {
@@ -121,6 +140,13 @@ public:
 		if (nivel.getTransicionMinijuego()) {
 			nivel.setTransicionMinijuego(false);
 			nivel.ejecutarMinijuego(pantalla, audio);
+			redibujarNecesario = true;
+			return;
+		}
+
+		if (nivel.getTransicionEasterEgg()) {
+			nivel.setTransicionEasterEgg(false);
+			pantalla.mostrarEasterEggTrollface();
 			redibujarNecesario = true;
 			return;
 		}

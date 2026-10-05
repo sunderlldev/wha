@@ -49,6 +49,7 @@ protected:
 	GestorMisiones* gestorMisiones;
 	bool transicionMinijuego;
 	bool animacionMyrphonHecha;
+	bool transicionEasterEgg;
 
 	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
 		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
@@ -111,7 +112,7 @@ public:
 		  ticksMensajeTemporal(0), tiempoInicio(0), tiempoFin(0),
 		  modalActivo(0), seleccionModal(0), solicitaSalir(false),
 		  cuartoRicheh(nullptr), torreAgott(nullptr), transicionMinijuego(false),
-		  animacionMyrphonHecha(false) {
+		  animacionMyrphonHecha(false), transicionEasterEgg(false) {
 		this->mapa = new Mapa(filasMapa, columnasMapa);
 		this->gestorDialogos = new GestorDialogos();
 		this->gestorMisiones = new GestorMisiones();
@@ -233,6 +234,8 @@ public:
 	}
 	bool getTransicionMinijuego() const { return this->transicionMinijuego; }
 	void setTransicionMinijuego(bool tm) { this->transicionMinijuego = tm; }
+	bool getTransicionEasterEgg() const { return this->transicionEasterEgg; }
+	void setTransicionEasterEgg(bool te) { this->transicionEasterEgg = te; }
 	virtual void ejecutarMinijuego(Pantalla&, GestorAudio&) {}
 	virtual void dibujarEntidadesExtra(Pantalla&, int, int) const {}
 
@@ -394,19 +397,8 @@ public:
 		int ph = protagonista->getAlto();
 
 		if (ticksMensajeTemporal > 0 && !mensajeTemporal.empty()) {
-			bool cercaDeItem = false;
-			for (size_t i = 0; i < itemsSuelo.size(); i++) {
-				if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
-					if (estaCerca(px, py, pw, ph, itemsSuelo[i]->getX(), itemsSuelo[i]->getY(), itemsSuelo[i]->getAncho(), itemsSuelo[i]->getAlto(), 2)) {
-						cercaDeItem = true;
-						break;
-					}
-				}
-			}
-			if (!cercaDeItem) {
-				promptFlotante = mensajeTemporal;
-				return;
-			}
+			promptFlotante = mensajeTemporal;
+			return;
 		}
 
 		promptFlotante = "";

@@ -107,12 +107,27 @@ public:
 				enemigoX[i] = (i % 2 == 0) ? 20 + i * 15 : 30 + i * 10;
 				enemigoY[i] = 5 + i * 6;
 			}
-			if (i % 2 == 0) {
-				enemigoDx[i] = (rand() % 2 == 0) ? 1 : -1;
+			bool libreH = (!colisiona(enemigoX[i] + 1, enemigoY[i]) || !colisiona(enemigoX[i] - 1, enemigoY[i]));
+			bool libreV = (!colisiona(enemigoX[i], enemigoY[i] + 1) || !colisiona(enemigoX[i], enemigoY[i] - 1));
+			if (libreH && !libreV) {
+				enemigoDx[i] = !colisiona(enemigoX[i] + 1, enemigoY[i]) ? 1 : -1;
 				enemigoDy[i] = 0;
-			} else {
+			} else if (libreV && !libreH) {
 				enemigoDx[i] = 0;
-				enemigoDy[i] = (rand() % 2 == 0) ? 1 : -1;
+				enemigoDy[i] = !colisiona(enemigoX[i], enemigoY[i] + 1) ? 1 : -1;
+			} else if (libreH && libreV) {
+				if (rand() % 2 == 0) {
+					enemigoDx[i] = (rand() % 2 == 0) ? 1 : -1;
+					if (colisiona(enemigoX[i] + enemigoDx[i], enemigoY[i])) enemigoDx[i] = -enemigoDx[i];
+					enemigoDy[i] = 0;
+				} else {
+					enemigoDx[i] = 0;
+					enemigoDy[i] = (rand() % 2 == 0) ? 1 : -1;
+					if (colisiona(enemigoX[i], enemigoY[i] + enemigoDy[i])) enemigoDy[i] = -enemigoDy[i];
+				}
+			} else {
+				enemigoDx[i] = 1;
+				enemigoDy[i] = 0;
 			}
 		}
 
@@ -138,12 +153,42 @@ public:
 		for (int i = 0; i < 4; i++) {
 			int nx = enemigoX[i] + enemigoDx[i];
 			int ny = enemigoY[i] + enemigoDy[i];
-			if (colisiona(nx, ny)) {
-				enemigoDx[i] = -enemigoDx[i];
-				enemigoDy[i] = -enemigoDy[i];
-			} else {
+			if (!colisiona(nx, ny)) {
 				enemigoX[i] = nx;
 				enemigoY[i] = ny;
+			} else {
+				int revDx = -enemigoDx[i];
+				int revDy = -enemigoDy[i];
+				if (!colisiona(enemigoX[i] + revDx, enemigoY[i] + revDy)) {
+					enemigoDx[i] = revDx;
+					enemigoDy[i] = revDy;
+					enemigoX[i] += revDx;
+					enemigoY[i] += revDy;
+				} else {
+					if (enemigoDx[i] != 0) {
+						enemigoDx[i] = 0;
+						if (!colisiona(enemigoX[i], enemigoY[i] + 1)) {
+							enemigoDy[i] = 1;
+							enemigoY[i] += 1;
+						} else if (!colisiona(enemigoX[i], enemigoY[i] - 1)) {
+							enemigoDy[i] = -1;
+							enemigoY[i] -= 1;
+						} else {
+							enemigoDy[i] = 1;
+						}
+					} else {
+						enemigoDy[i] = 0;
+						if (!colisiona(enemigoX[i] + 1, enemigoY[i])) {
+							enemigoDx[i] = 1;
+							enemigoX[i] += 1;
+						} else if (!colisiona(enemigoX[i] - 1, enemigoY[i])) {
+							enemigoDx[i] = -1;
+							enemigoX[i] -= 1;
+						} else {
+							enemigoDx[i] = 1;
+						}
+					}
+				}
 			}
 		}
 	}
