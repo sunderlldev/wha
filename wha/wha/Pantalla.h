@@ -1396,7 +1396,7 @@ public:
                                     bufferColor[yPantalla][xPantalla] = 2;
                                 }
                             } else if (ch == '#') {
-                                if (xMundo >= 180 && xMundo <= 260 && yMundo >= 94 && yMundo <= 111) {
+                                if (xMundo >= 220 && xMundo <= 280 && yMundo >= 106 && yMundo <= 121) {
                                     bufferColor[yPantalla][xPantalla] = 12;
                                 } else {
                                     bufferColor[yPantalla][xPantalla] = 2;
@@ -1408,11 +1408,7 @@ public:
                             } else if (ch == '.' || ch == ':' || ch == '=') {
                                 bufferColor[yPantalla][xPantalla] = 4;
                             } else if (ch == '+' || ch == '-' || ch == '|') {
-                                if (xMundo >= 180 && xMundo <= 260 && (yMundo >= 94 && yMundo <= 111)) {
-                                    bufferColor[yPantalla][xPantalla] = 12;
-                                } else {
-                                    bufferColor[yPantalla][xPantalla] = 8;
-                                }
+                                bufferColor[yPantalla][xPantalla] = 8;
                             } else if (ch == 'O') {
                                 bufferColor[yPantalla][xPantalla] = 8;
                             } else if (ch == 'T') {

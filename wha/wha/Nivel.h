@@ -388,15 +388,26 @@ public:
 			return;
 		}
 
-		if (ticksMensajeTemporal > 0 && !mensajeTemporal.empty()) {
-			promptFlotante = mensajeTemporal;
-			return;
-		}
-
 		int px = protagonista->getX();
 		int py = protagonista->getY();
 		int pw = protagonista->getAncho();
 		int ph = protagonista->getAlto();
+
+		if (ticksMensajeTemporal > 0 && !mensajeTemporal.empty()) {
+			bool cercaDeItem = false;
+			for (size_t i = 0; i < itemsSuelo.size(); i++) {
+				if (itemsSuelo[i] != nullptr && !itemsSuelo[i]->getRecogido()) {
+					if (estaCerca(px, py, pw, ph, itemsSuelo[i]->getX(), itemsSuelo[i]->getY(), itemsSuelo[i]->getAncho(), itemsSuelo[i]->getAlto(), 2)) {
+						cercaDeItem = true;
+						break;
+					}
+				}
+			}
+			if (!cercaDeItem) {
+				promptFlotante = mensajeTemporal;
+				return;
+			}
+		}
 
 		promptFlotante = "";
 
@@ -804,11 +815,11 @@ public:
 								if (inv->agregarItem(new ItemMagico(0, 0, itemsSuelo[i]->getNombre(), itemsSuelo[i]->getDescripcion(), itemsSuelo[i]->getTipoItem(), true))) {
 									itemsSuelo[i]->setRecogido(true);
 									sumarPuntosMision(25);
-									promptFlotante = "[Recogiste: " + itemsSuelo[i]->getNombre() + "]";
+									mostrarMensajeTemporal("[Recogiste: " + itemsSuelo[i]->getNombre() + "]", 60);
 									huboCambio = true;
 									return huboCambio;
 								} else {
-									promptFlotante = "[Mochila llena: ¡Máx. 8 ítems!]";
+									mostrarMensajeTemporal("[Mochila llena: ¡Máx. 8 ítems!]", 60);
 									huboCambio = true;
 									return huboCambio;
 								}

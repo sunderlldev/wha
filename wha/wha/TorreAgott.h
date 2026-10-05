@@ -201,7 +201,7 @@ public:
 					} else {
 						mensajeTemporal = "Coco: ¡Por fin, lo encontré!";
 					}
-					ticksMensajeTemporal = 100;
+					ticksMensajeTemporal = 50;
 				} else if (indiceCaja == indiceCajaPozo && !pozoEncontrado) {
 					pozoEncontrado = true;
 					pozoX = cajas[indiceCaja]->getOrigX() + 2;
