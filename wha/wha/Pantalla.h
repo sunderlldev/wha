@@ -841,6 +841,17 @@ public:
             }
             setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Finalizar aventura y ver epilogo", 4);
             setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego", 8);
+        } else if (nivel == 2) {
+            setTextoJuego(x + 4, y + 24, "Pistas de Kaln reunidas:              Ininia y Coustas localizados", 2);
+            setTextoJuego(x + 4, y + 25, "Ruta de huida descubierta:            Sendero hacia el Arbol de Plata", 5);
+            setTextoJuego(x + 4, y + 26, "Hermandad con Coustas:                Determinacion inquebrantable", 6);
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + alto - 4][x + c] = L'-';
+                bufferColor[y + alto - 4][x + c] = 3;
+            }
+            setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Avanzar al Nivel 3    [C] Seguir explorando", 4);
+            setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego", 8);
         } else {
             std::string confStr = "Sin confianza";
             int colConf = 8;

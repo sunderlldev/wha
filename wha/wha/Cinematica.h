@@ -16,15 +16,43 @@ struct CuadroCinematica {
     std::vector<std::vector<PixelArt>> matrizPixel;
     std::string texto;
     int duracionMS;
+    int textoX;
+    int textoY;
+    int imagenX;
+    int imagenY;
 
-    CuadroCinematica(const std::vector<std::vector<PixelArt>>& matriz, const std::string& txt, int ms)
-        : matrizPixel(matriz), texto(txt), duracionMS(ms) {
+    CuadroCinematica(const std::vector<std::vector<PixelArt>>& matriz, const std::string& txt, int ms, int txtX = 10, int txtY = 2, int imgX = 10, int imgY = 6)
+        : matrizPixel(matriz), texto(txt), duracionMS(ms), textoX(txtX), textoY(txtY), imagenX(imgX), imagenY(imgY) {
     }
 };
 
 class Cinematica {
 private:
     std::vector<CuadroCinematica*> secuencia;
+
+    void moverCursor(int x, int y) {
+        std::cout << "\033[" << y << ";" << x << "H";
+    }
+
+    void imprimirTextoAdaptable(const std::string& texto, int x, int y) {
+        if (texto.empty()) return;
+
+        int longitud = (int)texto.length();
+        int anchoCaja = longitud + 4;
+
+        moverCursor(x, y);
+        std::cout << "+";
+        for (int i = 0; i < anchoCaja; i++) std::cout << "-";
+        std::cout << "+";
+
+        moverCursor(x, y + 1);
+        std::cout << "|  " << texto << "  |";
+
+        moverCursor(x, y + 2);
+        std::cout << "+";
+        for (int i = 0; i < anchoCaja; i++) std::cout << "-";
+        std::cout << "+";
+    }
 
 public:
     Cinematica() {}
@@ -43,8 +71,8 @@ public:
         secuencia.clear();
     }
 
-    void agregarCuadro(const std::vector<std::vector<PixelArt>>& matriz, const std::string& texto, int duracionMS) {
-        CuadroCinematica* nuevoCuadro = new CuadroCinematica(matriz, texto, duracionMS);
+    void agregarCuadro(const std::vector<std::vector<PixelArt>>& matriz, const std::string& texto, int duracionMS, int textoX = 10, int textoY = 2, int imagenX = 10, int imagenY = 6) {
+        CuadroCinematica* nuevoCuadro = new CuadroCinematica(matriz, texto, duracionMS, textoX, textoY, imagenX, imagenY);
         secuencia.push_back(nuevoCuadro);
     }
 
@@ -65,20 +93,12 @@ public:
             if (c == nullptr) continue;
 
             system("cls");
-            std::cout << "\n";
 
-            if (!c->texto.empty()) {
-                std::cout << "         +---------------------------------------------------+\n";
-                std::cout << "         | " << c->texto << "\n";
-                std::cout << "         +---------------------------------------------------+\n\n";
-            }
-            else {
-                std::cout << "\n";
-            }
+            imprimirTextoAdaptable(c->texto, c->textoX, c->textoY);
 
             int altoMatriz = (int)c->matrizPixel.size();
             for (int r = 0; r < altoMatriz; r++) {
-                std::cout << "         ";
+                moverCursor(c->imagenX, c->imagenY + r);
                 int anchoMatriz = (int)c->matrizPixel[r].size();
 
                 for (int col = 0; col < anchoMatriz; col++) {
@@ -88,10 +108,9 @@ public:
                         std::cout << "  ";
                     }
                     else {
-                        std::cout << "\033[48;2;" << px.r << ";" << px.g << ";" << px.v << "m  \033[0m";
+                        std::cout << "\033[48;2;" << px.r << ";" << px.g << ";" << px.b << "m  \033[0m";
                     }
                 }
-                std::cout << "\n";
             }
 
             std::cout << std::flush;

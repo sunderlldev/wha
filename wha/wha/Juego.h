@@ -34,10 +34,6 @@ public:
 		listaNivel.push_back(new Nivel2());
 		listaNivel.push_back(new Nivel3());
 		listaNivel[nivelActual]->iniciarNivel();
-
-		if (nivelActual == 1) {
-			listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
-		}
 	}
 
 	~Juego() {
