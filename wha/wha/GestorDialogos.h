@@ -117,7 +117,7 @@ public:
 				if (total == 0) {
 					lineas.push_back("Para confeccionar tu Manto de Aprendiz necesito 3 elementos del atelier:");
 					lineas.push_back("Fibra del Arbol de Plata, Tinta magica de conjuracion y el Grimorio de Trazos.");
-					lineas.push_back("¡Explora el taller, el almacen exterior y la torre este para reunirlos!");
+					lineas.push_back("¡Explora el taller, la cueva misteriosa y la torre este para reunirlos!");
 					opciones.push_back("[1] Está bien, iré a buscarlos por el atelier.");
 				} else {
 					lineas.push_back("Te faltan materiales para confeccionar tu Manto de Aprendiz.");
@@ -416,7 +416,7 @@ public:
 			lineas.push_back("(Abraza fuertemente a su mascota mientras llora de alegría)");
 			lineas.push_back("¡Muchas gracias! Pensé que no volvería a verlo...");
 			lineas.push_back("Lo prometido es deuda. Toma la Pluma Termica Searneedle de Olruggio.");
-			lineas.push_back("Usa su calor para fracturar y fundir el muro de roca del almacen exterior.");
+			lineas.push_back("Usa su calor para fracturar y fundir el muro de roca de la cueva misteriosa.");
 			opciones.push_back("[1] ¡Muchas gracias, Richeh!");
 			break;
 
@@ -789,7 +789,7 @@ public:
 				richeh->setConfianza(2);
 				richeh->setExpresion(2);
 			}
-			objetivoActual = "Usar la Pluma Termica para quebrar la pared del almacen";
+			objetivoActual = "Usar la Pluma Termica para quebrar la pared de la cueva";
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else if (estadoDialogo == 360) {

@@ -75,7 +75,7 @@ public:
 	virtual std::string getNombreUbicacionActual() const override {
 		if (getEnCuartoRicheh()) return "Sotano de Richeh";
 		if (idCuartoActual == 1) return "Choza de Hechizos";
-		if (idCuartoActual == 2) return "Almacen Abandonado";
+		if (idCuartoActual == 2) return "Cueva Misteriosa";
 		if (idCuartoActual == 3) return "Torre de Agott";
 		if (idCuartoActual == 4) return "Laberinto Serpentback";
 		if (idCuartoActual == 5) return "Despacho de Qifrey";
@@ -89,7 +89,7 @@ public:
 			if (nuevoCuarto == 1) {
 				mostrarMensajeTemporal("La Choza de Hechizos", 60);
 			} else if (nuevoCuarto == 2) {
-				mostrarMensajeTemporal("El Almacen Abandonado", 60);
+				mostrarMensajeTemporal("La Cueva Misteriosa", 60);
 			} else if (nuevoCuarto == 3) {
 				mostrarMensajeTemporal("Torre de Agott", 60);
 				if (agott != nullptr && !agott->getYaHablo()) {
@@ -235,6 +235,7 @@ public:
 		this->ticksMensajeTemporal = 0;
 		this->paredPiedraDestruida = false;
 		this->transicionMinijuego = false;
+		this->animacionMyrphonHecha = false;
 
 		if (cuartoRicheh == nullptr) {
 			cuartoRicheh = new CuartoRicheh();
@@ -326,16 +327,16 @@ public:
 
 		limpiarItemsSuelo();
 		itemsSuelo.push_back(new ItemMagico(390, 30, "Fibra de Arbol", "Fibras del Arbol de Plata para tejer el manto de aprendiz.", "Material Textil Arcano", false));
-		itemsSuelo.push_back(new ItemMagico(394, 32, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacén antiguo.", "Objeto de Colección", false));
+		itemsSuelo.push_back(new ItemMagico(394, 32, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en la cueva misteriosa.", "Objeto de Colección", false));
 		itemsSuelo.push_back(new ItemMagico(160, 50, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran río.", "Objeto de Colección", false));
 
 		monologoCruceActivado = false;
 		limpiarLetreros();
 		letreros.push_back(new Letrero(79, 45, "Letrero: Choza de Trazos. Dibuja runas con pasión y cuida tus pergaminos."));
 		letreros.push_back(new Letrero(140, 102, "Letrero: Historia del Manga. Witch Hat Atelier fue creado por la mangaka Kamome Shirahama e inició su publicación el 22 de julio de 2016. Comenzó a lanzarse de forma mensual en la revista Morning Two de la editorial Kodansha, destacando por su magia basada en el arte del dibujo."));
-		letreros.push_back(new Letrero(265, 102, "Letrero: Enciclopedia Mágica. Las tres sendas del Atelier: hacia el norte el almacén de vestigios antiguos, al este la Torre de Agott, y al sur el sendero hacia el despacho del maestro Qifrey."));
+		letreros.push_back(new Letrero(265, 102, "Letrero: Enciclopedia Mágica. Las tres sendas del Atelier: hacia el norte la cueva misteriosa, al este la Torre de Agott, y al sur el sendero hacia el despacho del maestro Qifrey."));
 		letreros.push_back(new Letrero(380, 101, "Letrero: Torre de Agott. Prohibido el paso sin autorización de Agott."));
-		letreros.push_back(new Letrero(355, 32, "Letrero: Almacén Abandonado. Peligro: Derrumbe. Usa magia ígnea."));
+		letreros.push_back(new Letrero(355, 32, "Letrero: Cueva Misteriosa. Peligro: Derrumbe. Usa magia ígnea."));
 		letreros.push_back(new Letrero(75, 152, "Letrero: Despacho de Qifrey. Maestro del atelier y protector del agua."));
 
 		dibujarLetrerosEnMapa();

@@ -1534,6 +1534,77 @@ public:
         }
     }
 
+    void animarMyrphonRegresaARicheh(const std::vector<std::string>& matrizCuarto, int camX, int camY,
+                                     int nivelNum, const std::string& nivelNom,
+                                     const std::string& protaNom, int vida, int vidaMax) {
+        int startX = 14;
+        int endX = 64;
+        int myrY = 12;
+
+        int totalPasos = endX - startX;
+        for (int p = 0; p <= totalPasos; p += 2) {
+            int mx = startX + p;
+            limpiarBuffer();
+            copiarViewport(matrizCuarto, camX, camY, 0, true);
+
+            int px = 8 - camX;
+            int py = 8 - camY;
+            setTextoJuego(px, py, " /\\ ", 6);
+            setTextoJuego(px, py + 1, "/___\\", 6);
+            setTextoJuego(px, py + 2, "(*u*)", 1);
+            setTextoJuego(px, py + 3, "/ | \\", 6);
+
+            int rx = 55 - camX;
+            int ry = 12 - camY;
+            int exprR = (mx >= 45) ? 1 : 0;
+            if (exprR == 1) {
+                setTextoJuego(rx + 2, ry - 1, "!", 7);
+                setTextoJuego(rx, ry, "  /  \\ ", 4);
+                setTextoJuego(rx, ry + 1, " /____\\", 4);
+                setTextoJuego(rx, ry + 2, "( •o• )", 1);
+                setTextoJuego(rx, ry + 3, " / || \\", 4);
+            } else {
+                setTextoJuego(rx, ry, "  /  \\ ", 4);
+                setTextoJuego(rx, ry + 1, " /____\\", 4);
+                setTextoJuego(rx, ry + 2, "( ._. )", 1);
+                setTextoJuego(rx, ry + 3, " / || \\", 4);
+            }
+
+            int screenMx = mx - camX;
+            int screenMy = myrY - camY;
+            bool pasoAlterno = ((p / 2) % 2 == 0);
+            setTextoJuego(screenMx, screenMy, "(o> ", 4);
+            setTextoJuego(screenMx, screenMy + 1, pasoAlterno ? "/||\\" : "\\||/", 4);
+
+            if (mx >= 52) {
+                setTextoJuego(rx + 2, ry - 2, "<3", 5);
+            }
+
+            std::string msg = (mx < 50) ? "[ Myrphon corre emocionado hacia Richeh... ]" : "[ ¡Myrphon ha regresado con Richeh! ]";
+            int cxMsg = (anchoJuego - longitudVisible(msg)) / 2;
+            setTextoJuego(cxMsg, altoTotal - 3, msg, 7);
+
+            renderizarPanelLateral(nivelNum, nivelNom, protaNom, vida, vidaMax, "Sotano de Richeh");
+            dibujar();
+
+#ifdef _WIN32
+            if (p % 4 == 0) {
+                Beep(1400 + (p * 8), 25);
+            }
+            Sleep(50);
+#else
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
+        }
+
+#ifdef _WIN32
+        Beep(1200, 70);
+        Beep(1500, 70);
+        Beep(1800, 130);
+#endif
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+
     void animarCaidaPozoMuerte(int nivelNum, const std::string& nivelNom,
                               const std::string& protaNom) {
         wchar_t block = L'█';

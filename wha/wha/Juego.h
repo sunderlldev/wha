@@ -104,7 +104,7 @@ public:
 			nivel.setTransicionBajando(false);
 			Protagonista* prota = nivel.getProtagonista();
 			pantalla.animarEscaleraPozo(true, nivel.getNumeroNivel(), nivel.getNombreNivel(), prota != nullptr ? prota->getNombre() : "Coco", prota != nullptr ? prota->getVida() : 3, prota != nullptr ? prota->getVidaMaxima() : 3);
-			nivel.entrarCuartoRicheh();
+			nivel.entrarCuartoRicheh(pantalla);
 			redibujarNecesario = true;
 			return;
 		}
@@ -334,6 +334,20 @@ public:
 										pantalla.setPixelJuego(rx + col, ry + row, ch, colR);
 									}
 								}
+							}
+						}
+					}
+					if (nivel.getGestorDialogos() != nullptr && nivel.getGestorDialogos()->getMyrphonRescatado()) {
+						int mx = 64 - camX;
+						int my = 12 - camY;
+						const char* myrFila0 = "(o> ";
+						const char* myrFila1 = "/||\\";
+						for (int c = 0; c < 4; c++) {
+							if (mx + c >= 0 && mx + c < pantalla.getAnchoJuego() && my >= 0 && my < pantalla.getAltoTotal()) {
+								pantalla.setPixelJuego(mx + c, my, myrFila0[c], 4);
+							}
+							if (mx + c >= 0 && mx + c < pantalla.getAnchoJuego() && my + 1 >= 0 && my + 1 < pantalla.getAltoTotal()) {
+								pantalla.setPixelJuego(mx + c, my + 1, myrFila1[c], 4);
 							}
 						}
 					}

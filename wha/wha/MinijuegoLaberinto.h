@@ -81,10 +81,40 @@ public:
 		myrphonX = 72;
 		myrphonY = 28;
 
-		enemigoX[0] = 20; enemigoY[0] = 5;  enemigoDx[0] = 1;  enemigoDy[0] = 0;
-		enemigoX[1] = 40; enemigoY[1] = 17; enemigoDx[1] = -1; enemigoDy[1] = 0;
-		enemigoX[2] = 14; enemigoY[2] = 7;  enemigoDx[2] = 0;  enemigoDy[2] = 1;
-		enemigoX[3] = 62; enemigoY[3] = 15; enemigoDx[3] = 0;  enemigoDy[3] = -1;
+		for (int i = 0; i < 4; i++) {
+			bool ubicado = false;
+			int intentos = 0;
+			while (!ubicado && intentos < 300) {
+				intentos++;
+				int rx = 2 + (rand() % 73);
+				int ry = 1 + (rand() % 28);
+				if (colisiona(rx, ry)) continue;
+				if (abs(rx - cocoX) < 18 && abs(ry - cocoY) < 6) continue;
+				if (abs(rx - myrphonX) < 6 && abs(ry - myrphonY) < 3) continue;
+				bool solapado = false;
+				for (int j = 0; j < i; j++) {
+					if (abs(rx - enemigoX[j]) < 5 && abs(ry - enemigoY[j]) < 3) {
+						solapado = true;
+						break;
+					}
+				}
+				if (solapado) continue;
+				enemigoX[i] = rx;
+				enemigoY[i] = ry;
+				ubicado = true;
+			}
+			if (!ubicado) {
+				enemigoX[i] = (i % 2 == 0) ? 20 + i * 15 : 30 + i * 10;
+				enemigoY[i] = 5 + i * 6;
+			}
+			if (i % 2 == 0) {
+				enemigoDx[i] = (rand() % 2 == 0) ? 1 : -1;
+				enemigoDy[i] = 0;
+			} else {
+				enemigoDx[i] = 0;
+				enemigoDy[i] = (rand() % 2 == 0) ? 1 : -1;
+			}
+		}
 
 		invulnerableTicks = 0;
 	}
@@ -121,23 +151,33 @@ public:
 	void moverMyrphon() {
 		int dx = 0;
 		int dy = 0;
-		if (abs(cocoX - myrphonX) < 12 && abs(cocoY - myrphonY) < 6) {
+		bool cercaCoco = (abs(cocoX - myrphonX) < 14 && abs(cocoY - myrphonY) < 7);
+		if (cercaCoco) {
 			if (cocoX < myrphonX) dx = 1;
 			else if (cocoX > myrphonX) dx = -1;
 			if (cocoY < myrphonY) dy = 1;
 			else if (cocoY > myrphonY) dy = -1;
 		} else {
-			int r = rand() % 5;
+			int r = rand() % 6;
 			if (r == 0) dx = 1;
 			else if (r == 1) dx = -1;
 			else if (r == 2) dy = 1;
 			else if (r == 3) dy = -1;
 		}
 
-		if (dx != 0 && !colisiona(myrphonX + dx, myrphonY)) {
-			myrphonX += dx;
-		} else if (dy != 0 && !colisiona(myrphonX, myrphonY + dy)) {
-			myrphonY += dy;
+		bool vertPrimero = (rand() % 2 == 0);
+		if (vertPrimero) {
+			if (dy != 0 && !colisiona(myrphonX, myrphonY + dy)) {
+				myrphonY += dy;
+			} else if (dx != 0 && !colisiona(myrphonX + dx, myrphonY)) {
+				myrphonX += dx;
+			}
+		} else {
+			if (dx != 0 && !colisiona(myrphonX + dx, myrphonY)) {
+				myrphonX += dx;
+			} else if (dy != 0 && !colisiona(myrphonX, myrphonY + dy)) {
+				myrphonY += dy;
+			}
 		}
 	}
 

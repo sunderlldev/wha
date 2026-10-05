@@ -48,6 +48,7 @@ protected:
 	GestorDialogos* gestorDialogos;
 	GestorMisiones* gestorMisiones;
 	bool transicionMinijuego;
+	bool animacionMyrphonHecha;
 
 	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
 		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
@@ -109,7 +110,8 @@ public:
 		  idCuartoActual(0), promptFlotante(""), mensajeTemporal(""),
 		  ticksMensajeTemporal(0), tiempoInicio(0), tiempoFin(0),
 		  modalActivo(0), seleccionModal(0), solicitaSalir(false),
-		  cuartoRicheh(nullptr), torreAgott(nullptr), transicionMinijuego(false) {
+		  cuartoRicheh(nullptr), torreAgott(nullptr), transicionMinijuego(false),
+		  animacionMyrphonHecha(false) {
 		this->mapa = new Mapa(filasMapa, columnasMapa);
 		this->gestorDialogos = new GestorDialogos();
 		this->gestorMisiones = new GestorMisiones();
@@ -158,6 +160,33 @@ public:
 	void mostrarMensajeTemporal(const std::string& msg, int ticks) {
 		this->mensajeTemporal = msg;
 		this->ticksMensajeTemporal = ticks;
+	}
+
+	void entrarCuartoRicheh(Pantalla& pantalla) {
+		if (cuartoRicheh != nullptr) {
+			cuartoRicheh->entrar(protagonista);
+			if (gestorDialogos != nullptr && gestorDialogos->getDioVaraRicheh()) {
+				cuartoRicheh->colocarMyrphon();
+			}
+		}
+		promptFlotante = "";
+		mostrarMensajeTemporal("[SÓTANO SECRETO DE RICHEH]", 60);
+		if (gestorDialogos != nullptr && gestorDialogos->getMyrphonRescatado() && !animacionMyrphonHecha) {
+			animacionMyrphonHecha = true;
+			if (cuartoRicheh != nullptr) {
+				int camX = 0;
+				int camY = (cuartoRicheh->getMapa()->getFilas() - pantalla.getAltoTotal()) / 2;
+				pantalla.animarMyrphonRegresaARicheh(cuartoRicheh->getMapa()->getMatriz(), camX, camY,
+				                                     numeroNivel, nombreNivel,
+				                                     protagonista != nullptr ? protagonista->getNombre() : "Coco",
+				                                     protagonista != nullptr ? protagonista->getVida() : 3,
+				                                     protagonista != nullptr ? protagonista->getVidaMaxima() : 3);
+				cuartoRicheh->colocarMyrphon();
+			}
+			NPC* richeh = getRicheh();
+			if (richeh != nullptr) richeh->setExpresion(1);
+			gestorDialogos->iniciarDialogo("Richeh", 350);
+		}
 	}
 
 	void entrarCuartoRicheh() {
