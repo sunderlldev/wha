@@ -1396,7 +1396,7 @@ public:
                                     bufferColor[yPantalla][xPantalla] = 2;
                                 }
                             } else if (ch == '#') {
-                                if (xMundo >= 220 && xMundo <= 280 && yMundo >= 106 && yMundo <= 121) {
+                                if (xMundo >= 190 && xMundo <= 255 && yMundo >= 94 && yMundo <= 112) {
                                     bufferColor[yPantalla][xPantalla] = 12;
                                 } else {
                                     bufferColor[yPantalla][xPantalla] = 2;
