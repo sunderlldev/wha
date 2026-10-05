@@ -787,6 +787,7 @@ public:
 				}
 
 				if (qifrey != nullptr && estaCerca(px, py, pw, ph, qifrey->getX(), qifrey->getY(), qifrey->getAncho(), qifrey->getAlto(), 2)) {
+					qifrey->setYaHablo(true);
 					if (gestorDialogos != nullptr) {
 						gestorDialogos->iniciarDialogo("Qifrey", 1);
 					}
@@ -795,6 +796,7 @@ public:
 				}
 
 				if (agott != nullptr && estaCerca(px, py, pw, ph, agott->getX(), agott->getY(), agott->getAncho(), agott->getAlto(), 2)) {
+					agott->setYaHablo(true);
 					if (gestorDialogos != nullptr) {
 						gestorDialogos->iniciarDialogoAgott();
 					}

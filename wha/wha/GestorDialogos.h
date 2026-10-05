@@ -813,6 +813,9 @@ public:
 		} else if (estadoDialogo == 500) {
 			estadoDialogo = 501;
 		} else if (estadoDialogo == 501) {
+			if (agott != nullptr) {
+				agott->setYaHablo(true);
+			}
 			estadoDialogo = 600;
 		} else if (estadoDialogo == 600) {
 			estadoDialogo = 601;
@@ -820,6 +823,7 @@ public:
 			puntosMisiones += 100;
 			estadoDialogo = 602;
 		} else if (estadoDialogo == 602) {
+			objetivoActual = "Destino sellado: Epilogo alcanzado";
 			completado = true;
 			mostrarEstadisticasFin = true;
 			enDialogo = false;

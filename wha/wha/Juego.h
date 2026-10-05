@@ -477,13 +477,13 @@ public:
 						roles.push_back("Protector de Coustas");
 						desc.push_back("Guerrero leal que acompana a Coustas y resiste herido protegiendo su camino.");
 						confianzas.push_back(nivel.getQifrey() != nullptr ? nivel.getQifrey()->getConfianza() : 2);
-						desbloqueados.push_back(true);
+						desbloqueados.push_back(nivel.getQifrey() != nullptr ? nivel.getQifrey()->getYaHablo() : false);
 
 						nombres.push_back("Ininia");
 						roles.push_back("Sombrero de Ala Ancha");
 						desc.push_back("Hechicera proscrita que ofrece a Coustas la Semilla Prohibida del Arbol de Plata.");
 						confianzas.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getConfianza() : 0);
-						desbloqueados.push_back(true);
+						desbloqueados.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getYaHablo() : false);
 
 						nombres.push_back("Coco");
 						roles.push_back("Aprendiz de Maga");
@@ -537,14 +537,17 @@ public:
 						confianzas.push_back(-1);
 						confianzas.push_back(myrphonRescatado ? 3 : -2);
 
+						Nivel1* n1Ref = dynamic_cast<Nivel1*>(&nivel);
+						bool enemigosDesbloqueados = (n1Ref != nullptr && n1Ref->getMinijuegoJugado());
+
 						desbloqueados.push_back(true);
-						desbloqueados.push_back(true);
+						desbloqueados.push_back(nivel.getQifrey() != nullptr ? nivel.getQifrey()->getYaHablo() : false);
 						desbloqueados.push_back(nivel.getRicheh() != nullptr ? nivel.getRicheh()->getYaHablo() : false);
 						desbloqueados.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getYaHablo() : false);
 						desbloqueados.push_back(false);
 						desbloqueados.push_back(false);
-						desbloqueados.push_back(true);
-						desbloqueados.push_back(true);
+						desbloqueados.push_back(enemigosDesbloqueados);
+						desbloqueados.push_back(enemigosDesbloqueados);
 						desbloqueados.push_back(misionMyrphonActiva || myrphonRescatado);
 					}
 

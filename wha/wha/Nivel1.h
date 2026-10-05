@@ -15,9 +15,10 @@ private:
 	bool monologoCruceActivado;
 	bool paredPiedraDestruida;
 	bool myrphonEscapado;
+	bool minijuegoJugado;
 
 public:
-	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), minijuego(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false), myrphonEscapado(false) {}
+	Nivel1() : Nivel(1, "Atelier de Qifrey", 197, 524), myrphon(nullptr), minijuego(nullptr), monologoCruceActivado(false), paredPiedraDestruida(false), myrphonEscapado(false), minijuegoJugado(false) {}
 	virtual ~Nivel1() {
 		if (myrphon != nullptr) {
 			delete myrphon;
@@ -42,6 +43,7 @@ public:
 		        myrphon != nullptr && !myrphon->getRescatado() && !myrphonEscapado);
 	}
 	bool getParedPiedraDestruida() const { return paredPiedraDestruida; }
+	bool getMinijuegoJugado() const { return minijuegoJugado; }
 	int getMyrphonX() const { return (myrphon != nullptr) ? myrphon->getX() : 0; }
 	int getMyrphonY() const { return (myrphon != nullptr) ? myrphon->getY() : 0; }
 
@@ -195,6 +197,7 @@ public:
 	}
 
 	virtual void ejecutarMinijuego(Pantalla& pantalla, GestorAudio& audio) override {
+		minijuegoJugado = true;
 		if (minijuego == nullptr) {
 			minijuego = new MinijuegoLaberinto();
 		}

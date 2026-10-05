@@ -165,11 +165,11 @@ public:
 	                          std::vector<std::string>& estados,
 	                          std::vector<bool>& desbloqueadas) {
 		(void)protagonista;
-		(void)estadoDialogo;
-		titulos.push_back("Fin de la Aventura");
-		descripciones.push_back("Ya se completo el juego, gracias por jugar.");
+		bool completada = (estadoDialogo >= 602);
+		titulos.push_back("El Destino del Arbol de Plata");
+		descripciones.push_back("Bajo un cielo ceniciento de dolor y asedio, Coustas rueda en su\nfragil silla de ruedas entre las ruinas del desfiladero.\nDebe esquivar la implacable emboscada enemiga, auxiliar a su leal\nprotector Dagda y encarar a la enigmatica Ininia para sellar\nel tragico destino de la magia prohibida.");
 		desbloqueadas.push_back(true);
-		estados.push_back("COMPLETADO");
+		estados.push_back(completada ? "COMPLETADA" : "EN PROGRESO");
 	}
 
 	void obtenerDatosMisiones(int numeroNivel, Protagonista* protagonista, NPC* qifrey, int estadoDialogo,

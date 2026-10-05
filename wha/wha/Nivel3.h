@@ -75,12 +75,14 @@ public:
 
 	virtual bool procesarInteraccionEspecial(int px, int py, int pw, int ph) override {
 		if (qifrey != nullptr && estaCerca(px, py, pw, ph, qifrey->getX(), qifrey->getY(), qifrey->getAncho(), qifrey->getAlto(), 3)) {
+			qifrey->setYaHablo(true);
 			if (gestorDialogos != nullptr) {
 				gestorDialogos->iniciarDialogo("Dagda", 500);
 			}
 			return true;
 		}
 		if (agott != nullptr && estaCerca(px, py, pw, ph, agott->getX(), agott->getY(), agott->getAncho(), agott->getAlto(), 3)) {
+			agott->setYaHablo(true);
 			if (gestorDialogos != nullptr) {
 				gestorDialogos->iniciarDialogo("Ininia", 600);
 			}
@@ -174,7 +176,7 @@ public:
 			gestorMisiones->setEnModalMisiones(false);
 			gestorMisiones->setEnDetalleMision(false);
 			gestorMisiones->setSeleccionMision(0);
-			gestorMisiones->setObjetivoActual("Esquivar bandidos y auxiliar a Dagda");
+			gestorMisiones->setObjetivoActual("Cruzar las ruinas y sellar el destino en el Arbol de Plata");
 		}
 
 		if (mapa != nullptr) {
