@@ -64,6 +64,7 @@ public:
 			audio.detenerMusica();
 			puntajeGlobal += listaNivel[nivelActual]->getPuntajeTotalNivel();
 			nivelActual++;
+			pantalla.resetSonidoFin();
 			redibujarNecesario = true;
 			listaNivel[nivelActual]->iniciarNivel();
 			listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);

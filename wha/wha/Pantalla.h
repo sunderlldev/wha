@@ -134,14 +134,21 @@ private:
         }
     }
 
+    bool sonidoFinReproducido;
+
 public:
     Pantalla() : anchoTotal(120), altoTotal(40), anchoJuego(84), anchoPanel(35),
-                 ultimoDialogoHablante(""), ultimoDialogoTexto(""), ultimoPromptTexto("") {
+                 ultimoDialogoHablante(""), ultimoDialogoTexto(""), ultimoPromptTexto(""),
+                 sonidoFinReproducido(false) {
         buffer = std::vector<std::wstring>(altoTotal, std::wstring(anchoTotal, L' '));
         bufferColor = std::vector<std::vector<int>>(altoTotal, std::vector<int>(anchoTotal, 0));
     }
 
     ~Pantalla() {}
+
+    void resetSonidoFin() {
+        sonidoFinReproducido = false;
+    }
 
     void resetDialogoAnimado() {
         ultimoDialogoHablante = "";
@@ -214,8 +221,10 @@ public:
         for (size_t i = 0; i < wchars.size(); i++) {
             int posX = x + (int)i;
             if (posX >= 0 && posX < anchoJuego) {
-                buffer[y][posX] = wchars[i];
-                bufferColor[y][posX] = color;
+                if (wchars[i] >= 32) {
+                    buffer[y][posX] = wchars[i];
+                    bufferColor[y][posX] = color;
+                }
             }
         }
     }
@@ -245,24 +254,40 @@ public:
     std::vector<std::string> dividirEnLineas(const std::string& texto, int maxLongitud) const {
         std::vector<std::string> lineas;
         if (texto.empty()) return lineas;
-        std::string actual = "";
-        size_t i = 0;
-        while (i < texto.length()) {
-            size_t proxEspacio = texto.find(' ', i);
-            std::string palabra = (proxEspacio == std::string::npos) ? texto.substr(i) : texto.substr(i, proxEspacio - i);
-            if (actual.empty()) {
-                actual = palabra;
-            } else if (longitudVisible(actual) + 1 + longitudVisible(palabra) <= maxLongitud) {
-                actual += " " + palabra;
+        std::vector<std::string> parrafos;
+        std::string parrafo = "";
+        for (size_t k = 0; k < texto.length(); k++) {
+            if (texto[k] == '\n' || texto[k] == '\r') {
+                parrafos.push_back(parrafo);
+                parrafo = "";
             } else {
-                lineas.push_back(actual);
-                actual = palabra;
+                parrafo += texto[k];
             }
-            if (proxEspacio == std::string::npos) break;
-            i = proxEspacio + 1;
         }
-        if (!actual.empty()) {
-            lineas.push_back(actual);
+        parrafos.push_back(parrafo);
+
+        for (size_t p = 0; p < parrafos.size(); p++) {
+            const std::string& sec = parrafos[p];
+            if (sec.empty()) continue;
+            std::string actual = "";
+            size_t i = 0;
+            while (i < sec.length()) {
+                size_t proxEspacio = sec.find(' ', i);
+                std::string palabra = (proxEspacio == std::string::npos) ? sec.substr(i) : sec.substr(i, proxEspacio - i);
+                if (actual.empty()) {
+                    actual = palabra;
+                } else if (longitudVisible(actual) + 1 + longitudVisible(palabra) <= maxLongitud) {
+                    actual += " " + palabra;
+                } else {
+                    lineas.push_back(actual);
+                    actual = palabra;
+                }
+                if (proxEspacio == std::string::npos) break;
+                i = proxEspacio + 1;
+            }
+            if (!actual.empty()) {
+                lineas.push_back(actual);
+            }
         }
         return lineas;
     }
@@ -737,46 +762,72 @@ public:
                                      const std::string& prota, int segs,
                                      int bonoTiempo, int puntosMisiones,
                                      int confianzaQifrey) {
+        if (!sonidoFinReproducido) {
+            sonidoFinReproducido = true;
+#ifdef _WIN32
+            Beep(523, 120);
+            Beep(659, 120);
+            Beep(784, 140);
+            Beep(1046, 320);
+#endif
+        }
+
         int x = 4;
         int y = 3;
         int ancho = 76;
         int alto = 34;
-        dibujarCaja(x, y, ancho, alto);
+        dibujarCaja(x, y, ancho, alto, 3);
 
-        setTextoJuego(x + 18, y + 1, "=== ESTADÍSTICAS DE FIN DE NIVEL ===");
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 2][x + c] = L'-';
+        setTextoJuego(x + 18, y + 1, "=== ESTADÍSTICAS DE FIN DE NIVEL ===", 4);
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 2][x + c] = L'-';
+            bufferColor[y + 2][x + c] = 3;
+        }
 
-        setTextoJuego(x + 4, y + 4, "Nivel superado:   NIVEL " + std::to_string(nivel) + " - " + nombreNivel);
-        setTextoJuego(x + 4, y + 5, "Maga:             " + prota + " (Aprendiz)");
-        setTextoJuego(x + 4, y + 6, "Objetivo:         Capa Mágica Crafteada con Éxito");
+        setTextoJuego(x + 4, y + 4, "Nivel superado:   NIVEL " + std::to_string(nivel) + " - " + nombreNivel, 2);
+        setTextoJuego(x + 4, y + 5, "Maga:             " + prota + " (Aprendiz)", 6);
+        setTextoJuego(x + 4, y + 6, "Objetivo:         Capa Mágica Crafteada con Éxito", 2);
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 8][x + c] = L'-';
-        setTextoJuego(x + 4, y + 9, "[DESGLOSE DE PUNTUACIÓN SEGÚN TIEMPO Y MISIONES]");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 8][x + c] = L'-';
+            bufferColor[y + 8][x + c] = 3;
+        }
+        setTextoJuego(x + 4, y + 9, "[DESGLOSE DE PUNTUACIÓN SEGÚN TIEMPO Y MISIONES]", 3);
 
         int min = segs / 60;
         int seg = segs % 60;
         std::string tStr = (min < 10 ? "0" : "") + std::to_string(min) + ":" + (seg < 10 ? "0" : "") + std::to_string(seg);
 
-        setTextoJuego(x + 4, y + 11, "Tiempo empleado:                      " + tStr);
-        setTextoJuego(x + 4, y + 13, "Puntos por velocidad de tiempo:       +" + std::to_string(bonoTiempo) + " pts");
-        setTextoJuego(x + 4, y + 15, "Puntos por misiones y recolección:    +" + std::to_string(puntosMisiones) + " pts");
-        for (int c = 4; c < ancho - 4; c++) buffer[y + 17][x + c] = L'-';
+        setTextoJuego(x + 4, y + 11, "Tiempo empleado:                      " + tStr, 1);
+        setTextoJuego(x + 4, y + 13, "Puntos por velocidad de tiempo:       +" + std::to_string(bonoTiempo) + " pts", 2);
+        setTextoJuego(x + 4, y + 15, "Puntos por misiones y recolección:    +" + std::to_string(puntosMisiones) + " pts", 2);
+        for (int c = 4; c < ancho - 4; c++) {
+            buffer[y + 17][x + c] = L'-';
+            bufferColor[y + 17][x + c] = 4;
+        }
 
         int total = bonoTiempo + puntosMisiones;
-        setTextoJuego(x + 4, y + 19, "PUNTAJE TOTAL DEL NIVEL:              " + std::to_string(total) + " PTS");
+        setTextoJuego(x + 4, y + 19, "PUNTAJE TOTAL DEL NIVEL:              " + std::to_string(total) + " PTS", 4);
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + 21][x + c] = L'-';
-        setTextoJuego(x + 4, y + 22, "[LOGROS Y ESTADO DE LORE]");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 21][x + c] = L'-';
+            bufferColor[y + 21][x + c] = 3;
+        }
+        setTextoJuego(x + 4, y + 22, "[LOGROS Y ESTADO DE LORE]", 3);
         std::string confStr = "Sin confianza";
-        if (confianzaQifrey == 1) confStr = "Neutral";
-        else if (confianzaQifrey >= 2) confStr = "Amigos";
-        setTextoJuego(x + 4, y + 24, "Vínculo con Maestro Qifrey:           " + confStr);
-        setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Mágica de Vuelo");
-        setTextoJuego(x + 4, y + 26, "Habilidad de vuelo:                   Activada para Coco");
+        int colConf = 8;
+        if (confianzaQifrey == 1) { confStr = "Neutral"; colConf = 4; }
+        else if (confianzaQifrey >= 2) { confStr = "Amigos"; colConf = 2; }
+        setTextoJuego(x + 4, y + 24, "Vínculo con Maestro Qifrey:           " + confStr, colConf);
+        setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Mágica de Vuelo", 5);
+        setTextoJuego(x + 4, y + 26, "Habilidad de vuelo:                   Activada para Coco", 6);
 
-        for (int c = 1; c < ancho - 1; c++) buffer[y + alto - 4][x + c] = L'-';
-        setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Avanzar al Nivel 2    [C] Seguir explorando");
-        setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego");
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + alto - 4][x + c] = L'-';
+            bufferColor[y + alto - 4][x + c] = 3;
+        }
+        setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Avanzar al Nivel 2    [C] Seguir explorando", 4);
+        setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego", 8);
     }
 
     void renderizarPanelLateral(int nivel, const std::string& nombreNivel,
@@ -880,8 +931,10 @@ public:
         for (size_t i = 0; i < wchars.size(); i++) {
             int posX = x + (int)i;
             if (posX >= 0 && posX < anchoTotal) {
-                buffer[y][posX] = wchars[i];
-                bufferColor[y][posX] = color;
+                if (wchars[i] >= 32) {
+                    buffer[y][posX] = wchars[i];
+                    bufferColor[y][posX] = color;
+                }
             }
         }
     }

@@ -133,9 +133,10 @@ public:
 			break;
 
 		case 11:
-			lineas.push_back("¡Excelente trabajo! Has reunido los componentes arcanos indispensables.");
-			lineas.push_back("Tratando las fibras del Arbol de Plata y trazando los sellos protectores...");
-			lineas.push_back("¡Aqui esta tu Capa de Aprendiz! Recuerda que su forro repele la hechiceria exterior.");
+			lineas.push_back("¡Excelente trabajo! Has reunido los componentes indispensables.");
+			lineas.push_back("Tratando fibras del Arbol de Plata y sellos protectores...");
+			lineas.push_back("¡Aqui esta tu Capa de Aprendiz!");
+			lineas.push_back("Recuerda que su forro repele la hechiceria exterior.");
 			opciones.push_back("[1] ¡Entendido!");
 			break;
 
@@ -291,7 +292,8 @@ public:
 			break;
 
 		case 230:
-			lineas.push_back("El taller ya volvió a la normalidad. Deja de perder el tiempo y concéntrate en tu viaje.");
+			lineas.push_back("El taller ya volvió a la normalidad.");
+			lineas.push_back("Deja de perder el tiempo y concéntrate en tu viaje.");
 			opciones.push_back("[1] Salir");
 			break;
 
