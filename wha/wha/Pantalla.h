@@ -953,10 +953,10 @@ public:
         }
 
         setTextoPantallaCompleta(x + 4, y + 16, "=== PROLOGO: EL SECRETO DE LA MAGIA ===", 4);
-        setTextoPantallaCompleta(x + 4, y + 17, "En este mundo, la magia no es un don de nacimiento: se traza en silencio con tinta de plata y sellos.", 1);
-        setTextoPantallaCompleta(x + 4, y + 18, "Eres Coco, una humilde joven acogida en el atelier del sabio hechicero Qifrey tras una tragedia.", 6);
-        setTextoPantallaCompleta(x + 4, y + 19, "Tu mision: encontrar el contrahechizo prohibido para revertir la petrificacion de tu madre.", 3);
-        setTextoPantallaCompleta(x + 4, y + 20, "Para lograrlo, deberas dominar el arte del dibujo magico y confeccionar tu propio Manto de Aprendiz.", 1);
+        setTextoPantallaCompleta(x + 4, y + 17, "En este mundo la magia no nace contigo: se traza con tinta de plata y sellos.", 1);
+        setTextoPantallaCompleta(x + 4, y + 18, "Eres Coco, acogida en el atelier del sabio Qifrey tras una tragedia familiar.", 6);
+        setTextoPantallaCompleta(x + 4, y + 19, "Tu mision: encontrar el contrahechizo prohibido para salvar a tu madre.", 3);
+        setTextoPantallaCompleta(x + 4, y + 20, "Domina el arte del dibujo magico y confecciona tu propio Manto de Aprendiz.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 21][x + c] = L'-';
@@ -964,10 +964,10 @@ public:
         }
 
         setTextoPantallaCompleta(x + 4, y + 22, "=== OBJETIVOS DEL NIVEL 1: EL ATELIER DE QIFREY ===", 2);
-        setTextoPantallaCompleta(x + 4, y + 23, "* Habla con Maestro Qifrey en su despacho al sur para recibir instrucciones y tu primera leccion arcana.", 1);
-        setTextoPantallaCompleta(x + 4, y + 24, "* Reune los 3 componentes del taller: Fibra del Arbol de Plata, Tinta de Conjuracion y Grimorio de Trazos.", 1);
-        setTextoPantallaCompleta(x + 4, y + 25, "* Visita la Choza de Trazos, la Torre de Agott y ayuda a Richeh a rescatar a su pinguino Myrphon.", 1);
-        setTextoPantallaCompleta(x + 4, y + 26, "* Recolecta frascos de tinta arcaica perdidos para forjar una profunda amistad y confianza con tu maestro.", 1);
+        setTextoPantallaCompleta(x + 4, y + 23, "* Habla con Maestro Qifrey al sur para recibir tu primera leccion arcana.", 1);
+        setTextoPantallaCompleta(x + 4, y + 24, "* Reune los 3 componentes: Fibra de Plata, Tinta Arcana y Grimorio de Trazos.", 1);
+        setTextoPantallaCompleta(x + 4, y + 25, "* Visita la Torre de Agott y ayuda a Richeh a rescatar a Myrphon.", 1);
+        setTextoPantallaCompleta(x + 4, y + 26, "* Recolecta frascos de tinta perdidos para ganar la confianza de tu maestro.", 1);
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 28][x + c] = L'=';
@@ -1099,7 +1099,7 @@ public:
         }
     }
 
-    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0, bool enSubMapa = false, bool (*esCuartoFunc)(int, int) = nullptr, bool (*esCaminoFunc)(int, int) = nullptr) {
+    void copiarViewport(const std::vector<std::string>& matrizMapa, int camaraX, int camaraY, int tickAnim = 0, bool enSubMapa = false, bool (*esCuartoFunc)(int, int) = nullptr, bool (*esCaminoFunc)(int, int) = nullptr, bool cuevaDesbloqueada = true) {
         int filasMapa = (int)matrizMapa.size();
         if (filasMapa == 0) return;
         int columnasMapa = (int)matrizMapa[0].size();
@@ -1123,15 +1123,9 @@ public:
                                              (xMundo >= 6 && xMundo <= 74 && yMundo >= 8 && yMundo <= 15) ||
                                              (xMundo >= 44 && xMundo <= 74 && yMundo >= 5 && yMundo <= 18));
                         if (dentroRicheh) {
-                            if (xMundo >= 38 && xMundo <= 68 && yMundo >= 9 && yMundo <= 15) {
-                                int r = (xMundo + yMundo) % 2;
-                                buffer[yPantalla][xPantalla] = (r == 0) ? L'~' : L'=';
-                                bufferColor[yPantalla][xPantalla] = 5;
-                            } else {
-                                int r = (xMundo % 4 == 0 && yMundo % 2 == 0);
-                                buffer[yPantalla][xPantalla] = r ? L'.' : L' ';
-                                bufferColor[yPantalla][xPantalla] = 8;
-                            }
+                            int r = (xMundo % 4 == 0 && yMundo % 2 == 0);
+                            buffer[yPantalla][xPantalla] = r ? L'.' : L' ';
+                            bufferColor[yPantalla][xPantalla] = 8;
                         } else {
                             int r = std::abs(xMundo * 7 + yMundo * 11) % 4;
                             buffer[yPantalla][xPantalla] = (r == 0) ? L'░' : ((r == 1) ? L'▒' : ((r == 2) ? L':' : L'.'));
@@ -1139,14 +1133,10 @@ public:
                         }
                     } else if (ch == ' ' && !enSubMapa) {
                         if (esCuartoFunc != nullptr && esCuartoFunc(xMundo, yMundo)) {
-                            if (xMundo >= 60 && xMundo <= 126 && yMundo >= 19 && yMundo <= 45) {
-                                if (yMundo % 2 == 0) {
-                                    buffer[yPantalla][xPantalla] = (xMundo % 6 == 0) ? L'|' : L'-';
-                                    bufferColor[yPantalla][xPantalla] = 12;
-                                } else {
-                                    buffer[yPantalla][xPantalla] = L' ';
-                                    bufferColor[yPantalla][xPantalla] = 0;
-                                }
+                            if (xMundo >= 63 && xMundo <= 122 && yMundo >= 21 && yMundo <= 43) {
+                                int r = (xMundo * 11 + yMundo * 17) % 7;
+                                buffer[yPantalla][xPantalla] = (r == 0) ? L'.' : ((r == 1) ? L',' : L' ');
+                                bufferColor[yPantalla][xPantalla] = 8;
                             } else if (xMundo >= 385 && xMundo <= 463 && yMundo >= 83 && yMundo <= 123) {
                                 if ((xMundo / 3 + yMundo / 2) % 2 == 0) {
                                     buffer[yPantalla][xPantalla] = L'.';
@@ -1156,18 +1146,18 @@ public:
                                     bufferColor[yPantalla][xPantalla] = 0;
                                 }
                             } else if (xMundo >= 63 && xMundo <= 123 && yMundo >= 148 && yMundo <= 175) {
-                                if (xMundo >= 78 && xMundo <= 108 && yMundo >= 153 && yMundo <= 170) {
-                                    int r = (xMundo + yMundo) % 3;
-                                    buffer[yPantalla][xPantalla] = (r == 0) ? L'~' : ((r == 1) ? L'=' : L'-');
-                                    bufferColor[yPantalla][xPantalla] = 13;
+                                int r = (xMundo % 4 == 0 && yMundo % 2 == 0);
+                                buffer[yPantalla][xPantalla] = r ? L'+' : L' ';
+                                bufferColor[yPantalla][xPantalla] = 8;
+                            } else if (xMundo >= 383 && xMundo <= 415 && yMundo >= 25 && yMundo <= 38) {
+                                if (!cuevaDesbloqueada) {
+                                    buffer[yPantalla][xPantalla] = L' ';
+                                    bufferColor[yPantalla][xPantalla] = 0;
                                 } else {
-                                    buffer[yPantalla][xPantalla] = (xMundo % 4 == 0 && yMundo % 2 == 0) ? L'+' : L' ';
+                                    int r = (xMundo * 11 + yMundo * 17) % 7;
+                                    buffer[yPantalla][xPantalla] = (r == 0) ? L'.' : ((r == 1) ? L',' : L' ');
                                     bufferColor[yPantalla][xPantalla] = 8;
                                 }
-                            } else if (xMundo >= 383 && xMundo <= 458 && yMundo >= 11 && yMundo <= 49) {
-                                int r = (xMundo * 11 + yMundo * 17) % 7;
-                                buffer[yPantalla][xPantalla] = (r == 0) ? L'.' : ((r == 1) ? L',' : L' ');
-                                bufferColor[yPantalla][xPantalla] = 8;
                             } else {
                                 buffer[yPantalla][xPantalla] = L' ';
                                 bufferColor[yPantalla][xPantalla] = 0;
@@ -1185,34 +1175,45 @@ public:
                             bufferColor[yPantalla][xPantalla] = 11;
                         }
                     } else {
-                        buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
-                        if (ch == '/') {
-                            if (xMundo >= 388 && xMundo <= 396 && yMundo >= 158 && yMundo <= 170) {
-                                if (xMundo == 391) buffer[yPantalla][xPantalla] = L'░';
-                                else if (xMundo == 392) buffer[yPantalla][xPantalla] = L'▒';
-                                else buffer[yPantalla][xPantalla] = L'█';
-                                bufferColor[yPantalla][xPantalla] = 8;
-                            } else {
-                                bufferColor[yPantalla][xPantalla] = 2;
-                            }
-                        } else if (ch == '&' || ch == '#' || ch == '\\') {
-                            bufferColor[yPantalla][xPantalla] = 2;
-                        } else if (ch == '.' || ch == ':' || ch == '=') {
-                            bufferColor[yPantalla][xPantalla] = 4;
-                        } else if (ch == '+' || ch == '-' || ch == '|') {
-                            bufferColor[yPantalla][xPantalla] = 8;
-                        } else if (ch == 'O') {
-                            bufferColor[yPantalla][xPantalla] = 7;
-                        } else if (ch == '<') {
-                            bufferColor[yPantalla][xPantalla] = 4;
-                        } else if (ch == '*') {
-                            bufferColor[yPantalla][xPantalla] = 4;
-                        } else if (ch == '!') {
-                            bufferColor[yPantalla][xPantalla] = 4;
-                        } else if (ch == '[' || ch == ']') {
-                            bufferColor[yPantalla][xPantalla] = 8;
-                        } else {
+                        if (!cuevaDesbloqueada && xMundo >= 387 && xMundo <= 462 && yMundo >= 20 && yMundo <= 45) {
+                            buffer[yPantalla][xPantalla] = L' ';
                             bufferColor[yPantalla][xPantalla] = 0;
+                        } else {
+                            buffer[yPantalla][xPantalla] = (wchar_t)(unsigned char)ch;
+                            if (ch == '/') {
+                                if (xMundo >= 388 && xMundo <= 396 && yMundo >= 158 && yMundo <= 170) {
+                                    if (xMundo == 391) buffer[yPantalla][xPantalla] = L'░';
+                                    else if (xMundo == 392) buffer[yPantalla][xPantalla] = L'▒';
+                                    else buffer[yPantalla][xPantalla] = L'█';
+                                    bufferColor[yPantalla][xPantalla] = 8;
+                                } else {
+                                    bufferColor[yPantalla][xPantalla] = 2;
+                                }
+                            } else if (ch == '#') {
+                                if (xMundo >= 180 && xMundo <= 260 && yMundo >= 94 && yMundo <= 111) {
+                                    bufferColor[yPantalla][xPantalla] = 12;
+                                } else {
+                                    bufferColor[yPantalla][xPantalla] = 2;
+                                }
+                            } else if (ch == '&' || ch == '\\') {
+                                bufferColor[yPantalla][xPantalla] = 2;
+                            } else if (ch == '{' || ch == '}' || ch == '[' || ch == ']') {
+                                bufferColor[yPantalla][xPantalla] = 12;
+                            } else if (ch == '.' || ch == ':' || ch == '=') {
+                                bufferColor[yPantalla][xPantalla] = 4;
+                            } else if (ch == '+' || ch == '-' || ch == '|') {
+                                if (xMundo >= 180 && xMundo <= 260 && (yMundo >= 94 && yMundo <= 111)) {
+                                    bufferColor[yPantalla][xPantalla] = 12;
+                                } else {
+                                    bufferColor[yPantalla][xPantalla] = 8;
+                                }
+                            } else if (ch == 'O') {
+                                bufferColor[yPantalla][xPantalla] = 8;
+                            } else if (ch == '<' || ch == '*' || ch == '!') {
+                                bufferColor[yPantalla][xPantalla] = 4;
+                            } else {
+                                bufferColor[yPantalla][xPantalla] = 0;
+                            }
                         }
                     }
                 } else {

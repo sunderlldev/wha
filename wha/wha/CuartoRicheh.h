@@ -32,9 +32,8 @@ public:
 		matriz.push_back("|     +         +----------------------------+                             |     |");
 		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     |                                                                    |     |");
-		matriz.push_back("|     |                                      +-----+                       |     |");
-		matriz.push_back("|     |                                      | === |                       |     |");
-		matriz.push_back("|     |                                      +-----+                       |     |");
+		matriz.push_back("|     |                                                                    |     |");
+		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     |                                                                    |     |");
 		matriz.push_back("|     +-------------------------------------+                              |     |");

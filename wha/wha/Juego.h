@@ -174,9 +174,11 @@ public:
 
 				bool (*funcCuarto)(int, int) = (nivel.getNumeroNivel() == 2) ? Nivel2::esCuartoEstatico : Nivel1::esCuartoEstatico;
 				bool (*funcCamino)(int, int) = (nivel.getNumeroNivel() == 2) ? nullptr : Nivel1::esCaminoEstatico;
+				Nivel1* n1Ref = dynamic_cast<Nivel1*>(&nivel);
+				bool cuevaDesbloqueada = (n1Ref != nullptr) ? n1Ref->getParedPiedraDestruida() : true;
 
 				pantalla.limpiarBuffer();
-				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), funcCuarto, funcCamino);
+				pantalla.copiarViewport(mapa->getMatriz(), camX, camY, tickAnim, nivel.getEnCuartoRicheh(), funcCuarto, funcCamino, cuevaDesbloqueada);
 				pantalla.aplicarLluvia(tickLluvia, camX, camY, nivel.getEnCuartoRicheh(), funcCuarto);
 
 				if (!nivel.getEnCuartoRicheh() && nivel.getPozoEncontrado()) {
@@ -200,6 +202,9 @@ public:
 					const std::vector<ItemMagico*>& suelo = nivel.getItemsSuelo();
 					for (size_t i = 0; i < suelo.size(); i++) {
 						if (suelo[i] != nullptr && !suelo[i]->getRecogido()) {
+							if (!cuevaDesbloqueada && suelo[i]->getX() >= 387 && suelo[i]->getY() <= 40) {
+								continue;
+							}
 							int ix = suelo[i]->getX() - camX;
 							int iy = suelo[i]->getY() - camY;
 							int iAncho = suelo[i]->getAncho();

@@ -41,12 +41,13 @@ public:
 		return (gestorDialogos != nullptr && gestorDialogos->getMisionMyrphonActiva() &&
 		        myrphon != nullptr && !myrphon->getRescatado() && !myrphonEscapado);
 	}
+	bool getParedPiedraDestruida() const { return paredPiedraDestruida; }
 	int getMyrphonX() const { return (myrphon != nullptr) ? myrphon->getX() : 0; }
 	int getMyrphonY() const { return (myrphon != nullptr) ? myrphon->getY() : 0; }
 
 	static bool esCuartoEstatico(int px, int py) {
 		if (px >= 60 && px <= 126 && py >= 19 && py <= 45) return true;
-		if (px >= 383 && px <= 458 && py >= 11 && py <= 49) return true;
+		if (px >= 383 && px <= 410 && py >= 25 && py <= 38) return true;
 		if (px >= 385 && px <= 463 && py >= 83 && py <= 123) return true;
 		if (px >= 63 && px <= 123 && py >= 148 && py <= 175) return true;
 		return false;
@@ -64,7 +65,7 @@ public:
 
 	virtual int determinarCuarto(int px, int py) const override {
 		if (px >= 60 && px <= 126 && py >= 19 && py <= 45) return 1;
-		if (px >= 383 && px <= 458 && py >= 11 && py <= 49) return 2;
+		if (px >= 383 && px <= 410 && py >= 25 && py <= 38) return 2;
 		if (px >= 385 && px <= 463 && py >= 83 && py <= 123) return 3;
 		if (px >= 380 && px <= 395 && py >= 160 && py <= 168) return 4;
 		if (px >= 63 && px <= 123 && py >= 148 && py <= 175) return 5;
@@ -324,8 +325,8 @@ public:
 		}
 
 		limpiarItemsSuelo();
-		itemsSuelo.push_back(new ItemMagico(405, 20, "Fibra de Arbol", "Fibras del Arbol de Plata para tejer el manto de aprendiz.", "Material Textil Arcano", false));
-		itemsSuelo.push_back(new ItemMagico(440, 20, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacén antiguo.", "Objeto de Colección", false));
+		itemsSuelo.push_back(new ItemMagico(390, 30, "Fibra de Arbol", "Fibras del Arbol de Plata para tejer el manto de aprendiz.", "Material Textil Arcano", false));
+		itemsSuelo.push_back(new ItemMagico(394, 32, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en el almacén antiguo.", "Objeto de Colección", false));
 		itemsSuelo.push_back(new ItemMagico(160, 50, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran río.", "Objeto de Colección", false));
 
 		monologoCruceActivado = false;
