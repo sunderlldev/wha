@@ -50,6 +50,7 @@ protected:
 	bool transicionMinijuego;
 	bool animacionMyrphonHecha;
 	bool transicionEasterEgg;
+	bool transicionDanioCoustas;
 
 	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
 		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
@@ -112,7 +113,7 @@ public:
 		  ticksMensajeTemporal(0), tiempoInicio(0), tiempoFin(0),
 		  modalActivo(0), seleccionModal(0), solicitaSalir(false),
 		  cuartoRicheh(nullptr), torreAgott(nullptr), transicionMinijuego(false),
-		  animacionMyrphonHecha(false), transicionEasterEgg(false) {
+		  animacionMyrphonHecha(false), transicionEasterEgg(false), transicionDanioCoustas(false) {
 		this->mapa = new Mapa(filasMapa, columnasMapa);
 		this->gestorDialogos = new GestorDialogos();
 		this->gestorMisiones = new GestorMisiones();
@@ -236,6 +237,8 @@ public:
 	void setTransicionMinijuego(bool tm) { this->transicionMinijuego = tm; }
 	bool getTransicionEasterEgg() const { return this->transicionEasterEgg; }
 	void setTransicionEasterEgg(bool te) { this->transicionEasterEgg = te; }
+	bool getTransicionDanioCoustas() const { return this->transicionDanioCoustas; }
+	void setTransicionDanioCoustas(bool td) { this->transicionDanioCoustas = td; }
 	virtual void ejecutarMinijuego(Pantalla&, GestorAudio&) {}
 	virtual void dibujarEntidadesExtra(Pantalla&, int, int) const {}
 
@@ -828,10 +831,17 @@ public:
 
 			int dx = 0;
 			int dy = 0;
-			if (tecla == 'w' || tecla == 'W') dy = -1;
-			else if (tecla == 's' || tecla == 'S') dy = 1;
-			else if (tecla == 'a' || tecla == 'A') dx = -1;
-			else if (tecla == 'd' || tecla == 'D') dx = 1;
+			if (numeroNivel == 3) {
+				if (tecla == 'w' || tecla == 'W') dy = 1;
+				else if (tecla == 's' || tecla == 'S') dy = -1;
+				else if (tecla == 'a' || tecla == 'A') dx = 1;
+				else if (tecla == 'd' || tecla == 'D') dx = -1;
+			} else {
+				if (tecla == 'w' || tecla == 'W') dy = -1;
+				else if (tecla == 's' || tecla == 'S') dy = 1;
+				else if (tecla == 'a' || tecla == 'A') dx = -1;
+				else if (tecla == 'd' || tecla == 'D') dx = 1;
+			}
 
 			if (dx != 0 || dy != 0) {
 				for (int paso = 0; paso < 2; paso++) {

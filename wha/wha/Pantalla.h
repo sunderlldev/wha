@@ -584,6 +584,16 @@ public:
                 } else if (nombres[seleccionado] == "Myrphon") {
                     setTextoJuego(artX, artY,     "  (o>    ", 4);
                     setTextoJuego(artX, artY + 1, " /||\\   ", 4);
+                } else if (nombres[seleccionado] == "Coustas") {
+                    setTextoJuego(artX, artY,     "  _/_\\   ", 6);
+                    setTextoJuego(artX, artY + 1, " ('v')   ", 1);
+                    setTextoJuego(artX, artY + 2, " [===]O  ", 8);
+                } else if (nombres[seleccionado] == "Dagda") {
+                    setTextoJuego(artX, artY,     "  /--\\   ", 6);
+                    setTextoJuego(artX, artY + 1, " (o_o)   ", 1);
+                } else if (nombres[seleccionado] == "Ininia") {
+                    setTextoJuego(artX, artY,     "  /==\\   ", 5);
+                    setTextoJuego(artX, artY + 1, " (~_~)   ", 5);
                 }
             } else {
                 setTextoJuego(x + 5, y + 17, "Personaje aun no descubierto en este nivel.", 8);
@@ -786,8 +796,16 @@ public:
         }
 
         setTextoJuego(x + 4, y + 4, "Nivel superado:   NIVEL " + std::to_string(nivel) + " - " + nombreNivel, 2);
-        setTextoJuego(x + 4, y + 5, "Maga:             " + prota + " (Aprendiz)", 6);
-        setTextoJuego(x + 4, y + 6, "Objetivo:         Capa Mágica Crafteada con Éxito", 2);
+        if (nivel == 3) {
+            setTextoJuego(x + 4, y + 5, "Personaje:        " + prota + " (Trovador)", 6);
+            setTextoJuego(x + 4, y + 6, "Destino:          El Destino de la Noche de Plata", 2);
+        } else if (nivel == 2) {
+            setTextoJuego(x + 4, y + 5, "Personaje:        " + prota + " (Orfebre)", 6);
+            setTextoJuego(x + 4, y + 6, "Objetivo:         Rastro de Ininia Descubierto", 2);
+        } else {
+            setTextoJuego(x + 4, y + 5, "Maga:             " + prota + " (Aprendiz)", 6);
+            setTextoJuego(x + 4, y + 6, "Objetivo:         Capa Mágica Crafteada con Éxito", 2);
+        }
 
         for (int c = 1; c < ancho - 1; c++) {
             buffer[y + 8][x + c] = L'-';
@@ -815,20 +833,30 @@ public:
             bufferColor[y + 21][x + c] = 3;
         }
         setTextoJuego(x + 4, y + 22, "[LOGROS Y ESTADO DE LORE]", 3);
-        std::string confStr = "Sin confianza";
-        int colConf = 8;
-        if (confianzaQifrey == 1) { confStr = "Neutral"; colConf = 4; }
-        else if (confianzaQifrey >= 2) { confStr = "Amigos"; colConf = 2; }
-        setTextoJuego(x + 4, y + 24, "Vínculo con Maestro Qifrey:           " + confStr, colConf);
-        setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Mágica de Vuelo", 5);
-        setTextoJuego(x + 4, y + 26, "Habilidad de vuelo:                   Activada para Coco", 6);
+        if (nivel == 3) {
+            setTextoJuego(x + 4, y + 24, "Ya se completo el juego, gracias por jugar.", 2);
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + alto - 4][x + c] = L'-';
+                bufferColor[y + alto - 4][x + c] = 3;
+            }
+            setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Finalizar aventura y ver epilogo", 4);
+            setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego", 8);
+        } else {
+            std::string confStr = "Sin confianza";
+            int colConf = 8;
+            if (confianzaQifrey == 1) { confStr = "Neutral"; colConf = 4; }
+            else if (confianzaQifrey >= 2) { confStr = "Amigos"; colConf = 2; }
+            setTextoJuego(x + 4, y + 24, "Vínculo con Maestro Qifrey:           " + confStr, colConf);
+            setTextoJuego(x + 4, y + 25, "Objeto legendario desbloqueado:       Capa Mágica de Vuelo", 5);
+            setTextoJuego(x + 4, y + 26, "Habilidad de vuelo:                   Activada para Coco", 6);
 
-        for (int c = 1; c < ancho - 1; c++) {
-            buffer[y + alto - 4][x + c] = L'-';
-            bufferColor[y + alto - 4][x + c] = 3;
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + alto - 4][x + c] = L'-';
+                bufferColor[y + alto - 4][x + c] = 3;
+            }
+            setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Avanzar al Nivel 2    [C] Seguir explorando", 4);
+            setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego", 8);
         }
-        setTextoJuego(x + 4, y + alto - 3, "[1 / ENTER] Avanzar al Nivel 2    [C] Seguir explorando", 4);
-        setTextoJuego(x + 4, y + alto - 2, "[ESC] Salir del juego", 8);
     }
 
     void renderizarPanelLateral(int nivel, const std::string& nombreNivel,
@@ -844,7 +872,13 @@ public:
         lineasPanel[2]  = encuadrarFilaPanelW("      ÁRBOL DE PLATA", anchoPanel);
         lineasPanel[3]  = separador;
         lineasPanel[4]  = encuadrarFilaPanelW("NIVEL " + std::to_string(nivel) + ": " + nombreNivel, anchoPanel);
-        lineasPanel[5]  = encuadrarFilaPanelW("MAGA: " + protagonista + " (Aprendiz)", anchoPanel);
+        if (nivel == 3) {
+            lineasPanel[5]  = encuadrarFilaPanelW("TROVADOR: " + protagonista, anchoPanel);
+        } else if (nivel == 2) {
+            lineasPanel[5]  = encuadrarFilaPanelW("ORFEBRE: " + protagonista, anchoPanel);
+        } else {
+            lineasPanel[5]  = encuadrarFilaPanelW("MAGA: " + protagonista + " (Aprendiz)", anchoPanel);
+        }
 
         std::string corazones = "";
         for (int i = 0; i < vidaMax; i++) {
@@ -2409,6 +2443,190 @@ public:
                 int t = _getch();
                 if (t == 0 || t == 224) t = _getch();
                 if (t == 13 || t == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void animarDanioCoustas(int vidasRestantes) {
+        int xModal = 18;
+        int yModal = 10;
+        int anchoM = 48;
+        int altoM = 19;
+
+        for (int frame = 0; frame < 4; frame++) {
+            dibujarCaja(xModal, yModal, anchoM, altoM, (frame >= 2) ? 8 : 6);
+
+            if (frame == 0) {
+                setTextoJuego(xModal + 20, yModal + 2, " _/\\_ ", 6);
+                setTextoJuego(xModal + 19, yModal + 3, "( 'v' )", 1);
+                setTextoJuego(xModal + 19, yModal + 4, "[=====]", 6);
+                setTextoJuego(xModal + 20, yModal + 5, "O   O", 8);
+            } else if (frame == 1) {
+                setTextoJuego(xModal + 19, yModal + 2, " _/\\_   *", 7);
+                setTextoJuego(xModal + 18, yModal + 3, "( >_< ) /", 1);
+                setTextoJuego(xModal + 17, yModal + 4, "/[=====]", 6);
+                setTextoJuego(xModal + 17, yModal + 5, "O  .  O", 8);
+            } else if (frame == 2) {
+                setTextoJuego(xModal + 18, yModal + 2, "  _/\\_  ..", 8);
+                setTextoJuego(xModal + 17, yModal + 3, " ( ;_; ) </3", 7);
+                setTextoJuego(xModal + 16, yModal + 4, "//[====] ", 8);
+                setTextoJuego(xModal + 16, yModal + 5, "o   .  o", 8);
+            } else {
+                setTextoJuego(xModal + 18, yModal + 2, "  _/\\_   .", 8);
+                setTextoJuego(xModal + 17, yModal + 3, " ( u_u ) .", 8);
+                setTextoJuego(xModal + 16, yModal + 4, "--[====]--", 8);
+                setTextoJuego(xModal + 16, yModal + 5, "o       o", 8);
+            }
+
+            for (int c = 1; c < anchoM - 1; c++) {
+                buffer[yModal + 7][xModal + c] = L'-';
+                bufferColor[yModal + 7][xModal + c] = 8;
+            }
+
+            setTextoJuego(xModal + 11, yModal + 9, "¡COUSTAS PIERDE EL EQUILIBRIO!", 7);
+            setTextoJuego(xModal + 4, yModal + 11, "La emboscada sacude la fragil silla de ruedas...", 1);
+            setTextoJuego(xModal + 5, yModal + 12, "\"Mis piernas no responden... Debo resistir...\"", 6);
+            std::string vidStr = "-1 Vida  (Vidas restantes: " + std::to_string(vidasRestantes > 0 ? vidasRestantes : 0) + ")";
+            setTextoJuego(xModal + 10, yModal + 14, vidStr, (vidasRestantes > 0) ? 4 : 7);
+            if (vidasRestantes <= 0) {
+                setTextoJuego(xModal + 4, yModal + 15, "Coustas no puede continuar... Reiniciando senda.", 7);
+            }
+            setTextoJuego(xModal + 13, yModal + 17, "[ENTER / ESPACIO] Continuar", 3);
+
+            dibujar();
+#ifdef _WIN32
+            if (frame == 0) Beep(330, 90);
+            else if (frame == 1) Beep(262, 110);
+            else if (frame == 2) Beep(220, 140);
+            else if (frame == 3) Beep(165, 200);
+            Sleep(260);
+#else
+            std::this_thread::sleep_for(std::chrono::milliseconds(260));
+#endif
+        }
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int t = _getch();
+                if (t == 0 || t == 224) t = _getch();
+                if (t == 13 || t == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void animarDespedidaCoustas() {
+        int x = 12;
+        int y = 4;
+        int ancho = 96;
+        int alto = 32;
+
+        for (int frame = 0; frame < 5; frame++) {
+            limpiarBufferCompleto();
+            dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+            std::string tit1 = "W I T C H   H A T   A T E L I E R";
+            std::string tit2 = "D E S P E D I D A :   E L   C A M I N O   D E   C O U S T A S";
+            int cx1 = x + (ancho - longitudVisible(tit1)) / 2;
+            int cx2 = x + (ancho - longitudVisible(tit2)) / 2;
+            setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
+            setTextoPantallaCompleta(cx2, y + 3, tit2, 3);
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 5][x + c] = L'=';
+                bufferColor[y + 5][x + c] = 8;
+            }
+
+            int treeX = x + 72;
+            int treeY = y + 7;
+            setTextoPantallaCompleta(treeX + 3, treeY,     "  .---.   ", 2);
+            setTextoPantallaCompleta(treeX + 1, treeY + 1, " / *** \\  ", 2);
+            setTextoPantallaCompleta(treeX,     treeY + 2, "|***T***| ", 2);
+            setTextoPantallaCompleta(treeX + 1, treeY + 3, " \\ *** /  ", 2);
+            setTextoPantallaCompleta(treeX + 3, treeY + 4, "  '---'   ", 2);
+            setTextoPantallaCompleta(treeX + 4, treeY + 5, "   | |    ", 12);
+            setTextoPantallaCompleta(treeX + 4, treeY + 6, "   | |    ", 12);
+            setTextoPantallaCompleta(treeX + 3, treeY + 7, "  /   \\   ", 12);
+
+            for (int r = y + 8; r <= y + 17; r++) {
+                for (int c = x + 4; c < x + ancho - 4; c++) {
+                    if ((r * 7 + c * 13 + frame * 5) % 17 == 0) {
+                        buffer[r][c] = L'*';
+                        bufferColor[r][c] = (frame % 2 == 0) ? 1 : 3;
+                    }
+                }
+            }
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 18][x + c] = L'_';
+                bufferColor[y + 18][x + c] = 8;
+            }
+
+            int posX = x + 16 + frame * 10;
+            int posY = y + 13;
+
+            if (frame < 4) {
+                setTextoPantallaCompleta(posX + 2, posY,     " _/\\_ ", 6);
+                setTextoPantallaCompleta(posX + 1, posY + 1, "('v') \\", 1);
+                setTextoPantallaCompleta(posX,     posY + 2, "=[====]~", 6);
+                setTextoPantallaCompleta(posX + 1, posY + 3, (frame % 2 == 0 ? " O   O " : " o   o "), 8);
+            } else {
+                setTextoPantallaCompleta(posX + 2, posY + 1, " _/_ ", 8);
+                setTextoPantallaCompleta(posX + 1, posY + 2, "('v')~", 6);
+                setTextoPantallaCompleta(posX,     posY + 3, "=[=]o ", 8);
+            }
+
+            for (int c = 1; c < ancho - 1; c++) {
+                buffer[y + 20][x + c] = L'-';
+                bufferColor[y + 20][x + c] = 8;
+            }
+
+            if (frame == 0) {
+                setTextoPantallaCompleta(x + 6, y + 22, "Coustas contempla por ultima vez las ruinas ancestrales y la sombra de Dagda.", 1);
+                setTextoPantallaCompleta(x + 6, y + 24, "\"Gracias, Dagda... tu sacrificio no habra sido en vano.\"", 6);
+            } else if (frame == 1) {
+                setTextoPantallaCompleta(x + 6, y + 22, "Gira las ruedas de su silla hacia el sendero abierto... El viento sacude su manto.", 1);
+                setTextoPantallaCompleta(x + 6, y + 24, "\"Mis piernas quiza nunca caminen, pero mi alma ya no estara atada.\"", 4);
+            } else if (frame == 2) {
+                setTextoPantallaCompleta(x + 6, y + 22, "La Semilla Prohibida late en su pecho como una promesa y una advertencia.", 1);
+                setTextoPantallaCompleta(x + 6, y + 24, "\"Coco... Tartah... un dia comprenderan por que elegi este sendero.\"", 5);
+            } else if (frame == 3) {
+                setTextoPantallaCompleta(x + 6, y + 22, "Las hojas de plata caen en silencio mientras la figura del joven se aleja.", 1);
+                setTextoPantallaCompleta(x + 6, y + 24, "\"No soy un heroe ni un monstruo. Solo soy Coustas, buscando su propia verdad.\"", 3);
+            } else {
+                setTextoPantallaCompleta(x + 6, y + 22, "Coustas desaparece en el horizonte crepuscular del Arbol de Plata...", 2);
+                setTextoPantallaCompleta(x + 6, y + 24, "El silencio abraza las ruinas. Una nueva era de magia y desafio ha nacido.", 1);
+                setTextoPantallaCompleta(x + 22, y + 28, "[ Presiona ENTER o ESPACIO para ver el desenlace ]", 4);
+            }
+
+            dibujar();
+
+#ifdef _WIN32
+            if (frame == 0) { Beep(440, 150); Beep(523, 180); }
+            else if (frame == 1) { Beep(587, 160); Beep(659, 200); }
+            else if (frame == 2) { Beep(698, 170); Beep(784, 220); }
+            else if (frame == 3) { Beep(880, 200); Beep(784, 250); }
+            else if (frame == 4) { Beep(659, 220); Beep(523, 350); }
+            Sleep(frame == 4 ? 300 : 700);
+#else
+            std::this_thread::sleep_for(std::chrono::milliseconds(frame == 4 ? 300 : 700));
+#endif
+        }
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int tecla = _getch();
+                if (tecla == 0 || tecla == 224) tecla = _getch();
+                if (tecla == 13 || tecla == 32) break;
             }
             Sleep(20);
         }

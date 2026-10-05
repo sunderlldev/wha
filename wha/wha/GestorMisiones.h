@@ -164,24 +164,12 @@ public:
 	                          std::vector<std::string>& descripciones,
 	                          std::vector<std::string>& estados,
 	                          std::vector<bool>& desbloqueadas) {
-		bool cruzoRuinas = (protagonista != nullptr && protagonista->getX() >= 80);
-		bool auxilioDagda = (estadoDialogo >= 501 || estadoDialogo >= 600);
-		bool pactoIninia = (estadoDialogo >= 601);
-
-		titulos.push_back("Cruzar las Ruinas");
-		descripciones.push_back("Desplázate con Coustas esquivando a las patrullas\nenemigas que custodian el desfiladero.");
+		(void)protagonista;
+		(void)estadoDialogo;
+		titulos.push_back("Fin de la Aventura");
+		descripciones.push_back("Ya se completo el juego, gracias por jugar.");
 		desbloqueadas.push_back(true);
-		estados.push_back(cruzoRuinas ? "COMPLETADA" : "EN PROGRESO");
-
-		titulos.push_back("Auxiliar a Dagda");
-		descripciones.push_back("Alcanza el claro del Gran Árbol de Plata donde Dagda\nresiste herido tras la emboscada.");
-		desbloqueadas.push_back(cruzoRuinas);
-		estados.push_back(auxilioDagda ? "COMPLETADA" : "EN PROGRESO");
-
-		titulos.push_back("La Semilla Prohibida");
-		descripciones.push_back("Descubre la oferta de Ininia y decide el destino\nde la magia médica prohibida.");
-		desbloqueadas.push_back(auxilioDagda);
-		estados.push_back(pactoIninia ? "COMPLETADA" : "EN PROGRESO");
+		estados.push_back("COMPLETADO");
 	}
 
 	void obtenerDatosMisiones(int numeroNivel, Protagonista* protagonista, NPC* qifrey, int estadoDialogo,

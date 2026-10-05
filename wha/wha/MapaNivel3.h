@@ -27,10 +27,10 @@ public:
 		matriz.push_back("|  .       .  .   .         .         .         OOOOOOOO     .     .                               |");
 		matriz.push_back("|                                .        .     OOOOOOOO                                           |");
 		matriz.push_back("|              .          +|   .    . .         OOOOOOOO               ..                          |");
-		matriz.push_back("|                .        +|    .           .                               +|                     |");
-		matriz.push_back("|                         +|                                 .        .     +|                     |");
-		matriz.push_back("|                    ..   +|        .        .        .                     +|                     |");
-		matriz.push_back("|     .                   +|                            .         .    .    +|                     |");
+		matriz.push_back("|                .        +|    .           .                                 |                     |");
+		matriz.push_back("|                         +|                                 .        .       |                     |");
+		matriz.push_back("|                    ..   +|        .        .        .                       |                     |");
+		matriz.push_back("|     .                   +|                            .         .    .      |                     |");
 		matriz.push_back("|OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                   |");
 		matriz.push_back("|OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                   |");
 		matriz.push_back("|OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                   |");

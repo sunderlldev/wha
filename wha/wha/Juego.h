@@ -104,6 +104,7 @@ public:
 			audio.reproducirNivel(nivelActual + 1);
 		} else {
 			audio.detenerMusica();
+			pantalla.animarDespedidaCoustas();
 			mostrarDesenlaceFinal();
 		}
 	}
@@ -161,6 +162,14 @@ public:
 		if (nivel.getTransicionEasterEgg()) {
 			nivel.setTransicionEasterEgg(false);
 			pantalla.mostrarEasterEggTrollface();
+			redibujarNecesario = true;
+			return;
+		}
+
+		if (nivel.getTransicionDanioCoustas()) {
+			nivel.setTransicionDanioCoustas(false);
+			Protagonista* prota = nivel.getProtagonista();
+			pantalla.animarDanioCoustas(prota != nullptr ? prota->getVida() : 0);
 			redibujarNecesario = true;
 			return;
 		}
@@ -452,59 +461,92 @@ public:
 					bool misionMyrphonActiva = (gd != nullptr && gd->getMisionMyrphonActiva());
 
 					std::vector<std::string> nombres;
-					nombres.push_back("Coco");
-					nombres.push_back("Qifrey");
-					nombres.push_back("Richeh");
-					nombres.push_back("Agott");
-					nombres.push_back("Tetia");
-					nombres.push_back("Olruggio");
-					nombres.push_back("Iguin");
-					nombres.push_back("Restys");
-					nombres.push_back("Myrphon");
-
 					std::vector<std::string> roles;
-					roles.push_back("Aprendiz de Maga");
-					roles.push_back("Maestro Hechicero");
-					roles.push_back("Aprendiz");
-					roles.push_back("Aprendiz");
-					roles.push_back("Aprendiz");
-					roles.push_back("Inspector Mágico");
-					roles.push_back("Mago de Ala Ancha");
-					roles.push_back("Mago de Ala Ancha");
-					roles.push_back(myrphonRescatado ? "Mascota de Richeh" : "Mascota perdida de Richeh");
-
 					std::vector<std::string> desc;
-					desc.push_back("Protagonista del Nivel 1. Descubrió la verdad sobre el dibujo mágico.");
-					desc.push_back("Tutor y protector del atelier. Especialista en trazos y magia de agua.");
-					desc.push_back("Amiga reflexiva de Coco. Gran conocedora de runas antiguas.");
-					desc.push_back("Compañera disciplinada y exigente. Aspira a la perfección del trazo.");
-					desc.push_back("Compañera alegre y entusiasta. Le fascina la magia que anima vidas.");
-					desc.push_back("Hechicero artesano que protege el atelier contra peligros.");
-					desc.push_back("Líder misterioso de los Sombreros de Ala Ancha. Es quien causó la tragedia de Coco y orquestó el asalto en la cueva.");
-					desc.push_back("Mago proscrito especializado en el uso de magia médica prohibida y en alterar cuerpos para reclutar aliados.");
-					desc.push_back("Pingüino-grifo de cuatro patas propiedad de Richeh. Quedó atrapado en la oscuridad del laberinto Serpentback.");
-
 					std::vector<int> confianzas;
-					confianzas.push_back(2);
-					confianzas.push_back(nivel.getQifrey() != nullptr ? nivel.getQifrey()->getConfianza() : 0);
-					confianzas.push_back(nivel.getRicheh() != nullptr ? nivel.getRicheh()->getConfianza() : 0);
-					confianzas.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getConfianza() : 0);
-					confianzas.push_back(0);
-					confianzas.push_back(0);
-					confianzas.push_back(-1);
-					confianzas.push_back(-1);
-					confianzas.push_back(myrphonRescatado ? 3 : -2);
-
 					std::vector<bool> desbloqueados;
-					desbloqueados.push_back(true);
-					desbloqueados.push_back(true);
-					desbloqueados.push_back(nivel.getRicheh() != nullptr ? nivel.getRicheh()->getYaHablo() : false);
-					desbloqueados.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getYaHablo() : false);
-					desbloqueados.push_back(false);
-					desbloqueados.push_back(false);
-					desbloqueados.push_back(true);
-					desbloqueados.push_back(true);
-					desbloqueados.push_back(misionMyrphonActiva || myrphonRescatado);
+
+					if (nivel.getNumeroNivel() == 3) {
+						nombres.push_back("Coustas");
+						roles.push_back("Trovador de Kaln");
+						desc.push_back("Protagonista del Nivel 3. Joven invalido que se niega a rendirse ante su parálisis.");
+						confianzas.push_back(2);
+						desbloqueados.push_back(true);
+
+						nombres.push_back("Dagda");
+						roles.push_back("Protector de Coustas");
+						desc.push_back("Guerrero leal que acompana a Coustas y resiste herido protegiendo su camino.");
+						confianzas.push_back(nivel.getQifrey() != nullptr ? nivel.getQifrey()->getConfianza() : 2);
+						desbloqueados.push_back(true);
+
+						nombres.push_back("Ininia");
+						roles.push_back("Sombrero de Ala Ancha");
+						desc.push_back("Hechicera proscrita que ofrece a Coustas la Semilla Prohibida del Arbol de Plata.");
+						confianzas.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getConfianza() : 0);
+						desbloqueados.push_back(true);
+
+						nombres.push_back("Coco");
+						roles.push_back("Aprendiz de Maga");
+						desc.push_back("Companera que confecciono la Capa de Vuelo para dar esperanza a Coustas.");
+						confianzas.push_back(2);
+						desbloqueados.push_back(true);
+
+						nombres.push_back("Tartah");
+						roles.push_back("Orfebre de Kaln");
+						desc.push_back("Amigo leal de Coustas que busco incansablemente su rastro bajo la lluvia.");
+						confianzas.push_back(2);
+						desbloqueados.push_back(true);
+					} else {
+						nombres.push_back("Coco");
+						nombres.push_back("Qifrey");
+						nombres.push_back("Richeh");
+						nombres.push_back("Agott");
+						nombres.push_back("Tetia");
+						nombres.push_back("Olruggio");
+						nombres.push_back("Iguin");
+						nombres.push_back("Restys");
+						nombres.push_back("Myrphon");
+
+						roles.push_back("Aprendiz de Maga");
+						roles.push_back("Maestro Hechicero");
+						roles.push_back("Aprendiz");
+						roles.push_back("Aprendiz");
+						roles.push_back("Aprendiz");
+						roles.push_back("Inspector Mágico");
+						roles.push_back("Mago de Ala Ancha");
+						roles.push_back("Mago de Ala Ancha");
+						roles.push_back(myrphonRescatado ? "Mascota de Richeh" : "Mascota perdida de Richeh");
+
+						desc.push_back("Protagonista del Nivel 1. Descubrió la verdad sobre el dibujo mágico.");
+						desc.push_back("Tutor y protector del atelier. Especialista en trazos y magia de agua.");
+						desc.push_back("Amiga reflexiva de Coco. Gran conocedora de runas antiguas.");
+						desc.push_back("Compañera disciplinada y exigente. Aspira a la perfección del trazo.");
+						desc.push_back("Compañera alegre y entusiasta. Le fascina la magia que anima vidas.");
+						desc.push_back("Hechicero artesano que protege el atelier contra peligros.");
+						desc.push_back("Líder misterioso de los Sombreros de Ala Ancha. Es quien causó la tragedia de Coco y orquestó el asalto en la cueva.");
+						desc.push_back("Mago proscrito especializado en el uso de magia médica prohibida y en alterar cuerpos para reclutar aliados.");
+						desc.push_back("Pingüino-grifo de cuatro patas propiedad de Richeh. Quedó atrapado en la oscuridad del laberinto Serpentback.");
+
+						confianzas.push_back(2);
+						confianzas.push_back(nivel.getQifrey() != nullptr ? nivel.getQifrey()->getConfianza() : 0);
+						confianzas.push_back(nivel.getRicheh() != nullptr ? nivel.getRicheh()->getConfianza() : 0);
+						confianzas.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getConfianza() : 0);
+						confianzas.push_back(0);
+						confianzas.push_back(0);
+						confianzas.push_back(-1);
+						confianzas.push_back(-1);
+						confianzas.push_back(myrphonRescatado ? 3 : -2);
+
+						desbloqueados.push_back(true);
+						desbloqueados.push_back(true);
+						desbloqueados.push_back(nivel.getRicheh() != nullptr ? nivel.getRicheh()->getYaHablo() : false);
+						desbloqueados.push_back(nivel.getAgott() != nullptr ? nivel.getAgott()->getYaHablo() : false);
+						desbloqueados.push_back(false);
+						desbloqueados.push_back(false);
+						desbloqueados.push_back(true);
+						desbloqueados.push_back(true);
+						desbloqueados.push_back(misionMyrphonActiva || myrphonRescatado);
+					}
 
 					pantalla.dibujarModalPersonajes(nivel.getSeleccionModal(), nombres, roles, desc, confianzas, desbloqueados);
 				}

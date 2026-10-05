@@ -29,8 +29,7 @@ public:
 	}
 
 	static bool esCaminoEstatico(int px, int py) {
-		if (px >= 2 && px <= 78 && py >= 10 && py <= 23) return true;
-		if (px >= 80 && px <= 98 && py >= 5 && py <= 26) return true;
+		if (px >= 2 && px <= 98 && py >= 5 && py <= 26) return true;
 		return false;
 	}
 
@@ -129,13 +128,12 @@ public:
 				if (px < enemigoX[i] + 4 && px + pw > enemigoX[i] &&
 				    py < enemigoY[i] + 2 && py + ph > enemigoY[i]) {
 					protagonista->setVida(protagonista->getVida() - 1);
-					cooldownDanio = 20;
+					cooldownDanio = 30;
 					huboMovimiento = true;
+					this->transicionDanioCoustas = true;
 					if (px > 6) protagonista->setX(px - 3);
-					mostrarMensajeTemporal("¡Un bandido te embosco! Pierdes 1 vida.", 50);
 					if (protagonista->getVida() <= 0) {
 						iniciarNivel();
-						mostrarMensajeTemporal("Has caido en la emboscada... Reintentando el camino.", 70);
 					}
 					break;
 				}
@@ -198,14 +196,14 @@ public:
 			delete qifrey;
 			qifrey = nullptr;
 		}
-		qifrey = new NPC(83, 16, "Dagda", "Protector de Coustas");
+		qifrey = new NPC(76, 14, "Dagda", "Protector de Coustas");
 		qifrey->setConfianza(2);
 
 		if (agott != nullptr) {
 			delete agott;
 			agott = nullptr;
 		}
-		agott = new NPC(85, 22, "Ininia", "Sombrero de Ala Ancha");
+		agott = new NPC(89, 18, "Ininia", "Sombrero de Ala Ancha");
 		agott->setConfianza(0);
 
 		limpiarLetreros();
