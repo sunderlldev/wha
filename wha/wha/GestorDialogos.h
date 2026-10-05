@@ -66,7 +66,15 @@ public:
 	                         std::vector<std::string>& lineas,
 	                         std::vector<std::string>& opciones) {
 		(void)dioVaraRicheh;
-		if (estadoDialogo >= 400) {
+		if (estadoDialogo >= 600) {
+			hablante = (agott != nullptr) ? agott->getNombre() : "Ininia";
+			rol = (agott != nullptr) ? agott->getRolPerspectiva() : "Sombrero de Ala Ancha";
+			confianza = 0;
+		} else if (estadoDialogo >= 500) {
+			hablante = (qifrey != nullptr) ? qifrey->getNombre() : "Dagda";
+			rol = (qifrey != nullptr) ? qifrey->getRolPerspectiva() : "Protector de Coustas";
+			confianza = (qifrey != nullptr) ? qifrey->getConfianza() : 2;
+		} else if (estadoDialogo >= 400) {
 			hablante = "Letrero";
 			rol = "Informacion";
 			confianza = 0;
@@ -467,6 +475,44 @@ public:
 			opciones.push_back("[1] Cerrar");
 			break;
 
+		case 500:
+			lineas.push_back("¡Coustas...! Has logrado atravesar las ruinas a salvo...");
+			lineas.push_back("Los bandidos de sombrero ancho me hirieron gravemente...");
+			lineas.push_back("Pero no temas: mientras me quede un suspiro, te protegere.");
+			opciones.push_back("[1] ¡Dagda, resiste! Tenemos que salir de aqui juntos...");
+			opciones.push_back("[2] Usa la capa que nos dieron Coco y Tartah, ¡salvate!");
+			break;
+
+		case 501:
+			lineas.push_back("Mis piernas ya no responden, muchacho... Pero tu vida vale");
+			lineas.push_back("mucho mas que la mia. Toma mi arco y busca refugio...");
+			opciones.push_back("[1] (Una presencia oscura emerge entre los escombros...)");
+			break;
+
+		case 600:
+			lineas.push_back("Que devocion tan conmovedora entre un protector y su protegido.");
+			lineas.push_back("Pero seamos francos, pequeno trovador: tu protector se desangra.");
+			lineas.push_back("Y el consejo de hechiceros jamas salvara su vida ni tus piernas.");
+			opciones.push_back("[1] ¿Quien eres tu? ¿Que buscas de nosotros?");
+			opciones.push_back("[2] La magia prohibida destruye a quienes la usan...");
+			break;
+
+		case 601:
+			lineas.push_back("Soy Ininia. Y vengo a ofrecerte la verdadera libertad.");
+			lineas.push_back("Toma esta Semilla del Gran Arbol de Plata.");
+			lineas.push_back("Dibuja la runa de carne prohibida: sanaras a Dagda");
+			lineas.push_back("y tus piernas volveran a caminar por los valles.");
+			opciones.push_back("[1] [Aceptar la Semilla] ¡No dejare morir a Dagda por leyes injustas!");
+			opciones.push_back("[2] [Dudar] Coco y Tartah creyeron en nosotros... ¿Es este el camino?");
+			break;
+
+		case 602:
+			lineas.push_back("La semilla ya palpita en tu mano, Coustas...");
+			lineas.push_back("El pacto de la Noche de Plata ha comenzado.");
+			lineas.push_back("Dagda: 'Coustas... perdoname... no pude proteger tu luz...'");
+			opciones.push_back("[1] Contemplar el resplandor del Gran Arbol de Plata...");
+			break;
+
 		default:
 			lineas.push_back("Continua tu aprendizaje con dedicacion, Coco.");
 			opciones.push_back("[1] Salir");
@@ -760,6 +806,20 @@ public:
 		} else if (estadoDialogo == 410) {
 			estadoDialogo = 411;
 		} else if (estadoDialogo == 411) {
+			enDialogo = false;
+			estadoDialogo = 0;
+		} else if (estadoDialogo == 500) {
+			estadoDialogo = 501;
+		} else if (estadoDialogo == 501) {
+			estadoDialogo = 600;
+		} else if (estadoDialogo == 600) {
+			estadoDialogo = 601;
+		} else if (estadoDialogo == 601) {
+			puntosMisiones += 100;
+			estadoDialogo = 602;
+		} else if (estadoDialogo == 602) {
+			completado = true;
+			mostrarEstadisticasFin = true;
 			enDialogo = false;
 			estadoDialogo = 0;
 		} else {

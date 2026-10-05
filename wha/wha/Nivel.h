@@ -205,6 +205,7 @@ public:
 	bool getTransicionMinijuego() const { return this->transicionMinijuego; }
 	void setTransicionMinijuego(bool tm) { this->transicionMinijuego = tm; }
 	virtual void ejecutarMinijuego(Pantalla&, GestorAudio&) {}
+	virtual void dibujarEntidadesExtra(Pantalla&, int, int) const {}
 
 	Protagonista* getProtagonista() { return this->protagonista; }
 	NPC* getQifrey() { return this->qifrey; }
@@ -435,7 +436,7 @@ public:
 		}
 	}
 
-	bool actualizar() {
+	virtual bool actualizar() {
 		bool huboCambio = false;
 
 		if (this->protagonista != nullptr) {

@@ -163,13 +163,18 @@ public:
 	                          std::vector<std::string>& descripciones,
 	                          std::vector<std::string>& estados,
 	                          std::vector<bool>& desbloqueadas) {
-		titulos.push_back("El Gran Arbol");
-		descripciones.push_back("Asciende por las ramas ancestrales del Arbol de Plata\nenfrentando la hechiceria prohibida.");
+		titulos.push_back("Cruzar las Ruinas");
+		descripciones.push_back("Desplázate con Coustas esquivando a las patrullas\nenemigas que custodian el desfiladero.");
 		desbloqueadas.push_back(true);
 		estados.push_back("EN PROGRESO");
 
-		titulos.push_back("El Contrahechizo");
-		descripciones.push_back("Halla el grabado arcano primordial para revertir\nla petrificacion y sellar el pacto.");
+		titulos.push_back("Auxiliar a Dagda");
+		descripciones.push_back("Alcanza el claro del Gran Árbol de Plata donde Dagda\nresiste herido tras la emboscada.");
+		desbloqueadas.push_back(true);
+		estados.push_back("EN PROGRESO");
+
+		titulos.push_back("La Semilla Prohibida");
+		descripciones.push_back("Descubre la oferta de Ininia y decide el destino\nde la magia médica prohibida.");
 		desbloqueadas.push_back(true);
 		estados.push_back("EN PROGRESO");
 	}

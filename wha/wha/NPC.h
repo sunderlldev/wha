@@ -83,6 +83,46 @@ public:
 					frame2[r][c] = f2[r][c];
 				}
 			}
+		} else if (n == "Dagda") {
+			colorTraje = 6;
+			const char* f1[4] = {
+				"  /  \\ ",
+				" /____\\",
+				"( o_o )",
+				" / || \\"
+			};
+			const char* f2[4] = {
+				"  /  \\ ",
+				" /____\\",
+				"( ._. )",
+				" / || \\"
+			};
+			for (int r = 0; r < 4; r++) {
+				for (int c = 0; c < 7; c++) {
+					frame1[r][c] = f1[r][c];
+					frame2[r][c] = f2[r][c];
+				}
+			}
+		} else if (n == "Ininia") {
+			colorTraje = 5;
+			const char* f1[4] = {
+				"  /  \\ ",
+				" /____\\",
+				"( ~_~ )",
+				" / || \\"
+			};
+			const char* f2[4] = {
+				"  /  \\ ",
+				" /____\\",
+				"( -_- )",
+				" / || \\"
+			};
+			for (int r = 0; r < 4; r++) {
+				for (int c = 0; c < 7; c++) {
+					frame1[r][c] = f1[r][c];
+					frame2[r][c] = f2[r][c];
+				}
+			}
 		} else {
 			char inicial = n.empty() ? 'N' : n[0];
 			const char* f1[4] = {

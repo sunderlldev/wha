@@ -1073,6 +1073,159 @@ public:
 #endif
     }
 
+    void mostrarHistoriaNivel3() {
+        limpiarBufferCompleto();
+        int x = 7;
+        int y = 2;
+        int ancho = 106;
+        int alto = 36;
+        dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+        std::string tit1 = "W I T C H   H A T   A T E L I E R";
+        std::string tit2 = "A C T O   I I I :   L A   E M B O S C A D A";
+        int cx1 = x + (ancho - longitudVisible(tit1)) / 2;
+        int cx2 = x + (ancho - longitudVisible(tit2)) / 2;
+        setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
+        setTextoPantallaCompleta(cx2, y + 3, tit2, 2);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 5][x + c] = L'=';
+            bufferColor[y + 5][x + c] = 8;
+        }
+
+        std::string sub1 = "=== LA TRAGEDIA DE COUSTAS Y EL GRAN ARBOL DE PLATA ===";
+        int cxSub1 = x + (ancho - longitudVisible(sub1)) / 2;
+        setTextoPantallaCompleta(cxSub1, y + 7, sub1, 4);
+
+        setTextoPantallaCompleta(x + 5, y + 9,  "Tras recibir la Capa de Vuelo tejida por Coco y Tartah, Coustas emprende", 1);
+        setTextoPantallaCompleta(x + 5, y + 10, "el peligroso viaje hacia las ruinas del Gran Arbol de Plata con Dagda.", 1);
+        setTextoPantallaCompleta(x + 5, y + 11, "Pero una patrulla de hechiceros Sombreros de Ala Ancha los ha emboscado en el desfiladero.", 1);
+
+        setTextoPantallaCompleta(x + 5, y + 13, "Debido a su parálisis corporal y su silla de ruedas, Coustas no puede luchar.", 1);
+        setTextoPantallaCompleta(x + 5, y + 14, "Dagda se lanza al frente para resistir el asedio mientras Coustas debe esquivar", 1);
+        setTextoPantallaCompleta(x + 5, y + 15, "las patrullas enemigas y avanzar entre los escombros rocosos de la senda.", 1);
+
+        setTextoPantallaCompleta(x + 5, y + 17, "El destino pende de un hilo: Dagda resiste herido al final del camino,", 1);
+        setTextoPantallaCompleta(x + 5, y + 18, "mientras la misteriosa hechicera Ininia acecha en la sombra con una oferta prohibida...", 1);
+        setTextoPantallaCompleta(x + 5, y + 19, "¡Alcanza a tu protector antes de que sea demasiado tarde!", 1);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 21][x + c] = L'-';
+            bufferColor[y + 21][x + c] = 8;
+        }
+
+        std::string sub2 = "=== OBJETIVOS DEL NIVEL 3: LA EMBOSCADA ===";
+        int cxSub2 = x + (ancho - longitudVisible(sub2)) / 2;
+        setTextoPantallaCompleta(cxSub2, y + 23, sub2, 2);
+
+        setTextoPantallaCompleta(x + 5, y + 25, "* Desplazate con Coustas a traves de las ruinas rocosas del desfiladero.", 1);
+        setTextoPantallaCompleta(x + 5, y + 26, "* Esquiva a los bandidos patrulleros (evita el contacto directo).", 1);
+        setTextoPantallaCompleta(x + 5, y + 27, "* Llega hasta el claro donde Dagda defiende el Gran Arbol de Plata.", 1);
+        setTextoPantallaCompleta(x + 5, y + 28, "* Descubre la propuesta de Ininia y decide el destino de la Semilla Prohibida.", 1);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 30][x + c] = L'=';
+            bufferColor[y + 30][x + c] = 8;
+        }
+
+        std::string pie = "[ Presiona ENTER para iniciar el Nivel 3 ]";
+        int cxPie = x + (ancho - longitudVisible(pie)) / 2;
+        setTextoPantallaCompleta(cxPie, y + 32, pie, 4);
+
+        dibujar();
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int tecla = _getch();
+                if (tecla == 0 || tecla == 224) {
+                    tecla = _getch();
+                }
+                if (tecla == 13 || tecla == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
+    void mostrarEpilogoFinal(int puntajeTotal) {
+        limpiarBufferCompleto();
+        int x = 7;
+        int y = 2;
+        int ancho = 106;
+        int alto = 36;
+        dibujarCajaPantallaCompleta(x, y, ancho, alto, 3);
+
+        std::string tit1 = "W I T C H   H A T   A T E L I E R";
+        std::string tit2 = "E P I L O G O :   E L   A R B O L   D E   P L A T A";
+        int cx1 = x + (ancho - longitudVisible(tit1)) / 2;
+        int cx2 = x + (ancho - longitudVisible(tit2)) / 2;
+        setTextoPantallaCompleta(cx1, y + 2, tit1, 4);
+        setTextoPantallaCompleta(cx2, y + 3, tit2, 3);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 5][x + c] = L'=';
+            bufferColor[y + 5][x + c] = 8;
+        }
+
+        std::string sub1 = "=== TRES PERSPECTIVAS, UN MISMO DESTINO ===";
+        int cxSub1 = x + (ancho - longitudVisible(sub1)) / 2;
+        setTextoPantallaCompleta(cxSub1, y + 7, sub1, 4);
+
+        setTextoPantallaCompleta(x + 5, y + 9,  "* COCO (LA ESPERANZA):", 6);
+        setTextoPantallaCompleta(x + 5, y + 10, "  Descubrio que la magia no es privilegio divino, sino amor y trazo constante.", 1);
+        setTextoPantallaCompleta(x + 5, y + 11, "  Su manto de vuelo busco abrir los cielos a quien habia sido olvidado.", 1);
+
+        setTextoPantallaCompleta(x + 5, y + 13, "* TARTAH (LA DUDA Y LA LEALTAD):", 2);
+        setTextoPantallaCompleta(x + 5, y + 14, "  Cruzo las calles lluviosas de Kaln descubriendo la herida abierta del mundo.", 1);
+        setTextoPantallaCompleta(x + 5, y + 15, "  Entendio que las leyes que protegen a unos, dejan desamparados a otros.", 1);
+
+        setTextoPantallaCompleta(x + 5, y + 17, "* COUSTAS (LA TRAGEDIA Y EL PACTO):", 5);
+        setTextoPantallaCompleta(x + 5, y + 18, "  En su desesperacion por salvar a Dagda y romper las cadenas de su cuerpo,", 1);
+        setTextoPantallaCompleta(x + 5, y + 19, "  recibio la Semilla Prohibida del Arbol de Plata. Su historia apenas comienza...", 1);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 21][x + c] = L'-';
+            bufferColor[y + 21][x + c] = 8;
+        }
+
+        std::string ptsStr = "PUNTAJE GLOBAL OBTENIDO: " + std::to_string(puntajeTotal) + " PUNTOS";
+        int cxPts = x + (ancho - longitudVisible(ptsStr)) / 2;
+        setTextoPantallaCompleta(cxPts, y + 23, ptsStr, 2);
+
+        std::string finMsg = "¡Felicidades por completar la travesia del Arbol de Plata!";
+        int cxFin = x + (ancho - longitudVisible(finMsg)) / 2;
+        setTextoPantallaCompleta(cxFin, y + 25, finMsg, 1);
+
+        for (int c = 1; c < ancho - 1; c++) {
+            buffer[y + 28][x + c] = L'=';
+            bufferColor[y + 28][x + c] = 8;
+        }
+
+        std::string pie = "[ Presiona ENTER para finalizar la partida ]";
+        int cxPie = x + (ancho - longitudVisible(pie)) / 2;
+        setTextoPantallaCompleta(cxPie, y + 31, pie, 4);
+
+        dibujar();
+
+#ifdef _WIN32
+        while (true) {
+            if (_kbhit()) {
+                int tecla = _getch();
+                if (tecla == 0 || tecla == 224) {
+                    tecla = _getch();
+                }
+                if (tecla == 13 || tecla == 32) break;
+            }
+            Sleep(20);
+        }
+#else
+        std::cin.get();
+#endif
+    }
+
     void aplicarLluvia(int tickLluvia, int camX, int camY, bool enSubMapa, bool (*esCuartoFunc)(int, int) = nullptr) {
         if (enSubMapa) return;
         for (int y = 0; y < altoTotal; y++) {
@@ -1209,7 +1362,11 @@ public:
                                 }
                             } else if (ch == 'O') {
                                 bufferColor[yPantalla][xPantalla] = 8;
-                            } else if (ch == '<' || ch == '*' || ch == '!') {
+                            } else if (ch == 'T') {
+                                bufferColor[yPantalla][xPantalla] = 3;
+                            } else if (ch == '*') {
+                                bufferColor[yPantalla][xPantalla] = 7;
+                            } else if (ch == '<' || ch == '!') {
                                 bufferColor[yPantalla][xPantalla] = 4;
                             } else {
                                 bufferColor[yPantalla][xPantalla] = 0;

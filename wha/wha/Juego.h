@@ -83,7 +83,8 @@ public:
 	}
 
 	void mostrarDesenlaceFinal() {
-		std::cout << "¡Felicidades! ¡Has completado el viaje del Árbol de Plata!\n";
+		pantalla.mostrarEpilogoFinal(puntajeGlobal);
+		ejecutando = false;
 	}
 
 	void actualizar() {
@@ -172,8 +173,8 @@ public:
 					}
 				}
 
-				bool (*funcCuarto)(int, int) = (nivel.getNumeroNivel() == 2) ? Nivel2::esCuartoEstatico : Nivel1::esCuartoEstatico;
-				bool (*funcCamino)(int, int) = (nivel.getNumeroNivel() == 2) ? nullptr : Nivel1::esCaminoEstatico;
+				bool (*funcCuarto)(int, int) = (nivel.getNumeroNivel() == 2) ? Nivel2::esCuartoEstatico : ((nivel.getNumeroNivel() == 3) ? Nivel3::esCuartoEstatico : Nivel1::esCuartoEstatico);
+				bool (*funcCamino)(int, int) = (nivel.getNumeroNivel() == 2) ? nullptr : ((nivel.getNumeroNivel() == 3) ? Nivel3::esCaminoEstatico : Nivel1::esCaminoEstatico);
 				Nivel1* n1Ref = dynamic_cast<Nivel1*>(&nivel);
 				bool cuevaDesbloqueada = (n1Ref != nullptr) ? n1Ref->getParedPiedraDestruida() : true;
 
@@ -317,6 +318,7 @@ public:
 							}
 						}
 					}
+					nivel.dibujarEntidadesExtra(pantalla, camX, camY);
 				} else {
 					NPC* r = nivel.getRicheh();
 					if (r != nullptr) {
@@ -347,9 +349,14 @@ public:
 
 								if (nivel.getNumeroNivel() == 2) {
 									colPersonaje = 2;
+								} else if (nivel.getNumeroNivel() == 3) {
+									colPersonaje = 6;
 								}
 
 								int colCoco = (r == 2) ? 1 : colPersonaje;
+								if (nivel.getNumeroNivel() == 3 && r == 3) {
+									colCoco = 8;
+								}
 								pantalla.setPixelJuego(pantallaX + c, pantallaY + r, ch, colCoco);
 							}
 						}

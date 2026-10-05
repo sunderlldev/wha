@@ -11,18 +11,32 @@ public:
 	Protagonista(int x, int y, std::string n, int v = 3)
 		: Personaje(x, y, n, v) {
 		inventario = new Inventario();
-		ancho = 5;
-		alto = 4;
+		if (n == "Coustas") {
+			ancho = 6;
+			alto = 4;
+			frame1[0][0] = ' '; frame1[0][1] = '_'; frame1[0][2] = '/'; frame1[0][3] = '\\'; frame1[0][4] = '_'; frame1[0][5] = ' ';
+			frame1[1][0] = '('; frame1[1][1] = ' '; frame1[1][2] = '\''; frame1[1][3] = 'v'; frame1[1][4] = '\''; frame1[1][5] = ')';
+			frame1[2][0] = '['; frame1[2][1] = '='; frame1[2][2] = '='; frame1[2][3] = '='; frame1[2][4] = '='; frame1[2][5] = ']';
+			frame1[3][0] = ' '; frame1[3][1] = 'O'; frame1[3][2] = ' '; frame1[3][3] = ' '; frame1[3][4] = 'O'; frame1[3][5] = ' ';
 
-		frame1[0][0] = ' '; frame1[0][1] = '/'; frame1[0][2] = ' '; frame1[0][3] = '\\'; frame1[0][4] = ' ';
-		frame1[1][0] = '/'; frame1[1][1] = '_'; frame1[1][2] = '_'; frame1[1][3] = '_'; frame1[1][4] = '\\';
-		frame1[2][0] = '('; frame1[2][1] = '*'; frame1[2][2] = 'u'; frame1[2][3] = '*'; frame1[2][4] = ')';
-		frame1[3][0] = '/'; frame1[3][1] = ' '; frame1[3][2] = '|'; frame1[3][3] = ' '; frame1[3][4] = '\\';
+			frame2[0][0] = ' '; frame2[0][1] = '_'; frame2[0][2] = '/'; frame2[0][3] = '\\'; frame2[0][4] = '_'; frame2[0][5] = ' ';
+			frame2[1][0] = '('; frame2[1][1] = ' '; frame2[1][2] = '\''; frame2[1][3] = 'v'; frame2[1][4] = '\''; frame2[1][5] = ')';
+			frame2[2][0] = '['; frame2[2][1] = '='; frame2[2][2] = '='; frame2[2][3] = '='; frame2[2][4] = '='; frame2[2][5] = ']';
+			frame2[3][0] = ' '; frame2[3][1] = 'o'; frame2[3][2] = ' '; frame2[3][3] = ' '; frame2[3][4] = 'o'; frame2[3][5] = ' ';
+		} else {
+			ancho = 5;
+			alto = 4;
 
-		frame2[0][0] = ' '; frame2[0][1] = '/'; frame2[0][2] = ' '; frame2[0][3] = '\\'; frame2[0][4] = ' ';
-		frame2[1][0] = '/'; frame2[1][1] = '_'; frame2[1][2] = '_'; frame2[1][3] = '_'; frame2[1][4] = '\\';
-		frame2[2][0] = '('; frame2[2][1] = '*'; frame2[2][2] = 'u'; frame2[2][3] = '*'; frame2[2][4] = ')';
-		frame2[3][0] = ' '; frame2[3][1] = '|'; frame2[3][2] = ' '; frame2[3][3] = '|'; frame2[3][4] = ' ';
+			frame1[0][0] = ' '; frame1[0][1] = '/'; frame1[0][2] = ' '; frame1[0][3] = '\\'; frame1[0][4] = ' ';
+			frame1[1][0] = '/'; frame1[1][1] = '_'; frame1[1][2] = '_'; frame1[1][3] = '_'; frame1[1][4] = '\\';
+			frame1[2][0] = '('; frame1[2][1] = '*'; frame1[2][2] = 'u'; frame1[2][3] = '*'; frame1[2][4] = ')';
+			frame1[3][0] = '/'; frame1[3][1] = ' '; frame1[3][2] = '|'; frame1[3][3] = ' '; frame1[3][4] = '\\';
+
+			frame2[0][0] = ' '; frame2[0][1] = '/'; frame2[0][2] = ' '; frame2[0][3] = '\\'; frame2[0][4] = ' ';
+			frame2[1][0] = '/'; frame2[1][1] = '_'; frame2[1][2] = '_'; frame2[1][3] = '_'; frame2[1][4] = '\\';
+			frame2[2][0] = '('; frame2[2][1] = '*'; frame2[2][2] = 'u'; frame2[2][3] = '*'; frame2[2][4] = ')';
+			frame2[3][0] = ' '; frame2[3][1] = '|'; frame2[3][2] = ' '; frame2[3][3] = '|'; frame2[3][4] = ' ';
+		}
 	}
 
 	virtual ~Protagonista() {

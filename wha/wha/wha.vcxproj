@@ -132,6 +132,7 @@
     <ClInclude Include="Nivel1.h" />
     <ClInclude Include="Nivel2.h" />
     <ClInclude Include="Nivel3.h" />
+    <ClInclude Include="MapaNivel3.h" />
     <ClInclude Include="NPC.h" />
     <ClInclude Include="ObjetoMapa.h" />
     <ClInclude Include="Personaje.h" />
