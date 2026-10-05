@@ -28,7 +28,7 @@ private:
 	int tickAnimPrevio;
 	int tickLluviaPrevio;
 public:
-	Juego() : ejecutando(true), nivelActual(0), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1), tickLluviaPrevio(-1) {
+	Juego() : ejecutando(true), nivelActual(1), redibujarNecesario(true), puntajeGlobal(0), segundoPrevio(-1), tickAnimPrevio(-1), tickLluviaPrevio(-1) {
 		pantalla.configurarConsola();
 		listaNivel.push_back(new Nivel1());
 		listaNivel.push_back(new Nivel2());
