@@ -1217,7 +1217,7 @@ public:
                 bufferColor[y + 27][x + c] = 8;
             }
 
-            std::string controles = "[W / S] Mover   |   [ENTER / E] Seleccionar   |   [1..4] Opciones   |   [0] Test   |   [ESC] Volver";
+            std::string controles = "[W / S] Mover   |   [ENTER / E] Seleccionar   |   [1..4] Opciones   |   [ESC] Volver";
             int cxCtrl = x + (ancho - longitudVisible(controles)) / 2;
             setTextoPantallaCompleta(cxCtrl, y + 29, controles, 3);
 
@@ -1241,16 +1241,13 @@ public:
                         break;
                     } else if (tecla == '0') {
                         nivelesDesbloqueadosCheat = !nivelesDesbloqueadosCheat;
+                        mensajeAlerta = "";
                         if (nivelesDesbloqueadosCheat) {
                             Beep(600, 50);
                             Beep(800, 50);
                             Beep(1200, 100);
-                            mensajeAlerta = "¡MODO TEST ACTIVADO! Niveles 2 y 3 desbloqueados.";
-                            colorAlerta = 2;
                         } else {
                             Beep(400, 80);
-                            mensajeAlerta = "Modo test desactivado. Niveles bloqueados.";
-                            colorAlerta = 7;
                         }
                         break;
                     } else if (tecla == '1') {
