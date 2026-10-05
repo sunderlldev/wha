@@ -135,11 +135,12 @@ private:
     }
 
     bool sonidoFinReproducido;
+    bool nivelesDesbloqueadosCheat;
 
 public:
     Pantalla() : anchoTotal(120), altoTotal(40), anchoJuego(84), anchoPanel(35),
                  ultimoDialogoHablante(""), ultimoDialogoTexto(""), ultimoPromptTexto(""),
-                 sonidoFinReproducido(false) {
+                 sonidoFinReproducido(false), nivelesDesbloqueadosCheat(false) {
         buffer = std::vector<std::wstring>(altoTotal, std::wstring(anchoTotal, L' '));
         bufferColor = std::vector<std::vector<int>>(altoTotal, std::vector<int>(anchoTotal, 0));
     }
@@ -1177,23 +1178,30 @@ public:
             int cxDesc = x + (ancho - longitudVisible(desc)) / 2;
             setTextoPantallaCompleta(cxDesc, y + 6, desc, 1);
 
-            std::string itemsNivel[4] = {
-                "[1] Nivel 1: Coco   — El Atelier de Qifrey      [DESBLOQUEADO]",
-                "[2] Nivel 2: Tartah — El Laberinto de Kaln      [BLOQUEADO]",
-                "[3] Nivel 3: Qifrey — El Gran Arbol de Plata    [BLOQUEADO]",
-                "[4] Volver al Menu Principal"
-            };
+            std::string itemsNivel[4];
+            if (nivelesDesbloqueadosCheat) {
+                itemsNivel[0] = "[1] Nivel 1: Coco   - El Atelier de Qifrey      [DESBLOQUEADO]";
+                itemsNivel[1] = "[2] Nivel 2: Tartah - El Laberinto de Kaln      [DESBLOQUEADO]";
+                itemsNivel[2] = "[3] Nivel 3: Qifrey - El Gran Arbol de Plata    [DESBLOQUEADO]";
+                itemsNivel[3] = "[4] Volver al Menu Principal";
+            } else {
+                itemsNivel[0] = "[1] Nivel 1: Coco   - El Atelier de Qifrey      [DESBLOQUEADO]";
+                itemsNivel[1] = "[2] Nivel 2: Tartah - El Laberinto de Kaln      [BLOQUEADO]";
+                itemsNivel[2] = "[3] Nivel 3: Qifrey - El Gran Arbol de Plata    [BLOQUEADO]";
+                itemsNivel[3] = "[4] Volver al Menu Principal";
+            }
 
             for (int i = 0; i < totalOpciones; i++) {
                 int yOpc = y + 10 + i * 3;
                 std::string lineaOpc;
                 int colOpc;
+                bool desbloqueado = (i == 0 || (nivelesDesbloqueadosCheat && (i == 1 || i == 2)));
                 if (seleccion == i) {
                     lineaOpc = "==>  " + itemsNivel[i] + "  <==";
-                    colOpc = (i == 0) ? 2 : ((i == 3) ? 3 : 7);
+                    colOpc = desbloqueado ? 2 : ((i == 3) ? 3 : 7);
                 } else {
                     lineaOpc = "       " + itemsNivel[i] + "       ";
-                    colOpc = (i == 0) ? 1 : ((i == 3) ? 8 : 8);
+                    colOpc = desbloqueado ? 1 : ((i == 3) ? 8 : 8);
                 }
                 int cxOpc = x + (ancho - longitudVisible(lineaOpc)) / 2;
                 setTextoPantallaCompleta(cxOpc, yOpc, lineaOpc, colOpc);
@@ -1209,7 +1217,7 @@ public:
                 bufferColor[y + 27][x + c] = 8;
             }
 
-            std::string controles = "[W / S] Mover   |   [ENTER / E] Seleccionar   |   [1..4] Acceso rapido   |   [ESC] Volver";
+            std::string controles = "[W / S] Mover   |   [ENTER / E] Seleccionar   |   [1..4] Opciones   |   [0] Test   |   [ESC] Volver";
             int cxCtrl = x + (ancho - longitudVisible(controles)) / 2;
             setTextoPantallaCompleta(cxCtrl, y + 29, controles, 3);
 
@@ -1231,13 +1239,43 @@ public:
                         mensajeAlerta = "";
                         Beep(850, 18);
                         break;
+                    } else if (tecla == '0') {
+                        nivelesDesbloqueadosCheat = !nivelesDesbloqueadosCheat;
+                        if (nivelesDesbloqueadosCheat) {
+                            Beep(600, 50);
+                            Beep(800, 50);
+                            Beep(1200, 100);
+                            mensajeAlerta = "¡MODO TEST ACTIVADO! Niveles 2 y 3 desbloqueados.";
+                            colorAlerta = 2;
+                        } else {
+                            Beep(400, 80);
+                            mensajeAlerta = "Modo test desactivado. Niveles bloqueados.";
+                            colorAlerta = 7;
+                        }
+                        break;
                     } else if (tecla == '1') {
                         Beep(1200, 35);
                         return 0;
-                    } else if (tecla == '2' || tecla == '3') {
-                        Beep(300, 100);
-                        mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
-                        break;
+                    } else if (tecla == '2') {
+                        if (nivelesDesbloqueadosCheat) {
+                            Beep(1200, 35);
+                            return 1;
+                        } else {
+                            Beep(300, 100);
+                            mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
+                            colorAlerta = 7;
+                            break;
+                        }
+                    } else if (tecla == '3') {
+                        if (nivelesDesbloqueadosCheat) {
+                            Beep(1200, 35);
+                            return 2;
+                        } else {
+                            Beep(300, 100);
+                            mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
+                            colorAlerta = 7;
+                            break;
+                        }
                     } else if (tecla == '4' || tecla == 27) {
                         Beep(800, 25);
                         return -1;
@@ -1245,10 +1283,26 @@ public:
                         if (seleccion == 0) {
                             Beep(1200, 35);
                             return 0;
-                        } else if (seleccion == 1 || seleccion == 2) {
-                            Beep(300, 100);
-                            mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
-                            break;
+                        } else if (seleccion == 1) {
+                            if (nivelesDesbloqueadosCheat) {
+                                Beep(1200, 35);
+                                return 1;
+                            } else {
+                                Beep(300, 100);
+                                mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
+                                colorAlerta = 7;
+                                break;
+                            }
+                        } else if (seleccion == 2) {
+                            if (nivelesDesbloqueadosCheat) {
+                                Beep(1200, 35);
+                                return 2;
+                            } else {
+                                Beep(300, 100);
+                                mensajeAlerta = "¡Nivel Bloqueado! Debes completar el nivel previo para acceder.";
+                                colorAlerta = 7;
+                                break;
+                            }
                         } else {
                             Beep(800, 25);
                             return -1;
@@ -1293,7 +1347,7 @@ public:
             bufferColor[y + 11][x + c] = 8;
         }
 
-        std::string eq = "EQUIPO DE DESARROLLO — GRUPO 4";
+        std::string eq = "EQUIPO DE DESARROLLO - GRUPO 4";
         setTextoPantallaCompleta(x + (ancho - longitudVisible(eq)) / 2, y + 13, eq, 4);
 
         std::vector<std::string> arteJuan = {
@@ -1416,7 +1470,7 @@ public:
                 setTextoPantallaCompleta(x + 5, y + 25, "una faccion proscrita que busca destruir esta mentira, reivindicando que la magia", 6);
                 setTextoPantallaCompleta(x + 5, y + 26, "prohibida pertenece a todos y sembrando el caos para hacer caer el orden establecido.", 6);
             } else if (pagina == 1) {
-                std::string tPag = "PAGINA 2 / 4: NIVEL 1 — COCO (EL ATELIER DE QIFREY)";
+                std::string tPag = "PAGINA 2 / 4: NIVEL 1 - COCO (EL ATELIER DE QIFREY)";
                 setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 2);
 
                 setTextoPantallaCompleta(x + 5, y + 8, "=== QUIEN ES ===", 4);
@@ -1432,7 +1486,7 @@ public:
                 setTextoPantallaCompleta(x + 7, y + 22, "* Quiebra la pared de roca de la cueva con la pluma y recoge la Fibra de Plata.", 1);
                 setTextoPantallaCompleta(x + 7, y + 24, "* Entrega los 3 materiales a Qifrey para tejer la capa y consagrarse como bruja.", 1);
             } else if (pagina == 2) {
-                std::string tPag = "PAGINA 3 / 4: NIVEL 2 — TARTAH (EL LABERINTO DE KALN)";
+                std::string tPag = "PAGINA 3 / 4: NIVEL 2 - TARTAH (EL LABERINTO DE KALN)";
                 setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 6);
 
                 setTextoPantallaCompleta(x + 5, y + 8, "=== QUIEN ES ===", 4);
@@ -1448,7 +1502,7 @@ public:
                 setTextoPantallaCompleta(x + 7, y + 21, "* Descubre el escondite de la hechicera Ininia antes de que ejecuten a Coustas", 1);
                 setTextoPantallaCompleta(x + 9, y + 22, "por el uso de magia prohibida.", 1);
             } else if (pagina == 3) {
-                std::string tPag = "PAGINA 4 / 4: NIVEL 3 — QIFREY (EL GRAN ARBOL DE PLATA)";
+                std::string tPag = "PAGINA 4 / 4: NIVEL 3 - QIFREY (EL GRAN ARBOL DE PLATA)";
                 setTextoPantallaCompleta(x + (ancho - longitudVisible(tPag)) / 2, y + 6, tPag, 5);
 
                 setTextoPantallaCompleta(x + 5, y + 8, "=== QUIEN ES ===", 4);

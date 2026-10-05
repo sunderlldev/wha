@@ -66,6 +66,20 @@ public:
 					audio.reproducirNivel(nivelActual + 1);
 					redibujarNecesario = true;
 					break;
+				} else if (nivelSel == 1) {
+					nivelActual = 1;
+					listaNivel[nivelActual]->iniciarNivel();
+					listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
+					audio.reproducirNivel(nivelActual + 1);
+					redibujarNecesario = true;
+					break;
+				} else if (nivelSel == 2) {
+					nivelActual = 2;
+					listaNivel[nivelActual]->iniciarNivel();
+					listaNivel[nivelActual]->mostrarCinematicaIntro(pantalla);
+					audio.reproducirNivel(nivelActual + 1);
+					redibujarNecesario = true;
+					break;
 				}
 			} else if (opcion == 1) {
 				pantalla.mostrarCreditos();

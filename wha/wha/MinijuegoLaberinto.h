@@ -26,10 +26,10 @@ private:
 	int cocoY;
 	int myrphonX;
 	int myrphonY;
-	int enemigoX[4];
-	int enemigoY[4];
-	int enemigoDx[4];
-	int enemigoDy[4];
+	int enemigoX[5];
+	int enemigoY[5];
+	int enemigoDx[5];
+	int enemigoDy[5];
 	int invulnerableTicks;
 
 	void cargarMapa() {
@@ -81,32 +81,57 @@ public:
 		myrphonX = 72;
 		myrphonY = 28;
 
-		for (int i = 0; i < 4; i++) {
+		int zXMin[5] = { 42,  4, 40,  4, 30 };
+		int zXMax[5] = { 70, 26, 68, 26, 56 };
+		int zYMin[5] = {  1,  8,  9, 18, 20 };
+		int zYMax[5] = {  6, 15, 16, 28, 28 };
+
+		for (int i = 0; i < 5; i++) {
 			bool ubicado = false;
 			int intentos = 0;
+
 			while (!ubicado && intentos < 300) {
 				intentos++;
-				int rx = 2 + (rand() % 73);
-				int ry = 1 + (rand() % 28);
+				int spanX = (zXMax[i] - zXMin[i] > 0) ? (zXMax[i] - zXMin[i]) : 1;
+				int spanY = (zYMax[i] - zYMin[i] > 0) ? (zYMax[i] - zYMin[i]) : 1;
+				int rx = zXMin[i] + (rand() % spanX);
+				int ry = zYMin[i] + (rand() % spanY);
+
 				if (colisiona(rx, ry)) continue;
-				if (abs(rx - cocoX) < 18 && abs(ry - cocoY) < 6) continue;
+				if (abs(rx - cocoX) < 14 && abs(ry - cocoY) < 5) continue;
 				if (abs(rx - myrphonX) < 6 && abs(ry - myrphonY) < 3) continue;
+
 				bool solapado = false;
 				for (int j = 0; j < i; j++) {
-					if (abs(rx - enemigoX[j]) < 5 && abs(ry - enemigoY[j]) < 3) {
+					if (abs(rx - enemigoX[j]) < 8 && abs(ry - enemigoY[j]) < 4) {
 						solapado = true;
 						break;
 					}
 				}
 				if (solapado) continue;
+
 				enemigoX[i] = rx;
 				enemigoY[i] = ry;
 				ubicado = true;
 			}
+
 			if (!ubicado) {
-				enemigoX[i] = (i % 2 == 0) ? 20 + i * 15 : 30 + i * 10;
-				enemigoY[i] = 5 + i * 6;
+				for (int cy = zYMin[i]; cy <= zYMax[i] && !ubicado; cy++) {
+					for (int cx = zXMin[i]; cx <= zXMax[i] && !ubicado; cx++) {
+						if (!colisiona(cx, cy) && (abs(cx - cocoX) >= 10 || abs(cy - cocoY) >= 3) && (abs(cx - myrphonX) >= 6 || abs(cy - myrphonY) >= 3)) {
+							enemigoX[i] = cx;
+							enemigoY[i] = cy;
+							ubicado = true;
+						}
+					}
+				}
 			}
+
+			if (!ubicado) {
+				enemigoX[i] = 10 + i * 12;
+				enemigoY[i] = 5 + (i % 3) * 8;
+			}
+
 			bool libreH = (!colisiona(enemigoX[i] + 1, enemigoY[i]) || !colisiona(enemigoX[i] - 1, enemigoY[i]));
 			bool libreV = (!colisiona(enemigoX[i], enemigoY[i] + 1) || !colisiona(enemigoX[i], enemigoY[i] - 1));
 			if (libreH && !libreV) {
@@ -150,7 +175,7 @@ public:
 	}
 
 	void moverEnemigos() {
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 5; i++) {
 			int nx = enemigoX[i] + enemigoDx[i];
 			int ny = enemigoY[i] + enemigoDy[i];
 			if (!colisiona(nx, ny)) {
@@ -296,8 +321,8 @@ public:
 			pantalla.setTextoJuego(offsetX + myrphonX, offsetY + myrphonY, "(o> ", 4);
 			pantalla.setTextoJuego(offsetX + myrphonX, offsetY + myrphonY + 1, "/||\\", 4);
 
-			for (int i = 0; i < 4; i++) {
-				if (i < 2) {
+			for (int i = 0; i < 5; i++) {
+				if (i % 2 == 0) {
 					pantalla.setTextoJuego(offsetX + enemigoX[i], offsetY + enemigoY[i], " === ", 7);
 					pantalla.setTextoJuego(offsetX + enemigoX[i], offsetY + enemigoY[i] + 1, "/<_o", 7);
 				} else {
@@ -356,7 +381,7 @@ public:
 			}
 #endif
 
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 5; i++) {
 				if (abs(cocoX - enemigoX[i]) <= 3 && abs(cocoY - enemigoY[i]) <= 1) {
 					if (invulnerableTicks == 0) {
 						protagonista->setVida(protagonista->getVida() - 1);

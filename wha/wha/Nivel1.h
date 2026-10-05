@@ -181,6 +181,13 @@ public:
 				}
 				inv->removerItem("Pluma Termica");
 				promptFlotante = "Punta incandescente aplicada: La pared de roca se quebro.";
+#ifdef _WIN32
+				Beep(260, 60);
+				Beep(180, 80);
+				Beep(130, 90);
+				Beep(90, 110);
+				Beep(65, 160);
+#endif
 				return true;
 			}
 		}
