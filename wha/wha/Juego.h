@@ -278,7 +278,7 @@ public:
 								if (qx + c >= 0 && qx + c < pantalla.getAnchoJuego() && qy + r >= 0 && qy + r < pantalla.getAltoTotal()) {
 									char ch = q->getCaracter(r, c);
 									if (ch != ' ') {
-										int colQ = (r == 2) ? 1 : 3;
+										int colQ = (r == 2) ? 1 : q->getColorTraje();
 										pantalla.setPixelJuego(qx + c, qy + r, ch, colQ);
 									}
 								}
@@ -295,7 +295,7 @@ public:
 								if (ax + c >= 0 && ax + c < pantalla.getAnchoJuego() && ay + r >= 0 && ay + r < pantalla.getAltoTotal()) {
 									char ch = a->getCaracter(r, c);
 									if (ch != ' ') {
-										int colA = (r == 2) ? 1 : 5;
+										int colA = (r == 2) ? 1 : a->getColorTraje();
 										pantalla.setPixelJuego(ax + c, ay + r, ch, colA);
 									}
 								}
@@ -354,8 +354,11 @@ public:
 								}
 
 								int colCoco = (r == 2) ? 1 : colPersonaje;
-								if (nivel.getNumeroNivel() == 3 && r == 3) {
-									colCoco = 8;
+								if (nivel.getNumeroNivel() == 3) {
+									if (r == 1) colCoco = 7;
+									else if (r == 2) colCoco = 3;
+									else if (r == 3) colCoco = 8;
+									else colCoco = 6;
 								}
 								pantalla.setPixelJuego(pantallaX + c, pantallaY + r, ch, colCoco);
 							}

@@ -22,16 +22,7 @@ public:
 		enemigoX[3] = 72; enemigoY[3] = 20; enemigoDx[3] = 0; enemigoDy[3] = -1; enemigoMin[3] = 12; enemigoMax[3] = 21;
 	}
 
-	virtual ~Nivel3() {
-		if (qifrey != nullptr) {
-			delete qifrey;
-			qifrey = nullptr;
-		}
-		if (agott != nullptr) {
-			delete agott;
-			agott = nullptr;
-		}
-	}
+	virtual ~Nivel3() {}
 
 	static bool esCuartoEstatico(int, int) {
 		return false;
@@ -99,10 +90,12 @@ public:
 		return false;
 	}
 
-	void actualizarPatrullas() {
+	bool actualizarPatrullas() {
+		bool huboMovimiento = false;
 		clock_t ahora = clock();
 		if ((double)(ahora - tiempoUltimoPasoEnemigo) / CLOCKS_PER_SEC >= 0.20) {
 			tiempoUltimoPasoEnemigo = ahora;
+			huboMovimiento = true;
 			for (int i = 0; i < 4; i++) {
 				if (enemigoDx[i] != 0) {
 					int nx = enemigoX[i] + enemigoDx[i];
@@ -137,6 +130,7 @@ public:
 				    py < enemigoY[i] + 2 && py + ph > enemigoY[i]) {
 					protagonista->setVida(protagonista->getVida() - 1);
 					cooldownDanio = 20;
+					huboMovimiento = true;
 					if (px > 6) protagonista->setX(px - 3);
 					mostrarMensajeTemporal("¡Un bandido te embosco! Pierdes 1 vida.", 50);
 					if (protagonista->getVida() <= 0) {
@@ -147,11 +141,13 @@ public:
 				}
 			}
 		}
+		return huboMovimiento;
 	}
 
 	virtual bool actualizar() override {
-		actualizarPatrullas();
-		return Nivel::actualizar();
+		bool movio = actualizarPatrullas();
+		bool base = Nivel::actualizar();
+		return movio || base;
 	}
 
 	virtual void iniciarNivel() override {
@@ -192,14 +188,11 @@ public:
 		MapaNivel3::cargarMatriz(matrizCargada);
 		mapa->cargarMatriz(matrizCargada);
 
-		if (protagonista == nullptr) {
-			protagonista = new Protagonista(4, 15, "Coustas", 3);
-		} else {
-			protagonista->setX(4);
-			protagonista->setY(15);
-			protagonista->setVida(3);
-			protagonista->setVidaMaxima(3);
+		if (protagonista != nullptr) {
+			delete protagonista;
+			protagonista = nullptr;
 		}
+		protagonista = new Protagonista(4, 15, "Coustas", 3);
 
 		if (qifrey != nullptr) {
 			delete qifrey;
