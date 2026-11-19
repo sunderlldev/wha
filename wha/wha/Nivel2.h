@@ -131,10 +131,10 @@ public:
 
     void mostrarCinematicaIntro(Pantalla& pantalla) override {
         Cinematica* introNivel2 = new Cinematica();
-        introNivel2->agregarCuadro(Nivel2_Inicio01, "Es Ininia", 3000, 10, 2, 10, 7);
-        introNivel2->agregarCuadro(Nivel2_Inicio02, "Es coustas", 3000, 10, 2, 10, 7);
-        introNivel2->agregarCuadro(Nivel2_Inicio03, "Coco: Oh no, se van! Tenemos que alcanzarlos rapido.", 3000, 10, 2, 10, 7);
-        introNivel2->agregarCuadro(Nivel2_Inicio04, "Tartah: Espera Coco, no corras tan rapido! Voy al banio.", 3000, 10, 2, 10, 7);
+        introNivel2->agregarCuadro(Nivel2_Inicio01, "Tartah: Es Ininia", 3000, 10, 2, 12, 5);
+        introNivel2->agregarCuadro(Nivel2_Inicio02, "Coco: Es coustas", 3000, 10, 2, 12, 5);
+        introNivel2->agregarCuadro(Nivel2_Inicio03, "Coco: Oh no, se van! Tenemos que alcanzarlos rapido.", 3000, 10, 2, 12, 5);
+        introNivel2->agregarCuadro(Nivel2_Inicio04, "Tartah: Espera Coco, no corras tan rapido! Voy al banio.", 3000, 10, 2, 12, 5);
         introNivel2->reproducir();
         delete introNivel2;
         pantalla.mostrarHistoriaNivel2();
@@ -150,7 +150,11 @@ public:
         case 1:
             return;
         case 2:
-            cine->agregarCuadro(Nivel2_Inicio01, "CASA DEL PANADERO", 2500, 10, 2, 10, 7);
+            cine->agregarCuadro(Nivel2_Panaderia01, "Un mago de sombrero puntiagudo!", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Panaderia02, "El gato fue atrapado por los escombros!", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Panaderia03, "Magia prohibida!", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Panaderia04, "Esta ayudandolo?", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Panaderia05, "La magia se puede utilizar para curar?", 2500, 10, 2, 12, 5);
             break;
         case 3:
             cine->agregarCuadro(Nivel2_Inicio01, "CASA DE LA VIEJITA NADA SOSPECHOSA", 2500, 10, 2, 10, 7);
