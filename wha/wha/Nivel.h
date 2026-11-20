@@ -17,6 +17,7 @@
 #include "TorreAgott.h"
 #include "Letrero.h"
 #include "Pantalla.h"
+#include "Enemigo.h"
 class GestorAudio;
 #ifdef _WIN32
 #include <conio.h>
@@ -51,6 +52,7 @@ protected:
 	bool animacionMyrphonHecha;
 	bool transicionEasterEgg;
 	bool transicionDanioCoustas;
+	std::vector<Enemigo*> enemigos;
 
 	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
 		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
@@ -94,6 +96,15 @@ protected:
 			}
 		}
 		letreros.clear();
+	}
+
+	void limpiarEnemigos() {
+		for (size_t i = 0; i < enemigos.size(); i++)
+		{
+			if (enemigos[i] != nullptr) {
+				delete enemigos[i];
+			}
+		}
 	}
 
 	void dibujarLetrerosEnMapa() {
@@ -154,6 +165,12 @@ public:
 		}
 		limpiarItemsSuelo();
 		limpiarLetreros();
+		limpiarEnemigos();
+	}
+
+	virtual const std::vector<Enemigo*>& getEnemigos() const {
+		static const std::vector<Enemigo*> vacio;
+		return vacio;
 	}
 
 	virtual void mostrarCinematicaIntro(Pantalla&) {
@@ -489,6 +506,13 @@ public:
 			}
 			if (this->protagonista->getFrameActual() != framePrevio) {
 				huboCambio = true;
+			}
+			const std::vector<Enemigo*>& listaEnemigos = getEnemigos();
+			for (size_t i = 0; i < listaEnemigos.size(); i++) {
+				Enemigo* en = listaEnemigos[i];
+				if (en != nullptr && en->getActivo()) {
+					en->actualizarAnimacion(30);
+				}
 			}
 		}
 

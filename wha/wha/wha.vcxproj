@@ -118,6 +118,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Enemigo.h" />
     <ClInclude Include="MinijuegoLaberinto.h" />
     <ClInclude Include="Arbol.h" />
     <ClInclude Include="Cinematica.h" />

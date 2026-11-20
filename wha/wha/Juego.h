@@ -315,6 +315,25 @@ public:
 						}
 					}
 
+					const std::vector<Enemigo*>& listaEnemigos = nivel.getEnemigos();
+					for (size_t i = 0; i < listaEnemigos.size(); i++) {
+						Enemigo* en = listaEnemigos[i];
+						if (en != nullptr && en->getActivo()) {
+							int ex = en->getX() - camX;
+							int ey = en->getY() - camY;
+							for (int r = 0; r < en->getAlto(); r++) {
+								for (int c = 0; c < en->getAncho(); c++) {
+									if (ex + c >= 0 && ex + c < pantalla.getAnchoJuego() && ey + r >= 0 && ey + r < pantalla.getAltoTotal()) {
+										char ch = en->getCaracter(r, c);
+										if (ch != ' ') {
+											pantalla.setPixelJuego(ex + c, ey + r, ch, en->getColor());
+										}
+									}
+								}
+							}
+						}
+					}
+
 					NPC* q = nivel.getQifrey();
 					if (q != nullptr) {
 						int qx = q->getX() - camX;
