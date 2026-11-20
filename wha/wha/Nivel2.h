@@ -4,6 +4,7 @@
 #include "MapaNivel2.h"
 #include "MatricesNivel2.h"
 #include "Cinematica.h"
+#include "LibretaHechizoAire.h"
 
 class Nivel2 : public Nivel {
 private:
@@ -13,9 +14,121 @@ private:
     int ticksPersecucion = 0;
     int ticksCooldownDanio = 0;
     bool bonoExploracionAplicado = {false};
+    LibretaHechizoAire* libretaAire = nullptr;
+    int cargasHechizoAire = 0;
+    int ticksRafagaAire = 0;
+    int rafagaX = 0;
+    int rafagaY = 0;
+    char rafagaDir = 'D';
 public:
-    Nivel2() : Nivel(2, "Laberinto del Pueblo", 100, 200) {}
+    Nivel2() : Nivel(2, "Laberinto del Pueblo", 100, 200) {
+        ticksPersecucion = 0;
+        ticksRafagaAire = 0;
+        cargasHechizoAire = 0;
+        libretaAire = new LibretaHechizoAire(17, 44, 3);
+        itemsSuelo.push_back(libretaAire);
+    }
     virtual ~Nivel2() {}
+
+    //
+    // HECHIZO y puntaje
+    //
+
+    void dibujarEntidadesExtra(Pantalla& pantalla, int camX, int camY) const override {
+        if (ticksRafagaAire <= 0) {
+            return;
+        }
+
+        int dx = 1;
+        int dy = 0;
+        char chRafaga = '~';
+
+        if (rafagaDir == 'W' || rafagaDir == 'w') {
+            dx = 0;
+            dy = -1;
+            chRafaga = '^';
+        }
+        else if (rafagaDir == 'S' || rafagaDir == 's') {
+            dx = 0;
+            dy = 1;
+            chRafaga = 'v';
+        }
+        else if (rafagaDir == 'A' || rafagaDir == 'a') {
+            dx = -1;
+            dy = 0;
+            chRafaga = '<';
+        }
+        else {
+            dx = 1;
+            dy = 0;
+            chRafaga = '>';
+        }
+
+        int inicioPaso = 9 - ticksRafagaAire;
+        if (inicioPaso < 1) inicioPaso = 1;
+        int finPaso = inicioPaso + 6;
+        if (finPaso > 14) finPaso = 14;
+
+        for (int paso = inicioPaso; paso <= finPaso; paso++) {
+            int wx = rafagaX + dx * paso;
+            int wy = rafagaY + dy * paso;
+            int sx = wx - camX;
+            int sy = wy - camY;
+
+            char ch = (paso == finPaso) ? chRafaga : ((paso % 2 == 0) ? '~' : '-');
+            pantalla.setPixelJuego(sx, sy, ch, 3); // Cian brillante
+        }
+    }
+
+    bool activarHechizoAire() override {
+        if (protagonista == nullptr || protagonista->getInventario() == nullptr) {
+            return false;
+        }
+
+        if (!protagonista->getInventario()->tieneItem("Libreta de Hechizos de Aire")) {
+            mostrarMensajeTemporal("[AVISO] Aun no tienes la Libreta de Hechizos de Aire.", 60);
+            return true;
+        }
+
+        if (libretaAire == nullptr) {
+            libretaAire = new LibretaHechizoAire(0, 0, 3);
+        }
+
+        if (!libretaAire->tieneCargas()) {
+            cargasHechizoAire = 0;
+            mostrarMensajeTemporal("[AVISO] Ya no te quedan hechizos de aire (0/3).", 60);
+            return true;
+        }
+
+        char dir = protagonista->getDireccionMirada();
+        int px = protagonista->getX() + protagonista->getAncho() / 2;
+        int py = protagonista->getY() + protagonista->getAlto() / 2;
+
+        int eliminados = libretaAire->disparar(px, py, dir, enemigos);
+        ticksRafagaAire = 8; // Dura ~8 frames en pantalla
+        rafagaX = px;
+        rafagaY = py;
+        rafagaDir = dir;
+        cargasHechizoAire = libretaAire->getCargasRestantes();
+
+        if (eliminados > 0) {
+            mostrarMensajeTemporal("[HECHIZO DE AIRE] Eliminaste a " + std::to_string(eliminados) +
+                " enemigo(s). Cargas: " + std::to_string(cargasHechizoAire) + "/3", 75);
+        }
+        else {
+            mostrarMensajeTemporal("[HECHIZO DE AIRE] Lanzaste una rafaga de aire. Cargas: " +
+                std::to_string(cargasHechizoAire) + "/3", 65);
+        }
+        return true;
+    }
+
+    std::string getInfoPanelExtra1() const override {
+        return obtenerBarraConocimientoPueblo(8);
+    }
+
+    std::string getInfoPanelExtra2() const override {
+        return "Aire: " + std::to_string(cargasHechizoAire) + "/3";
+    }
 
     int calcularPuntosExploracionPueblo() {
         int visitados = contarCuartosVisitados();
@@ -34,7 +147,7 @@ public:
         }
     }
 
-    std::string obtenerBarraConocimientoPueblo(int anchoBarra) {
+    std::string obtenerBarraConocimientoPueblo(int anchoBarra) const {
         int visitados = contarCuartosVisitados();
         const int totalCuartos = 8;
 
@@ -59,7 +172,7 @@ public:
         return barra;
     }
 
-    int contarCuartosVisitados() {
+    int contarCuartosVisitados() const {
         int total = 0;
         for (int id = 1; id <= 9; id++) {
             if (id != 5 && cuartosVisitados[id]) {
@@ -98,6 +211,9 @@ public:
         if (ticksPersecucion >= 6) { // Cada 6 ciclos del bucle (~180 ms)
             ticksPersecucion = 0;
             persecucionEnemigos();
+        }
+        if (ticksRafagaAire > 0) {
+            ticksRafagaAire--;
         }
         colisionEnemigos();
     }
@@ -656,6 +772,9 @@ public:
         limpiarEnemigos();
 
         limpiarItemsSuelo();
+        cargasHechizoAire = 0;
+        libretaAire = new LibretaHechizoAire(17, 44, 3);
+        itemsSuelo.push_back(libretaAire);
 
         dibujarLetrerosEnMapa();
 

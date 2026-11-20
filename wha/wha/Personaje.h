@@ -14,10 +14,11 @@ protected:
     char frame2[4][7];
     int frameActual;
     int temporizadorAnimacion;
-    
+    char direccionMirada;
+
 public:
     Personaje()
-        : x(0), y(0), nombre("Sin Nombre"), vida(3), vidaMaxima(3),
+        : direccionMirada('D'), x(0), y(0), nombre("Sin Nombre"), vida(3), vidaMaxima(3),
           ancho(2), alto(2), frameActual(0), temporizadorAnimacion(0) {
         for (int r = 0; r < 4; r++) {
             for (int c = 0; c < 7; c++) {
@@ -56,6 +57,15 @@ public:
     int getAncho() const { return this->ancho; }
     int getAlto() const { return this->alto; }
     int getFrameActual() const { return this->frameActual; }
+
+    char getDireccionMirada() const { return this->direccionMirada; }
+
+    void setDireccionMirada(char dir) {
+        if (dir == 'W' || dir == 'w') this->direccionMirada = 'W';
+        else if (dir == 'S' || dir == 's') this->direccionMirada = 'S';
+        else if (dir == 'A' || dir == 'a') this->direccionMirada = 'A';
+        else if (dir == 'D' || dir == 'd') this->direccionMirada = 'D';
+    }
 
     char getCaracter(int fila, int col) const {
         if (fila < 0 || fila >= this->alto || col < 0 || col >= this->ancho) return ' ';

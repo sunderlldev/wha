@@ -315,6 +315,24 @@ public:
 						}
 					}
 
+					const std::vector<ItemMagico*>& items = nivel.getItemsSuelo();
+					for (size_t i = 0; i < items.size(); i++) {
+						ItemMagico* it = items[i];
+						if (it != nullptr && !it->getRecogido()) {
+							int sx = it->getX() - camX;
+							int sy = it->getY() - camY;
+							int col = it->getColor();
+							for (int r = 0; r < it->getAlto(); r++) {
+								for (int c = 0; c < it->getAncho(); c++) {
+									char ch = it->getCaracter(r, c);
+									if (ch != ' ') {
+										pantalla.setPixelJuego(sx + c, sy + r, ch, col);
+									}
+								}
+							}
+						}
+					}
+
 					const std::vector<Enemigo*>& listaEnemigos = nivel.getEnemigos();
 					for (size_t i = 0; i < listaEnemigos.size(); i++) {
 						Enemigo* en = listaEnemigos[i];
@@ -445,13 +463,17 @@ public:
 					}
 				}
 
+				nivel.dibujarEntidadesExtra(pantalla, camX, camY);
+
 				pantalla.renderizarPanelLateral(
 					nivel.getNumeroNivel(),
 					nivel.getNombreNivel(),
 					prota->getNombre(),
 					prota->getVida(),
 					prota->getVidaMaxima(),
-					nivel.getNombreUbicacionActual()
+					nivel.getNombreUbicacionActual(),
+					nivel.getInfoPanelExtra1(),
+					nivel.getInfoPanelExtra2()
 				);
 
 				if (!nivel.getPromptFlotante().empty() && !nivel.getEnDialogo() && nivel.getModalActivo() == 0 && !nivel.getMostrarEstadisticasFin()) {

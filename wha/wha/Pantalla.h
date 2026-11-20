@@ -871,8 +871,10 @@ public:
     }
 
     void renderizarPanelLateral(int nivel, const std::string& nombreNivel,
-                               const std::string& protagonista, int vida, int vidaMax,
-                               const std::string& ubicacion = "") {
+                                const std::string& protagonista, int vida, int vidaMax,
+                                const std::string& ubicacion = "",
+                                const std::string& infoConocimiento = "",
+                                const std::string& infoHechizo = "") {
         std::vector<std::wstring> lineasPanel(altoTotal, std::wstring(anchoPanel, L' '));
 
         std::wstring separador = std::wstring(anchoPanel - 1, L'-') + L"|";
@@ -927,6 +929,18 @@ public:
         for (int f = 31; f < altoTotal - 1; f++) {
             lineasPanel[f] = encuadrarFilaPanelW("", anchoPanel);
         }
+
+        if (!infoConocimiento.empty()) {
+            lineasPanel[31] = encuadrarFilaPanelW("[CONOCIMIENTO]", anchoPanel);
+            lineasPanel[32] = encuadrarFilaPanelW(infoConocimiento, anchoPanel);
+        }
+
+        if (!infoHechizo.empty()) {
+            lineasPanel[34] = encuadrarFilaPanelW("[HECHIZO AIRE]", anchoPanel);
+            lineasPanel[35] = encuadrarFilaPanelW(infoHechizo, anchoPanel);
+            lineasPanel[36] = encuadrarFilaPanelW("[ESPACIO] Disparar", anchoPanel);
+        }
+
         lineasPanel[altoTotal - 1] = bordeCaja;
 
         int colInicioPanel = anchoJuego + 1;
@@ -943,9 +957,17 @@ public:
                     bufferColor[f][colInicioPanel + c] = 7;
                 } else if (f == 8 || f == 24) {
                     bufferColor[f][colInicioPanel + c] = 4;
-                } else if (f == 28) {
+                }else if (f == 28) {
                     bufferColor[f][colInicioPanel + c] = 2;
-                } else {
+                } else if (f == 31 || f == 34) {
+                    bufferColor[f][colInicioPanel + c] = 4; // Amarillo para títulos de sección
+                }else if (f == 32) {
+                    bufferColor[f][colInicioPanel + c] = 2; // Verde brillante para la barra
+                }else if (f == 35) {
+                    bufferColor[f][colInicioPanel + c] = 3; // Cian brillante para cargas del hechizo
+                }else if (f == 36) {
+                    bufferColor[f][colInicioPanel + c] = 6; // Azul brillante para el control [ESPACIO]
+                }else {
                     bufferColor[f][colInicioPanel + c] = 1;
                 }
             }

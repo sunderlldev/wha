@@ -169,6 +169,11 @@ public:
 		limpiarEnemigos();
 	}
 
+	virtual std::string getInfoPanelExtra1() const { return ""; }
+	virtual std::string getInfoPanelExtra2() const { return ""; }
+
+	virtual bool activarHechizoAire() { return false; }
+
 	virtual const std::vector<Enemigo*>& getEnemigos() const {
 		static const std::vector<Enemigo*> vacio;
 		return vacio;
@@ -492,6 +497,7 @@ public:
 	}
 
 	virtual bool actualizar() {
+
 		bool huboCambio = false;
 
 		bool enDialogoActual = (gestorDialogos != nullptr && gestorDialogos->getEnDialogo());
@@ -703,6 +709,14 @@ public:
 				return huboCambio;
 			}
 
+			if (tecla == 32) { // ESPACIO
+				if (activarHechizoAire()) {
+					actualizarProximidad();
+					huboCambio = true;
+				}
+				return huboCambio;
+			}
+
 			if (getEnCuartoRicheh()) {
 				if (tecla == 13 || tecla == 'e' || tecla == 'E') {
 					int px = protagonista->getX();
@@ -844,11 +858,12 @@ public:
 								if (inv->agregarItem(new ItemMagico(0, 0, itemsSuelo[i]->getNombre(), itemsSuelo[i]->getDescripcion(), itemsSuelo[i]->getTipoItem(), true))) {
 									itemsSuelo[i]->setRecogido(true);
 									sumarPuntosMision(25);
-									mostrarMensajeTemporal("[Recogiste: " + itemsSuelo[i]->getNombre() + "]", 60);
-									huboCambio = true;
-									return huboCambio;
-								} else {
-									mostrarMensajeTemporal("[Mochila llena: ¡Máx. 8 ítems!]", 60);
+									if (itemsSuelo[i]->getNombre() == "Libreta de Hechizos de Aire") {
+										mostrarMensajeTemporal("Coco tu amiga te ha dejado una libreta con tres hechizos de aire para usar", 90);
+									}
+									else {
+										mostrarMensajeTemporal("[Recogiste: " + itemsSuelo[i]->getNombre() + "]", 60);
+									}
 									huboCambio = true;
 									return huboCambio;
 								}
@@ -878,6 +893,7 @@ public:
 			}
 
 			if (dx != 0 || dy != 0) {
+				protagonista->setDireccionMirada((char)tecla);
 				for (int paso = 0; paso < 2; paso++) {
 					int nx = protagonista->getX() + dx;
 					int ny = protagonista->getY() + dy;

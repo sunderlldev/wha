@@ -3,7 +3,7 @@
 #include <string>
 
 class ItemMagico {
-private:
+protected:
 	int x, y;
 	std::string nombre;
 	std::string descripcion;
@@ -27,7 +27,7 @@ public:
 	int getAncho() const { return 3; }
 	int getAlto() const { return 2; }
 
-	char getCaracter(int r, int c) const {
+	virtual char getCaracter(int r, int c) const {
 		if (nombre == "Grimorio de Trazos") {
 			if (r == 0) {
 				if (c == 0) return '[';
@@ -87,7 +87,7 @@ public:
 		return ' ';
 	}
 
-	int getColor() const {
+	virtual int getColor() const {
 		if (nombre == "Grimorio de Trazos") return 3;
 		if (nombre == "Fibra de Arbol") return 1;
 		if (nombre == "Pluma Termica") return 7;
