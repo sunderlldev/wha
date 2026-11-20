@@ -8,20 +8,285 @@
 class Nivel2 : public Nivel {
 private:
     bool cuartosVisitados[10] = { false };
-    bool cuartosEnemigos[9] = { false };
+    bool cuartosEnemigos[10] = { false };
     int probabilidadEnemigo = 0;
+    int ticksPersecucion = 0;
+    int ticksCooldownDanio = 0;
+    bool bonoExploracionAplicado = {false};
 public:
     Nivel2() : Nivel(2, "Laberinto del Pueblo", 100, 200) {}
     virtual ~Nivel2() {}
+
+    int calcularPuntosExploracionPueblo() {
+        int visitados = contarCuartosVisitados();
+
+        if (visitados <= 0) {
+            return 0;
+        }
+        else if (visitados >= 1 && visitados <= 3) {
+            return 30;
+        }
+        else if (visitados >= 4 && visitados <= 6) {
+            return 60;
+        }
+        else {
+            return 100; // 7 u 8 cuartos
+        }
+    }
+
+    std::string obtenerBarraConocimientoPueblo(int anchoBarra) {
+        int visitados = contarCuartosVisitados();
+        const int totalCuartos = 8;
+
+        if (visitados < 0) visitados = 0;
+        if (visitados > totalCuartos) visitados = totalCuartos;
+
+        int llenos = (visitados * anchoBarra) / totalCuartos;
+        if (visitados > 0 && llenos == 0) {
+            llenos = 1; // Asegura que se note desde el primer cuarto visitado
+        }
+
+        std::string barra = "[";
+        for (int i = 0; i < anchoBarra; i++) {
+            if (i < llenos) {
+                barra += "#";
+            }
+            else {
+                barra += "-";
+            }
+        }
+        barra += "] " + std::to_string(visitados) + "/" + std::to_string(totalCuartos);
+        return barra;
+    }
+
+    int contarCuartosVisitados() {
+        int total = 0;
+        for (int id = 1; id <= 9; id++) {
+            if (id != 5 && cuartosVisitados[id]) {
+                total++;
+            }
+        }
+        return total;
+    }
+
+    //
+    // ENEMIGOS aparicion y colision
+    //
+
+    bool encuentroEnmigosPorCuarto(int idCuarto) {
+        if (idCuarto == 5) { //id del cuarto banio
+            return false;
+        }
+
+        //al entrar a un cuarto aumenta la probabilidad de que aparezca el enemigo, solo una vez
+        if (!cuartosEnemigos[idCuarto]) {
+            cuartosEnemigos[idCuarto] = true;
+            probabilidadEnemigo++;
+        }
+
+        //probabilidad proporcional a los cuartos visitados sobre 8 (en porcentaje 0..100)
+        int probabilidad = (probabilidadEnemigo * 100) / 8;
+        System::Random r;
+        int tirada = r.Next(1, 101);
+        if (tirada <= probabilidad) return true;
+
+        return false;
+    }
+
+    void actualizarLogicaEnemigos() override {
+        ticksPersecucion++;
+        if (ticksPersecucion >= 6) { // Cada 6 ciclos del bucle (~180 ms)
+            ticksPersecucion = 0;
+            persecucionEnemigos();
+        }
+        colisionEnemigos();
+    }
+
+    bool hayColisionConEnemigo(Enemigo* en) {
+        if (protagonista == nullptr || en == nullptr || !en->getActivo()) {
+            return false;
+        }
+
+        int px = protagonista->getX();
+        int py = protagonista->getY();
+        int pw = protagonista->getAncho();
+        int ph = protagonista->getAlto();
+
+        int ex = en->getX();
+        int ey = en->getY();
+        int ew = en->getAncho();
+        int eh = en->getAlto();
+
+        // Revisa si los rectángulos de ambos se superponen o están pegados (margen de 1)
+        bool tocanX = (px - 1 < ex + ew && px + pw + 1 > ex);
+        bool tocanY = (py - 1 < ey + eh && py + ph + 1 > ey);
+
+        return (tocanX && tocanY);
+    }
+
+    void colisionEnemigos() {
+        if (ticksCooldownDanio > 0) {
+            ticksCooldownDanio--;
+            return;
+        }
+
+        if (protagonista == nullptr) {
+            return;
+        }
+
+        for (size_t i = 0; i < enemigos.size(); i++) {
+            Enemigo* en = enemigos[i];
+            if (hayColisionConEnemigo(en)) {
+                int nuevaVida = protagonista->getVida() - en->getDanio();
+                if (nuevaVida < 0) {
+                    nuevaVida = 0;
+                }
+                protagonista->setVida(nuevaVida);
+
+                // Espera ~30 ticks (~0.9 s con Sleep(30)) antes de poder recibir otro golpe
+                ticksCooldownDanio = 30;
+
+                mostrarMensajeTemporal("[DANIO] Un enemigo te ha golpeado!", 60);
+
+                // Si te quedaste sin vida, puedes reiniciar el nivel o activar fin
+                if (protagonista->getVida() <= 0) {
+                    mostrarMensajeTemporal("[DERROTA] Te quedaste sin vida! Reiniciando nivel...", 80);
+                    iniciarNivel();
+                }
+
+                break; // Solo recibe un golpe por turno de colisión
+            }
+        }
+    }
+
+    bool puedeMoverEnemigoA(Enemigo* en, int nx, int ny) {
+        if (mapa == nullptr || protagonista == nullptr || en == nullptr) {
+            return false;
+        }
+
+        int ew = en->getAncho();
+        int eh = en->getAlto();
+
+        // Revisa que no se salga de los bordes del mapa
+        if (nx < 0 || ny < 0 || nx + ew > mapa->getColumnas() || ny + eh > mapa->getFilas()) {
+            return false;
+        }
+
+        // Revisa que todas las casillas del sprite del enemigo sean válidas en el mapa
+        for (int r = 0; r < eh; r++) {
+            for (int c = 0; c < ew; c++) {
+                if (!mapa->esPosicionValida(nx + c, ny + r)) {
+                    return false;
+                }
+            }
+        }
+
+        // Evita que el enemigo se encime encima del protagonista
+        int px = protagonista->getX();
+        int py = protagonista->getY();
+        int pw = protagonista->getAncho();
+        int ph = protagonista->getAlto();
+
+        bool colisionaProta = (nx < px + pw && nx + ew > px &&
+            ny < py + ph && ny + eh > py);
+        if (colisionaProta) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool posicionLibreParaEnemigo(int tx, int ty, int eW, int eH,
+        int xMin, int yMin, int xMax, int yMax,
+        int px, int py) {
+        if (mapa == nullptr) {
+            return false;
+        }
+
+        // Verifica que todo el rectángulo del enemigo quepa dentro del cuarto
+        if (tx < xMin || ty < yMin || tx + eW - 1 > xMax || ty + eH - 1 > yMax) {
+            return false;
+        }
+
+        // Verifica que no se salga de los límites del mapa
+        if (tx < 0 || ty < 0 || tx + eW > mapa->getColumnas() || ty + eH > mapa->getFilas()) {
+            return false;
+        }
+
+        // Comprueba que cada casilla ocupada por el enemigo sea válida en el mapa
+        for (int r = 0; r < eH; r++) {
+            for (int c = 0; c < eW; c++) {
+                if (!mapa->esPosicionValida(tx + c, ty + r)) {
+                    return false;
+                }
+            }
+        }
+
+        // Evita que aparezca encima o muy pegado al protagonista
+        if (protagonista != nullptr) {
+            int pW = protagonista->getAncho();
+            int pH = protagonista->getAlto();
+            bool solapa = (tx < px + pW + 1 && tx + eW + 1 > px &&
+                ty < py + pH + 1 && ty + eH + 1 > py);
+            if (solapa) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool crearUnEnemigoEnCuarto(int idCuarto, int px, int py,
+        int eW, int eH,
+        int xMin, int yMin, int xMax, int yMax) {
+        System::Random rng;
+        int elegidoX = -1;
+        int elegidoY = -1;
+
+        // 1. Intenta posiciones aleatorias dentro del cuarto
+        for (int intento = 0; intento < 60; intento++) {
+            int rangoX = (xMax - eW + 1 >= xMin) ? (xMax - eW + 1 - xMin + 1) : 1;
+            int rangoY = (yMax - eH + 1 >= yMin) ? (yMax - eH + 1 - yMin + 1) : 1;
+            int tx = xMin + rng.Next(0, rangoX);
+            int ty = yMin + rng.Next(0, rangoY);
+
+            if (posicionLibreParaEnemigo(tx, ty, eW, eH, xMin, yMin, xMax, yMax, px, py)) {
+                elegidoX = tx;
+                elegidoY = ty;
+                break;
+            }
+        }
+
+        // 2. Respaldo: busca cerca de (px, py) dentro del cuarto
+        if (elegidoX == -1 || elegidoY == -1) {
+            for (int dy = -4; dy <= 4 && elegidoX == -1; dy++) {
+                for (int dx = -4; dx <= 4; dx++) {
+                    if (posicionLibreParaEnemigo(px + dx, py + dy, eW, eH, xMin, yMin, xMax, yMax, px, py)) {
+                        elegidoX = px + dx;
+                        elegidoY = py + dy;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (elegidoX != -1 && elegidoY != -1) {
+            enemigos.push_back(new Enemigo(elegidoX, elegidoY, "Sanguijuela Magica", 2, 1, 4, idCuarto));
+            return true;
+        }
+
+        return false;
+    }
 
     void generarEnemigoEnCuarto(int idCuarto, int px, int py) {
         if (mapa == nullptr || idCuarto <= 0 || idCuarto == 5) {
             return;
         }
 
-        // Límites (xMin, yMin, xMax, yMax) según los cuartos definidos en determinarCuarto
-        int xMin = 1, xMax = mapa->getColumnas() - 2;
-        int yMin = 1, yMax = mapa->getFilas() - 2;
+        int xMin = 1;
+        int xMax = mapa->getColumnas() - 2;
+        int yMin = 1;
+        int yMax = mapa->getFilas() - 2;
 
         switch (idCuarto) {
         case 1: xMin = 10;  xMax = 50;  yMin = 5;  yMax = 16; break;
@@ -35,102 +300,74 @@ public:
         default: return;
         }
 
-        // Tamaño del sprite de Enemigo (4 de ancho x 2 de alto)
         const int eW = 4;
         const int eH = 2;
 
-        // Dimensiones del protagonista para evitar solapamiento
-        const int pW = (protagonista != nullptr) ? protagonista->getAncho() : 5;
-        const int pH = (protagonista != nullptr) ? protagonista->getAlto() : 4;
-
-        auto posicionLibre = [&](int tx, int ty) -> bool {
-            if (tx < xMin || ty < yMin || tx + eW - 1 > xMax || ty + eH - 1 > yMax) {
-                return false;
-            }
-            if (tx < 0 || ty < 0 || tx + eW > mapa->getColumnas() || ty + eH > mapa->getFilas()) {
-                return false;
-            }
-
-            // Comprueba cada celda ocupada por el enemigo en el mapa
-            for (int r = 0; r < eH; r++) {
-                for (int c = 0; c < eW; c++) {
-                    if (!mapa->esPosicionValida(tx + c, ty + r)) {
-                        return false;
-                    }
-                }
-            }
-
-            // Evita solaparse con el jugador (y deja un pequeño margen)
-            if (protagonista != nullptr) {
-                bool solapa = (tx < px + pW + 1 && tx + eW + 1 > px &&
-                    ty < py + pH + 1 && ty + eH + 1 > py);
-                if (solapa) {
-                    return false;
-                }
-            }
-
-            return true;
-            };
-
         System::Random rng;
-        int elegidoX = -1;
-        int elegidoY = -1;
+        // En System::Random::Next(min, max), el límite superior es exclusivo, así que Next(1, 4) da 1, 2 o 3
+        int cantidadObjetivo = rng.Next(1, 4);
+        int creados = 0;
 
-        // 1. Intenta posiciones aleatorias dentro del cuarto
-        for (int intento = 0; intento < 60; intento++) {
-            int rangoX = (xMax - eW + 1 >= xMin) ? (xMax - eW + 1 - xMin + 1) : 1;
-            int rangoY = (yMax - eH + 1 >= yMin) ? (yMax - eH + 1 - yMin + 1) : 1;
-            int tx = xMin + rng.Next(0, rangoX);
-            int ty = yMin + rng.Next(0, rangoY);
-
-            if (posicionLibre(tx, ty)) {
-                elegidoX = tx;
-                elegidoY = ty;
-                break;
+        for (int k = 0; k < cantidadObjetivo; k++) {
+            if (crearUnEnemigoEnCuarto(idCuarto, px, py, eW, eH, xMin, yMin, xMax, yMax)) {
+                creados++;
             }
         }
 
-        // 2. Respaldo: busca cerca de (px, py) dentro de los límites del cuarto
-        if (elegidoX == -1 || elegidoY == -1) {
-            for (int dy = -4; dy <= 4 && elegidoX == -1; dy++) {
-                for (int dx = -4; dx <= 4; dx++) {
-                    if (posicionLibre(px + dx, py + dy)) {
-                        elegidoX = px + dx;
-                        elegidoY = py + dy;
-                        break;
-                    }
-                }
+        if (creados > 0) {
+            if (creados == 1) {
+                mostrarMensajeTemporal("[PELIGRO] Aparecio 1 enemigo en el cuarto!", 75);
+            }
+            else {
+                mostrarMensajeTemporal("[PELIGRO] Aparecieron " + std::to_string(creados) + " enemigos en el cuarto!", 75);
             }
         }
+    }
+    
+    void persecucionEnemigos() {
+        if (mapa == nullptr || protagonista == nullptr) {
+            return;
+        }
 
-        if (elegidoX != -1 && elegidoY != -1) {
-            enemigos.push_back(new Enemigo(elegidoX, elegidoY, "Sanguijuela Magica", 2, 1, 4, idCuarto));
-            mostrarMensajeTemporal("[PELIGRO] Un enemigo aparecio en el cuarto!", 75);
+        int px = protagonista->getX();
+        int py = protagonista->getY();
+
+        for (size_t i = 0; i < enemigos.size(); i++) {
+            Enemigo* en = enemigos[i];
+            if (en == nullptr || !en->getActivo()) {
+                continue;
+            }
+
+            int ex = en->getX();
+            int ey = en->getY();
+
+            // Calcula hacia dónde moverse en X (-1, 0 o 1) y en Y (-1, 0 o 1)
+            int dx = 0;
+            if (px > ex) dx = 1;
+            else if (px < ex) dx = -1;
+
+            int dy = 0;
+            if (py > ey) dy = 1;
+            else if (py < ey) dy = -1;
+
+            // 1. Intenta moverse en diagonal si hace falta
+            if (dx != 0 && dy != 0 && puedeMoverEnemigoA(en, ex + dx, ey + dy)) {
+                en->setX(ex + dx);
+                en->setY(ey + dy);
+            }
+            // 2. Si no puede en diagonal, intenta avanzar solo en X
+            else if (dx != 0 && puedeMoverEnemigoA(en, ex + dx, ey)) {
+                en->setX(ex + dx);
+            }
+            // 3. Si no puede en X, intenta avanzar solo en Y
+            else if (dy != 0 && puedeMoverEnemigoA(en, ex, ey + dy)) {
+                en->setY(ey + dy);
+            }
         }
     }
 
     const std::vector<Enemigo*>& getEnemigos() const override {
         return this->enemigos;
-    }
-
-    bool encuentroEnmigosPorCuarto(int idCuarto) {
-        if (idCuarto == 5 - 1) { //id del cuarto banio
-            return false;
-        }
-
-        //al entrar a un cuarto aumenta la probabilidad de que aparezca el enemigo, solo una vez
-        if (!cuartosEnemigos[idCuarto - 1]) {
-            cuartosEnemigos[idCuarto - 1] = true;
-            probabilidadEnemigo++;
-        }
-
-        //probabilidad proporcional a los cuartos visitados sobre 8 (en porcentaje 0..100)
-        int probabilidad = (probabilidadEnemigo * 100) / 8;
-        System::Random r;
-        int tirada = r.Next(1, 100);
-        if (tirada <= probabilidad) return true;
-
-        return false;
     }
 
     virtual int determinarCuarto(int px, int py) const override {
@@ -165,6 +402,18 @@ public:
         return ((px >= 176 && px <= 200 && py >= 9 && py <= 17) || (px >= 180 && px <= 200 && py >= 10 && py <= 17));
     }
 
+    bool intentarSalirAZonaFinal() {
+        int visitados = contarCuartosVisitados();
+
+        if (visitados == 0) {
+            mostrarMensajeTemporal("No puedes salir al bosque sin conocer tu pueblo", 80);
+            return false;
+        }
+
+        activarFinNivel();
+        return true;
+    }
+
     void activarFinNivel() {
         if (!completado && !mostrarEstadisticasFin) {
             completado = true;
@@ -173,7 +422,15 @@ public:
                 tiempoFin = clock();
             }
             if (gestorMisiones != nullptr) {
-                gestorMisiones->setPuntosMisiones(gestorMisiones->getPuntosMisiones() + 100);
+                int puntosActuales = gestorMisiones->getPuntosMisiones();
+                int puntosExtra = 0;
+
+                if (!bonoExploracionAplicado) {
+                    puntosExtra = calcularPuntosExploracionPueblo();
+                    bonoExploracionAplicado = true;
+                }
+
+                gestorMisiones->setPuntosMisiones(puntosActuales + 100 + puntosExtra);
                 gestorMisiones->setObjetivoActual("Pueblo de Kaln superado: Rumbo al Arbol de Plata");
             }
         }
@@ -181,7 +438,7 @@ public:
 
     virtual void actualizarCuartoActual(int px, int py) override {
         if (estaEnZonaSalida(px, py)) {
-            activarFinNivel();
+            intentarSalirAZonaFinal();
             return;
         }
 
@@ -326,6 +583,15 @@ public:
     }
 
     virtual void iniciarNivel() override {
+        ticksPersecucion = 0;
+        ticksCooldownDanio = 0;
+        bonoExploracionAplicado = false;
+
+        for (int id = 0; id < 10; id++) {
+            cuartosEnemigos[id] = false;
+        }
+        bonoExploracionAplicado = { false };
+
         this->tiempoInicio = clock();
         this->tiempoFin = 0;
         this->completado = false;
@@ -386,6 +652,8 @@ public:
         letreros.push_back(new Letrero(102, 29, "Letrero: Parece que aca estuvo Ininia. "));
         letreros.push_back(new Letrero(75, 29, "Letrero: No todos pueden comer pan. "));
         letreros.push_back(new Letrero(27, 11, "Letrero: Un dia todo se va. Y no queda nada. "));
+
+        limpiarEnemigos();
 
         limpiarItemsSuelo();
 

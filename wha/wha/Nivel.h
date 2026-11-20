@@ -80,6 +80,16 @@ protected:
 		return false;
 	}
 
+	void limpiarEnemigos() {
+		for (size_t i = 0; i < enemigos.size(); i++) {
+			if (enemigos[i] != nullptr) {
+				delete enemigos[i];
+				enemigos[i] = nullptr;
+			}
+		}
+		enemigos.clear();
+	}
+
 	void limpiarItemsSuelo() {
 		for (size_t i = 0; i < itemsSuelo.size(); i++) {
 			if (itemsSuelo[i] != nullptr) {
@@ -96,15 +106,6 @@ protected:
 			}
 		}
 		letreros.clear();
-	}
-
-	void limpiarEnemigos() {
-		for (size_t i = 0; i < enemigos.size(); i++)
-		{
-			if (enemigos[i] != nullptr) {
-				delete enemigos[i];
-			}
-		}
 	}
 
 	void dibujarLetrerosEnMapa() {
@@ -172,6 +173,8 @@ public:
 		static const std::vector<Enemigo*> vacio;
 		return vacio;
 	}
+
+	virtual void actualizarLogicaEnemigos() {}
 
 	virtual void mostrarCinematicaIntro(Pantalla&) {
 	}
@@ -490,6 +493,11 @@ public:
 
 	virtual bool actualizar() {
 		bool huboCambio = false;
+
+		bool enDialogoActual = (gestorDialogos != nullptr && gestorDialogos->getEnDialogo());
+		if (!mostrarEstadisticasFin && modalActivo == 0 && !enDialogoActual) {
+			actualizarLogicaEnemigos();
+		}
 
 		if (this->protagonista != nullptr) {
 			int framePrevio = this->protagonista->getFrameActual();
