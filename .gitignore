@@ -14,3 +14,27 @@ archivos/
 audio_log.txt
 audit_log.txt
 *.vbs
+*.zip
+
+# Archivos temporales y de pruebas
+/.gitnexus/
+/PC1_U20261B980/
+/PC1_U20261B980.zip
+/droppy-content/
+/resumenClasesSemanasFinales/
+/nuevo-wha-actualizado-nivel2-completo-del-v1/
+/sprites/
+/captura_juego.html
+/captura_juego.txt
+/ejecutar_captura.bat
+/generar_todos_los_mapas.py
+/mapa_completo_nivel1.html
+/mapa_completo_nivel1.txt
+/mapa_completo_nivel2.html
+/mapa_completo_nivel3.html
+/RESUMEN_SESION_CHAT.md
+/wha-v2.zip
+/wha-v2/background.png
+/wha-v2/BITACORA_IA_V2.md
+/wha-v2/*Borrador.md
+/wha-v2/wha-v2.zip
