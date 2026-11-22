@@ -17,6 +17,7 @@
 #include "TorreAgott.h"
 #include "Letrero.h"
 #include "Pantalla.h"
+#include "Enemigo.h"
 class GestorAudio;
 #ifdef _WIN32
 #include <conio.h>
@@ -51,6 +52,7 @@ protected:
 	bool animacionMyrphonHecha;
 	bool transicionEasterEgg;
 	bool transicionDanioCoustas;
+	std::vector<Enemigo*> enemigos;
 
 	bool estaCerca(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2, int maxDist) const {
 		int distX = (x1 + w1 <= x2) ? (x2 - (x1 + w1)) : ((x2 + w2 <= x1) ? (x1 - (x2 + w2)) : 0);
@@ -76,6 +78,16 @@ protected:
 			}
 		}
 		return false;
+	}
+
+	void limpiarEnemigos() {
+		for (size_t i = 0; i < enemigos.size(); i++) {
+			if (enemigos[i] != nullptr) {
+				delete enemigos[i];
+				enemigos[i] = nullptr;
+			}
+		}
+		enemigos.clear();
 	}
 
 	void limpiarItemsSuelo() {
@@ -154,7 +166,20 @@ public:
 		}
 		limpiarItemsSuelo();
 		limpiarLetreros();
+		limpiarEnemigos();
 	}
+
+	virtual std::string getInfoPanelExtra1() const { return ""; }
+	virtual std::string getInfoPanelExtra2() const { return ""; }
+
+	virtual bool activarHechizoAire() { return false; }
+
+	virtual const std::vector<Enemigo*>& getEnemigos() const {
+		static const std::vector<Enemigo*> vacio;
+		return vacio;
+	}
+
+	virtual void actualizarLogicaEnemigos() {}
 
 	virtual void mostrarCinematicaIntro(Pantalla&) {
 	}
@@ -472,7 +497,13 @@ public:
 	}
 
 	virtual bool actualizar() {
+
 		bool huboCambio = false;
+
+		bool enDialogoActual = (gestorDialogos != nullptr && gestorDialogos->getEnDialogo());
+		if (!mostrarEstadisticasFin && modalActivo == 0 && !enDialogoActual) {
+			actualizarLogicaEnemigos();
+		}
 
 		if (this->protagonista != nullptr) {
 			int framePrevio = this->protagonista->getFrameActual();
@@ -489,6 +520,13 @@ public:
 			}
 			if (this->protagonista->getFrameActual() != framePrevio) {
 				huboCambio = true;
+			}
+			const std::vector<Enemigo*>& listaEnemigos = getEnemigos();
+			for (size_t i = 0; i < listaEnemigos.size(); i++) {
+				Enemigo* en = listaEnemigos[i];
+				if (en != nullptr && en->getActivo()) {
+					en->actualizarAnimacion(30);
+				}
 			}
 		}
 
@@ -671,6 +709,14 @@ public:
 				return huboCambio;
 			}
 
+			if (tecla == 32) { // ESPACIO
+				if (activarHechizoAire()) {
+					actualizarProximidad();
+					huboCambio = true;
+				}
+				return huboCambio;
+			}
+
 			if (getEnCuartoRicheh()) {
 				if (tecla == 13 || tecla == 'e' || tecla == 'E') {
 					int px = protagonista->getX();
@@ -812,11 +858,12 @@ public:
 								if (inv->agregarItem(new ItemMagico(0, 0, itemsSuelo[i]->getNombre(), itemsSuelo[i]->getDescripcion(), itemsSuelo[i]->getTipoItem(), true))) {
 									itemsSuelo[i]->setRecogido(true);
 									sumarPuntosMision(25);
-									mostrarMensajeTemporal("[Recogiste: " + itemsSuelo[i]->getNombre() + "]", 60);
-									huboCambio = true;
-									return huboCambio;
-								} else {
-									mostrarMensajeTemporal("[Mochila llena: ¡Máx. 8 ítems!]", 60);
+									if (itemsSuelo[i]->getNombre() == "Libreta de Hechizos de Aire") {
+										mostrarMensajeTemporal("Coco tu amiga te ha dejado una libreta con tres hechizos de aire para usar", 90);
+									}
+									else {
+										mostrarMensajeTemporal("[Recogiste: " + itemsSuelo[i]->getNombre() + "]", 60);
+									}
 									huboCambio = true;
 									return huboCambio;
 								}
@@ -846,6 +893,7 @@ public:
 			}
 
 			if (dx != 0 || dy != 0) {
+				protagonista->setDireccionMirada((char)tecla);
 				for (int paso = 0; paso < 2; paso++) {
 					int nx = protagonista->getX() + dx;
 					int ny = protagonista->getY() + dy;

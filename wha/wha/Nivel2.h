@@ -4,14 +4,487 @@
 #include "MapaNivel2.h"
 #include "MatricesNivel2.h"
 #include "Cinematica.h"
+#include "LibretaHechizoAire.h"
 
 class Nivel2 : public Nivel {
 private:
     bool cuartosVisitados[10] = { false };
-
+    bool cuartosEnemigos[10] = { false };
+    int probabilidadEnemigo = 0;
+    int ticksPersecucion = 0;
+    int ticksCooldownDanio = 0;
+    bool bonoExploracionAplicado = {false};
+    LibretaHechizoAire* libretaAire = nullptr;
+    int cargasHechizoAire = 0;
+    int ticksRafagaAire = 0;
+    int rafagaX = 0;
+    int rafagaY = 0;
+    char rafagaDir = 'D';
 public:
-    Nivel2() : Nivel(2, "Laberinto del Pueblo", 100, 200) {}
+    Nivel2() : Nivel(2, "Laberinto del Pueblo", 100, 200) {
+        ticksPersecucion = 0;
+        ticksRafagaAire = 0;
+        cargasHechizoAire = 0;
+        libretaAire = new LibretaHechizoAire(17, 44, 3);
+        itemsSuelo.push_back(libretaAire);
+    }
     virtual ~Nivel2() {}
+
+    //
+    // HECHIZO y puntaje
+    //
+
+    void dibujarEntidadesExtra(Pantalla& pantalla, int camX, int camY) const override {
+        if (ticksRafagaAire <= 0) {
+            return;
+        }
+
+        int dx = 1;
+        int dy = 0;
+        char chRafaga = '~';
+
+        if (rafagaDir == 'W' || rafagaDir == 'w') {
+            dx = 0;
+            dy = -1;
+            chRafaga = '^';
+        }
+        else if (rafagaDir == 'S' || rafagaDir == 's') {
+            dx = 0;
+            dy = 1;
+            chRafaga = 'v';
+        }
+        else if (rafagaDir == 'A' || rafagaDir == 'a') {
+            dx = -1;
+            dy = 0;
+            chRafaga = '<';
+        }
+        else {
+            dx = 1;
+            dy = 0;
+            chRafaga = '>';
+        }
+
+        int inicioPaso = 9 - ticksRafagaAire;
+        if (inicioPaso < 1) inicioPaso = 1;
+        int finPaso = inicioPaso + 6;
+        if (finPaso > 14) finPaso = 14;
+
+        for (int paso = inicioPaso; paso <= finPaso; paso++) {
+            int wx = rafagaX + dx * paso;
+            int wy = rafagaY + dy * paso;
+            int sx = wx - camX;
+            int sy = wy - camY;
+
+            char ch = (paso == finPaso) ? chRafaga : ((paso % 2 == 0) ? '~' : '-');
+            pantalla.setPixelJuego(sx, sy, ch, 3); // Cian brillante
+        }
+    }
+
+    bool activarHechizoAire() override {
+        if (protagonista == nullptr || protagonista->getInventario() == nullptr) {
+            return false;
+        }
+
+        if (!protagonista->getInventario()->tieneItem("Libreta de Hechizos de Aire")) {
+            mostrarMensajeTemporal("[AVISO] Aun no tienes la Libreta de Hechizos de Aire.", 60);
+            return true;
+        }
+
+        if (libretaAire == nullptr) {
+            libretaAire = new LibretaHechizoAire(0, 0, 3);
+        }
+
+        if (!libretaAire->tieneCargas()) {
+            cargasHechizoAire = 0;
+            mostrarMensajeTemporal("[AVISO] Ya no te quedan hechizos de aire (0/3).", 60);
+            return true;
+        }
+
+        char dir = protagonista->getDireccionMirada();
+        int px = protagonista->getX() + protagonista->getAncho() / 2;
+        int py = protagonista->getY() + protagonista->getAlto() / 2;
+
+        int eliminados = libretaAire->disparar(px, py, dir, enemigos);
+        ticksRafagaAire = 8; // Dura ~8 frames en pantalla
+        rafagaX = px;
+        rafagaY = py;
+        rafagaDir = dir;
+        cargasHechizoAire = libretaAire->getCargasRestantes();
+
+        if (eliminados > 0) {
+            mostrarMensajeTemporal("[HECHIZO DE AIRE] Eliminaste a " + std::to_string(eliminados) +
+                " enemigo(s). Cargas: " + std::to_string(cargasHechizoAire) + "/3", 75);
+        }
+        else {
+            mostrarMensajeTemporal("[HECHIZO DE AIRE] Lanzaste una rafaga de aire. Cargas: " +
+                std::to_string(cargasHechizoAire) + "/3", 65);
+        }
+        return true;
+    }
+
+    std::string getInfoPanelExtra1() const override {
+        return obtenerBarraConocimientoPueblo(8);
+    }
+
+    std::string getInfoPanelExtra2() const override {
+        return "Aire: " + std::to_string(cargasHechizoAire) + "/3";
+    }
+
+    int calcularPuntosExploracionPueblo() {
+        int visitados = contarCuartosVisitados();
+
+        if (visitados <= 0) {
+            return 0;
+        }
+        else if (visitados >= 1 && visitados <= 3) {
+            return 30;
+        }
+        else if (visitados >= 4 && visitados <= 6) {
+            return 60;
+        }
+        else {
+            return 100; // 7 u 8 cuartos
+        }
+    }
+
+    std::string obtenerBarraConocimientoPueblo(int anchoBarra) const {
+        int visitados = contarCuartosVisitados();
+        const int totalCuartos = 8;
+
+        if (visitados < 0) visitados = 0;
+        if (visitados > totalCuartos) visitados = totalCuartos;
+
+        int llenos = (visitados * anchoBarra) / totalCuartos;
+        if (visitados > 0 && llenos == 0) {
+            llenos = 1; // Asegura que se note desde el primer cuarto visitado
+        }
+
+        std::string barra = "[";
+        for (int i = 0; i < anchoBarra; i++) {
+            if (i < llenos) {
+                barra += "#";
+            }
+            else {
+                barra += "-";
+            }
+        }
+        barra += "] " + std::to_string(visitados) + "/" + std::to_string(totalCuartos);
+        return barra;
+    }
+
+    int contarCuartosVisitados() const {
+        int total = 0;
+        for (int id = 1; id <= 9; id++) {
+            if (id != 5 && cuartosVisitados[id]) {
+                total++;
+            }
+        }
+        return total;
+    }
+
+    //
+    // ENEMIGOS aparicion y colision
+    //
+
+    bool encuentroEnmigosPorCuarto(int idCuarto) {
+        if (idCuarto == 5) { //id del cuarto banio
+            return false;
+        }
+
+        //al entrar a un cuarto aumenta la probabilidad de que aparezca el enemigo, solo una vez
+        if (!cuartosEnemigos[idCuarto]) {
+            cuartosEnemigos[idCuarto] = true;
+            probabilidadEnemigo++;
+        }
+
+        //probabilidad proporcional a los cuartos visitados sobre 8 (en porcentaje 0..100)
+        int probabilidad = (probabilidadEnemigo * 100) / 8;
+        System::Random r;
+        int tirada = r.Next(1, 101);
+        if (tirada <= probabilidad) return true;
+
+        return false;
+    }
+
+    void actualizarLogicaEnemigos() override {
+        ticksPersecucion++;
+        if (ticksPersecucion >= 6) { // Cada 6 ciclos del bucle (~180 ms)
+            ticksPersecucion = 0;
+            persecucionEnemigos();
+        }
+        if (ticksRafagaAire > 0) {
+            ticksRafagaAire--;
+        }
+        colisionEnemigos();
+    }
+
+    bool hayColisionConEnemigo(Enemigo* en) {
+        if (protagonista == nullptr || en == nullptr || !en->getActivo()) {
+            return false;
+        }
+
+        int px = protagonista->getX();
+        int py = protagonista->getY();
+        int pw = protagonista->getAncho();
+        int ph = protagonista->getAlto();
+
+        int ex = en->getX();
+        int ey = en->getY();
+        int ew = en->getAncho();
+        int eh = en->getAlto();
+
+        // Revisa si los rectángulos de ambos se superponen o están pegados (margen de 1)
+        bool tocanX = (px - 1 < ex + ew && px + pw + 1 > ex);
+        bool tocanY = (py - 1 < ey + eh && py + ph + 1 > ey);
+
+        return (tocanX && tocanY);
+    }
+
+    void colisionEnemigos() {
+        if (ticksCooldownDanio > 0) {
+            ticksCooldownDanio--;
+            return;
+        }
+
+        if (protagonista == nullptr) {
+            return;
+        }
+
+        for (size_t i = 0; i < enemigos.size(); i++) {
+            Enemigo* en = enemigos[i];
+            if (hayColisionConEnemigo(en)) {
+                int nuevaVida = protagonista->getVida() - en->getDanio();
+                if (nuevaVida < 0) {
+                    nuevaVida = 0;
+                }
+                protagonista->setVida(nuevaVida);
+
+                // Espera ~30 ticks (~0.9 s con Sleep(30)) antes de poder recibir otro golpe
+                ticksCooldownDanio = 30;
+
+                mostrarMensajeTemporal("[DANIO] Un enemigo te ha golpeado!", 60);
+
+                // Si te quedaste sin vida, puedes reiniciar el nivel o activar fin
+                if (protagonista->getVida() <= 0) {
+                    mostrarMensajeTemporal("[DERROTA] Te quedaste sin vida! Reiniciando nivel...", 80);
+                    iniciarNivel();
+                }
+
+                break; // Solo recibe un golpe por turno de colisión
+            }
+        }
+    }
+
+    bool puedeMoverEnemigoA(Enemigo* en, int nx, int ny) {
+        if (mapa == nullptr || protagonista == nullptr || en == nullptr) {
+            return false;
+        }
+
+        int ew = en->getAncho();
+        int eh = en->getAlto();
+
+        // Revisa que no se salga de los bordes del mapa
+        if (nx < 0 || ny < 0 || nx + ew > mapa->getColumnas() || ny + eh > mapa->getFilas()) {
+            return false;
+        }
+
+        // Revisa que todas las casillas del sprite del enemigo sean válidas en el mapa
+        for (int r = 0; r < eh; r++) {
+            for (int c = 0; c < ew; c++) {
+                if (!mapa->esPosicionValida(nx + c, ny + r)) {
+                    return false;
+                }
+            }
+        }
+
+        // Evita que el enemigo se encime encima del protagonista
+        int px = protagonista->getX();
+        int py = protagonista->getY();
+        int pw = protagonista->getAncho();
+        int ph = protagonista->getAlto();
+
+        bool colisionaProta = (nx < px + pw && nx + ew > px &&
+            ny < py + ph && ny + eh > py);
+        if (colisionaProta) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool posicionLibreParaEnemigo(int tx, int ty, int eW, int eH,
+        int xMin, int yMin, int xMax, int yMax,
+        int px, int py) {
+        if (mapa == nullptr) {
+            return false;
+        }
+
+        // Verifica que todo el rectángulo del enemigo quepa dentro del cuarto
+        if (tx < xMin || ty < yMin || tx + eW - 1 > xMax || ty + eH - 1 > yMax) {
+            return false;
+        }
+
+        // Verifica que no se salga de los límites del mapa
+        if (tx < 0 || ty < 0 || tx + eW > mapa->getColumnas() || ty + eH > mapa->getFilas()) {
+            return false;
+        }
+
+        // Comprueba que cada casilla ocupada por el enemigo sea válida en el mapa
+        for (int r = 0; r < eH; r++) {
+            for (int c = 0; c < eW; c++) {
+                if (!mapa->esPosicionValida(tx + c, ty + r)) {
+                    return false;
+                }
+            }
+        }
+
+        // Evita que aparezca encima o muy pegado al protagonista
+        if (protagonista != nullptr) {
+            int pW = protagonista->getAncho();
+            int pH = protagonista->getAlto();
+            bool solapa = (tx < px + pW + 1 && tx + eW + 1 > px &&
+                ty < py + pH + 1 && ty + eH + 1 > py);
+            if (solapa) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool crearUnEnemigoEnCuarto(int idCuarto, int px, int py,
+        int eW, int eH,
+        int xMin, int yMin, int xMax, int yMax) {
+        System::Random rng;
+        int elegidoX = -1;
+        int elegidoY = -1;
+
+        // 1. Intenta posiciones aleatorias dentro del cuarto
+        for (int intento = 0; intento < 60; intento++) {
+            int rangoX = (xMax - eW + 1 >= xMin) ? (xMax - eW + 1 - xMin + 1) : 1;
+            int rangoY = (yMax - eH + 1 >= yMin) ? (yMax - eH + 1 - yMin + 1) : 1;
+            int tx = xMin + rng.Next(0, rangoX);
+            int ty = yMin + rng.Next(0, rangoY);
+
+            if (posicionLibreParaEnemigo(tx, ty, eW, eH, xMin, yMin, xMax, yMax, px, py)) {
+                elegidoX = tx;
+                elegidoY = ty;
+                break;
+            }
+        }
+
+        // 2. Respaldo: busca cerca de (px, py) dentro del cuarto
+        if (elegidoX == -1 || elegidoY == -1) {
+            for (int dy = -4; dy <= 4 && elegidoX == -1; dy++) {
+                for (int dx = -4; dx <= 4; dx++) {
+                    if (posicionLibreParaEnemigo(px + dx, py + dy, eW, eH, xMin, yMin, xMax, yMax, px, py)) {
+                        elegidoX = px + dx;
+                        elegidoY = py + dy;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (elegidoX != -1 && elegidoY != -1) {
+            enemigos.push_back(new Enemigo(elegidoX, elegidoY, "Sanguijuela Magica", 2, 1, 4, idCuarto));
+            return true;
+        }
+
+        return false;
+    }
+
+    void generarEnemigoEnCuarto(int idCuarto, int px, int py) {
+        if (mapa == nullptr || idCuarto <= 0 || idCuarto == 5) {
+            return;
+        }
+
+        int xMin = 1;
+        int xMax = mapa->getColumnas() - 2;
+        int yMin = 1;
+        int yMax = mapa->getFilas() - 2;
+
+        switch (idCuarto) {
+        case 1: xMin = 10;  xMax = 50;  yMin = 5;  yMax = 16; break;
+        case 2: xMin = 41;  xMax = 73;  yMin = 23; yMax = 35; break;
+        case 3: xMin = 106; xMax = 137; yMin = 23; yMax = 34; break;
+        case 4: xMin = 144; xMax = 163; yMin = 26; yMax = 34; break;
+        case 6: xMin = 41;  xMax = 73;  yMin = 42; yMax = 55; break;
+        case 7: xMin = 108; xMax = 129; yMin = 39; yMax = 53; break;
+        case 8: xMin = 40;  xMax = 72;  yMin = 72; yMax = 84; break;
+        case 9: xMin = 84;  xMax = 130; yMin = 68; yMax = 73; break;
+        default: return;
+        }
+
+        const int eW = 4;
+        const int eH = 2;
+
+        System::Random rng;
+        // En System::Random::Next(min, max), el límite superior es exclusivo, así que Next(1, 4) da 1, 2 o 3
+        int cantidadObjetivo = rng.Next(1, 4);
+        int creados = 0;
+
+        for (int k = 0; k < cantidadObjetivo; k++) {
+            if (crearUnEnemigoEnCuarto(idCuarto, px, py, eW, eH, xMin, yMin, xMax, yMax)) {
+                creados++;
+            }
+        }
+
+        if (creados > 0) {
+            if (creados == 1) {
+                mostrarMensajeTemporal("[PELIGRO] Aparecio 1 enemigo en el cuarto!", 75);
+            }
+            else {
+                mostrarMensajeTemporal("[PELIGRO] Aparecieron " + std::to_string(creados) + " enemigos en el cuarto!", 75);
+            }
+        }
+    }
+    
+    void persecucionEnemigos() {
+        if (mapa == nullptr || protagonista == nullptr) {
+            return;
+        }
+
+        int px = protagonista->getX();
+        int py = protagonista->getY();
+
+        for (size_t i = 0; i < enemigos.size(); i++) {
+            Enemigo* en = enemigos[i];
+            if (en == nullptr || !en->getActivo()) {
+                continue;
+            }
+
+            int ex = en->getX();
+            int ey = en->getY();
+
+            // Calcula hacia dónde moverse en X (-1, 0 o 1) y en Y (-1, 0 o 1)
+            int dx = 0;
+            if (px > ex) dx = 1;
+            else if (px < ex) dx = -1;
+
+            int dy = 0;
+            if (py > ey) dy = 1;
+            else if (py < ey) dy = -1;
+
+            // 1. Intenta moverse en diagonal si hace falta
+            if (dx != 0 && dy != 0 && puedeMoverEnemigoA(en, ex + dx, ey + dy)) {
+                en->setX(ex + dx);
+                en->setY(ey + dy);
+            }
+            // 2. Si no puede en diagonal, intenta avanzar solo en X
+            else if (dx != 0 && puedeMoverEnemigoA(en, ex + dx, ey)) {
+                en->setX(ex + dx);
+            }
+            // 3. Si no puede en X, intenta avanzar solo en Y
+            else if (dy != 0 && puedeMoverEnemigoA(en, ex, ey + dy)) {
+                en->setY(ey + dy);
+            }
+        }
+    }
+
+    const std::vector<Enemigo*>& getEnemigos() const override {
+        return this->enemigos;
+    }
 
     virtual int determinarCuarto(int px, int py) const override {
         if (px >= 10 && px <= 50 && py >= 5 && py <= 16) return 1;
@@ -45,6 +518,18 @@ public:
         return ((px >= 176 && px <= 200 && py >= 9 && py <= 17) || (px >= 180 && px <= 200 && py >= 10 && py <= 17));
     }
 
+    bool intentarSalirAZonaFinal() {
+        int visitados = contarCuartosVisitados();
+
+        if (visitados == 0) {
+            mostrarMensajeTemporal("No puedes salir al bosque sin conocer tu pueblo", 80);
+            return false;
+        }
+
+        activarFinNivel();
+        return true;
+    }
+
     void activarFinNivel() {
         if (!completado && !mostrarEstadisticasFin) {
             completado = true;
@@ -53,7 +538,15 @@ public:
                 tiempoFin = clock();
             }
             if (gestorMisiones != nullptr) {
-                gestorMisiones->setPuntosMisiones(gestorMisiones->getPuntosMisiones() + 100);
+                int puntosActuales = gestorMisiones->getPuntosMisiones();
+                int puntosExtra = 0;
+
+                if (!bonoExploracionAplicado) {
+                    puntosExtra = calcularPuntosExploracionPueblo();
+                    bonoExploracionAplicado = true;
+                }
+
+                gestorMisiones->setPuntosMisiones(puntosActuales + 100 + puntosExtra);
                 gestorMisiones->setObjetivoActual("Pueblo de Kaln superado: Rumbo al Arbol de Plata");
             }
         }
@@ -61,7 +554,7 @@ public:
 
     virtual void actualizarCuartoActual(int px, int py) override {
         if (estaEnZonaSalida(px, py)) {
-            activarFinNivel();
+            intentarSalirAZonaFinal();
             return;
         }
 
@@ -85,7 +578,10 @@ public:
             }
 
             if (nuevoCuarto != 0) {
-                verificarCinematicaLugar(px, py);
+                if(nuevoCuarto !=5) verificarCinematicaLugar(px, py);
+                if (encuentroEnmigosPorCuarto(nuevoCuarto)) {
+                    generarEnemigoEnCuarto(nuevoCuarto, px, py);
+                };
             }
         }
     }
@@ -148,7 +644,7 @@ public:
 
         switch (idCuarto) {
         case 1:
-            return;
+            break;
         case 2:
             cine->agregarCuadro(Nivel2_Panaderia01, "Un mago de sombrero puntiagudo!", 2500, 10, 2, 12, 5);
             cine->agregarCuadro(Nivel2_Panaderia02, "El gato fue atrapado por los escombros!", 2500, 10, 2, 12, 5);
@@ -162,20 +658,25 @@ public:
         case 4:
             cine->agregarCuadro(Nivel2_Inicio01, "CASA ALQUILADA USADA POR MAGO", 2500, 10, 2, 10, 7);
             break;
-        case 5:
-            cine->agregarCuadro(Nivel2_Inicio01, "BANIO DEL PUEBLO", 2500, 10, 2, 10, 7);
-            break;
         case 6:
-            cine->agregarCuadro(Nivel2_Inicio01, "CUARTEL MORALIS", 2500, 10, 2, 10, 7);
+            cine->agregarCuadro(Nivel2_Moralis01, "Hagan aviso", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Moralis02, "El pueblo esta siendo invadido por una sanguijuela magica", 2500, 10, 2, 12, 5);
             break;
         case 7:
-            cine->agregarCuadro(Nivel2_Inicio01, "CHOZA DEL PUEBLO", 2500, 10, 2, 10, 7);
+            cine->agregarCuadro(Nivel2_ChozaPueblo01, "Veras Tartah", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_ChozaPueblo02, "La razon por la que Coustas puede caminar", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_ChozaPueblo03, "Es por la semilla del arbol de plata", 2500, 10, 2, 12, 5);
             break;
         case 8:
-            cine->agregarCuadro(Nivel2_Inicio01, "TABERNA DE KALN", 2500, 10, 2, 10, 7);
+            cine->agregarCuadro(Nivel2_Taberna01, "Tipo1: Si como te decia...", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Taberna02, "Tipo2: Corran!", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Taberna03, "Tipo2: No sé que sea esa cosa pero nos va a matar", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Taberna04, "Tipo1: ah", 2500, 10, 2, 12, 5);
             break;
         case 9:
-            cine->agregarCuadro(Nivel2_Inicio01, "BOTICA", 2500, 10, 2, 10, 7);
+            cine->agregarCuadro(Nivel2_Botica01, "Tipo1: Ayuda! Mi amigo esta herido", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Botica02, "Medico1: Hay mucho heridos", 2500, 10, 2, 12, 5);
+            cine->agregarCuadro(Nivel2_Botica03, "Medico2: No hay suficientes medicos y siguen llegando más personas", 2500, 10, 2, 12, 5);
             break;
         default:
             delete cine;
@@ -198,6 +699,15 @@ public:
     }
 
     virtual void iniciarNivel() override {
+        ticksPersecucion = 0;
+        ticksCooldownDanio = 0;
+        bonoExploracionAplicado = false;
+
+        for (int id = 0; id < 10; id++) {
+            cuartosEnemigos[id] = false;
+        }
+        bonoExploracionAplicado = { false };
+
         this->tiempoInicio = clock();
         this->tiempoFin = 0;
         this->completado = false;
@@ -259,7 +769,12 @@ public:
         letreros.push_back(new Letrero(75, 29, "Letrero: No todos pueden comer pan. "));
         letreros.push_back(new Letrero(27, 11, "Letrero: Un dia todo se va. Y no queda nada. "));
 
+        limpiarEnemigos();
+
         limpiarItemsSuelo();
+        cargasHechizoAire = 0;
+        libretaAire = new LibretaHechizoAire(17, 44, 3);
+        itemsSuelo.push_back(libretaAire);
 
         dibujarLetrerosEnMapa();
 
