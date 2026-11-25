@@ -38,10 +38,14 @@ public:
 
 	virtual ~Protagonista() {}
 
+	int getIdX() { return idX; }
+	int getIdY() { return idY; }
+
 	int getVidas() { return vidas; }
 	int getTinta() { return tinta; }
 	int getNivel() { return nivel; }
 	bool getEnMovimiento() { return enMovimiento; }
+	int getDireccion() { return direccion; }
 
 	void setVidas(int v) { vidas = v; }
 	void setTinta(int t) { tinta = t; }
@@ -95,14 +99,18 @@ public:
 	void animar() {
 		if (enMovimiento) {
 			ticksAnimacion++;
-			if (ticksAnimacion % 2 == 0) {
+			if (ticksAnimacion % Configuracion::FPSZeldaSprtChange == 0) {
 				idX++;
-				if (idX >= 10) idX = 0;
+				if (idX >= Configuracion::cantZeldaWalking) idX = 0;
 			}
 			idY = 4 + filaDireccion(direccion);
 		}
 		else {
-			idX = 0;
+			ticksAnimacion++;
+			if (ticksAnimacion % Configuracion::FPSZeldaSprtChange == 0) {
+				idX++;
+				if (idX >= Configuracion::cantZeldaQuiet) idX = 0;
+			}
 			idY = filaDireccion(direccion);
 		}
 	}
