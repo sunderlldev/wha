@@ -536,12 +536,9 @@ public:
 
 		bmpCoustas = CargarBitmapSeguro("sprites/Coustas_Spritesheet.png");
 		bmpSillaCoustas = CargarBitmapSeguro("sprites/Coustas_Silla_Spritesheet.png");
-		Bitmap^ qifreyBase = CargarBitmapSeguro("sprites/Qifrey_Spritesheet.png");
-		bmpDagda = CrearVarianteDagdaComun(qifreyBase);
-		if (qifreyBase != nullptr) delete qifreyBase;
-
+		bmpDagda = CargarBitmapSeguro("sprites/Dagda_Spritesheet.png");
 		bmpEnemigo = CargarBitmapSeguro("sprites/Mago_Cueva_Spritesheet.png");
-		bmpIninia = CrearVarianteIniniaComun(bmpEnemigo);
+		bmpIninia = CargarBitmapSeguro("sprites/Ininia_Spritesheet.png");
 		bmpDisparo = CargarBitmapSeguro("sprites/Disparo_Cueva_Spritesheet.png");
 		bmpRoca = CargarBitmapSeguro("sprites/tile_roca.png");
 		bmpMuro = CargarBitmapSeguro("sprites/tile_muro.png");
@@ -1168,7 +1165,7 @@ private:
 
 	void dibujarNPCs(Graphics^ g) {
 		if (dagda != nullptr) dagda->dibujarConGrid(g, bmpDagda, camX, camY, 1, ticksJuego, 4, 4, false);
-		if (ininia != nullptr) ininia->dibujarConGrid(g, bmpIninia, camX, camY, 1, ticksJuego, 4, 4, true);
+		if (ininia != nullptr) ininia->dibujarConGrid(g, bmpIninia, camX, camY, 1, ticksJuego, 6, 4, true);
 	}
 
 	void dibujarEnemigos(Graphics^ g) {

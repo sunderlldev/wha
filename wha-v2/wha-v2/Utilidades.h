@@ -119,54 +119,6 @@ static Bitmap^ CrearVarianteSpriteComun(Bitmap^ base, Color ropaOscura, Color ro
 	return copia;
 }
 
-static Bitmap^ CrearVarianteDagdaComun(Bitmap^ baseQifrey) {
-	if (baseQifrey == nullptr) return gcnew Bitmap(96, 128);
-	Bitmap^ copia = gcnew Bitmap(baseQifrey->Width, baseQifrey->Height, PixelFormat::Format32bppArgb);
-	for (int y = 0; y < baseQifrey->Height; y++) {
-		for (int x = 0; x < baseQifrey->Width; x++) {
-			Color p = baseQifrey->GetPixel(x, y);
-			int alpha = (int)p.A;
-			if (alpha < 20) {
-				copia->SetPixel(x, y, Color::Transparent);
-				continue;
-			}
-			Color out = p;
-			if ((int)p.B >= (int)p.R + 6 && (int)p.B > 110 && !((int)p.R > 220 && (int)p.G > 195)) {
-				int br = ((int)p.R + (int)p.G + (int)p.B) / 3;
-				if (br > 205) out = Color::FromArgb(alpha, 122, 138, 96);
-				else if (br > 170) out = Color::FromArgb(alpha, 88, 108, 72);
-				else out = Color::FromArgb(alpha, 56, 72, 48);
-			}
-			copia->SetPixel(x, y, out);
-		}
-	}
-	return copia;
-}
-
-static Bitmap^ CrearVarianteIniniaComun(Bitmap^ baseMago) {
-	if (baseMago == nullptr) return gcnew Bitmap(64, 96);
-	Bitmap^ copia = gcnew Bitmap(baseMago->Width, baseMago->Height, PixelFormat::Format32bppArgb);
-	for (int y = 0; y < baseMago->Height; y++) {
-		for (int x = 0; x < baseMago->Width; x++) {
-			Color p = baseMago->GetPixel(x, y);
-			int alpha = (int)p.A;
-			if (alpha < 20) {
-				copia->SetPixel(x, y, Color::Transparent);
-				continue;
-			}
-			Color out = p;
-			if ((int)p.R >= (int)p.G + 14 && (int)p.B <= (int)p.R - 10 && (int)p.R > 95) {
-				out = Color::FromArgb(alpha, Math::Min(255, (int)p.R + 28), Math::Min(255, (int)p.G + 8), Math::Min(255, (int)p.B + 86));
-			}
-			else if ((int)p.B >= (int)p.G + 8 && (int)p.R >= 30 && (int)p.B >= 45) {
-				out = Color::FromArgb(alpha, Math::Min(255, (int)p.R + 22), (int)p.G, Math::Min(255, (int)p.B + 42));
-			}
-			copia->SetPixel(x, y, out);
-		}
-	}
-	return copia;
-}
-
 static Bitmap^ CrearSpritePolvoFrameComun(int frame) {
 	Bitmap^ bmp = gcnew Bitmap(16, 16, PixelFormat::Format32bppArgb);
 	Graphics^ g = Graphics::FromImage(bmp);
@@ -376,7 +328,6 @@ static Bitmap^ CargarRetratoPersonajeComun(String^ clave) {
 	String^ archivo = nullptr;
 	int cols = 10;
 	int rows = 8;
-	int modoVariante = 0;
 	int colQuieto = 0;
 
 	if (k->Contains("coco")) {
@@ -431,30 +382,19 @@ static Bitmap^ CargarRetratoPersonajeComun(String^ clave) {
 		colQuieto = 1;
 	}
 	else if (k->Contains("dagda")) {
-		archivo = "sprites/Qifrey_Spritesheet.png";
+		archivo = "sprites/Dagda_Spritesheet.png";
 		cols = 4; rows = 4;
-		modoVariante = 1;
 	}
 	else if (k->Contains("ininia")) {
-		archivo = "sprites/Mago_Cueva_Spritesheet.png";
-		cols = 4; rows = 4;
-		modoVariante = 2;
+		archivo = "sprites/Ininia_Spritesheet.png";
+		cols = 6; rows = 4;
 	}
 	else {
 		return nullptr;
 	}
 
-	Bitmap^ hoja = CargarBitmapSeguroComun(archivo, false);
-	if (hoja == nullptr) return nullptr;
-	Bitmap^ origen = hoja;
-	if (modoVariante == 1) {
-		origen = CrearVarianteDagdaComun(hoja);
-		delete hoja;
-	}
-	else if (modoVariante == 2) {
-		origen = CrearVarianteIniniaComun(hoja);
-		delete hoja;
-	}
+	Bitmap^ origen = CargarBitmapSeguroComun(archivo, false);
+	if (origen == nullptr) return nullptr;
 
 	int fw = Math::Max(1, origen->Width / cols);
 	int fh = Math::Max(1, origen->Height / rows);
