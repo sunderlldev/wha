@@ -387,7 +387,7 @@ namespace whav2 {
 		void AbrirPausa();
 		void AbrirMinijuego();
 		void AbrirTrollface();
-		void AbrirFinNivel(int numNivel);
+		void AbrirFinNivel(int numNivel, bool esDerrota);
 
 		void btnJugar_Click(System::Object^ sender, System::EventArgs^ e);
 		void btnControles_Click(System::Object^ sender, System::EventArgs^ e);

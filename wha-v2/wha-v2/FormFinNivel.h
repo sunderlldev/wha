@@ -18,10 +18,43 @@ namespace whav2 {
 		int puntajeNivel;
 		int cuartosVisitados;
 		int totalCuartos;
+		bool derrota;
 		Bitmap^ bmpEstrellaPixel;
 		Button^ btnSiguiente;
 		Button^ btnRejugar;
 		Button^ btnMenu;
+
+		static Bitmap^ CrearIconoDerrotaPixel() {
+			static const char* patron[16] = {
+				"................",
+				"..OOOO....OOOO..",
+				".ORRRRO..ORRRRO.",
+				"ORRRRRO..ORRRRRO",
+				"ORRRRRO.OORRRRRO",
+				"ORRRRRRO.ORRRRRO",
+				"ORRRRRO..ORRRRRO",
+				".ORRRRO.OORRRRO.",
+				".ORRRO...ORRRO..",
+				"..ORRO..OORRO...",
+				"...ORRO.ORRO....",
+				"....ORO.ORO.....",
+				".....OOOOO......",
+				"......OOO.......",
+				".......O........",
+				"................"
+			};
+			Bitmap^ bmp = gcnew Bitmap(16, 16, PixelFormat::Format32bppArgb);
+			for (int y = 0; y < 16; y++) {
+				for (int x = 0; x < 16; x++) {
+					char c = patron[y][x];
+					Color col = Color::Transparent;
+					if (c == 'O') col = Color::FromArgb(255, 68, 28, 34);
+					else if (c == 'R') col = Color::FromArgb(255, 198, 76, 88);
+					bmp->SetPixel(x, y, col);
+				}
+			}
+			return bmp;
+		}
 
 		static Bitmap^ CrearEstrellaPixel() {
 			static const char* patron[16] = {
@@ -110,7 +143,7 @@ namespace whav2 {
 			}
 		}
 
-		void InicializarModal(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, int punt, int cVis, int cTot) {
+		void InicializarModal(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, int punt, int cVis, int cTot, bool esDerrota) {
 			tiempo = tiempoSegundos;
 			objetos = objetosRecogidos;
 			detalleExtra = extra;
@@ -118,10 +151,11 @@ namespace whav2 {
 			puntajeNivel = punt;
 			cuartosVisitados = cVis;
 			totalCuartos = cTot;
+			derrota = esDerrota;
 			accion = 0;
-			bmpEstrellaPixel = CrearEstrellaPixel();
+			bmpEstrellaPixel = esDerrota ? CrearIconoDerrotaPixel() : CrearEstrellaPixel();
 
-			this->Text = "Nivel " + nivel.ToString() + " completado";
+			this->Text = esDerrota ? ("Nivel " + nivel.ToString() + " - Derrota") : ("Nivel " + nivel.ToString() + " completado");
 			this->ClientSize = System::Drawing::Size(480, 310);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
@@ -131,9 +165,9 @@ namespace whav2 {
 			this->DoubleBuffered = true;
 
 			Label^ lblTitulo = gcnew Label();
-			lblTitulo->Text = "NIVEL " + nivel.ToString() + " COMPLETADO";
+			lblTitulo->Text = esDerrota ? "PERDISTE" : ("NIVEL " + nivel.ToString() + " COMPLETADO");
 			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 14.5f, FontStyle::Bold);
-			lblTitulo->ForeColor = Color::FromArgb(236, 224, 196);
+			lblTitulo->ForeColor = esDerrota ? Color::FromArgb(236, 134, 134) : Color::FromArgb(236, 224, 196);
 			lblTitulo->BackColor = Color::FromArgb(18, 25, 36);
 			lblTitulo->Location = Point(40, 102);
 			lblTitulo->Size = System::Drawing::Size(400, 30);
@@ -142,7 +176,7 @@ namespace whav2 {
 
 			Label^ lblSub = gcnew Label();
 			if (nivel == 2) lblSub->Text = "Tartah · Laberinto de Kaln";
-			else if (nivel == 3) lblSub->Text = detalleExtra ? "Coustas · Pacto de la Semilla Prohibida" : "Coustas · Voluntad del Árbol de Plata";
+			else if (nivel == 3) lblSub->Text = esDerrota ? "Coustas · Santuario del Árbol de Plata" : (detalleExtra ? "Coustas · Pacto de la Semilla Prohibida" : "Coustas · Voluntad del Árbol de Plata");
 			else lblSub->Text = "Coco · Atelier de Qifrey";
 			lblSub->Font = gcnew System::Drawing::Font("Segoe UI", 10.0f, FontStyle::Regular);
 			lblSub->ForeColor = Color::FromArgb(170, 184, 202);
@@ -153,7 +187,15 @@ namespace whav2 {
 			this->Controls->Add(lblSub);
 
 			Label^ lblStats = gcnew Label();
-			if (nivel == 2 && puntajeNivel >= 0) {
+			if (esDerrota) {
+				if (nivel == 2 && puntajeNivel >= 0) {
+					lblStats->Text = "Sin vidas  ·  Cuartos: " + cuartosVisitados.ToString() + "/" + totalCuartos.ToString() + "  ·  Puntaje: " + puntajeNivel.ToString();
+				}
+				else {
+					lblStats->Text = "Te has quedado sin vidas   ·   Tiempo: " + tiempo.ToString() + " s";
+				}
+			}
+			else if (nivel == 2 && puntajeNivel >= 0) {
 				lblStats->Text = "Tiempo: " + tiempo.ToString() + " s  ·  Cuartos: " + cuartosVisitados.ToString() + "/" + totalCuartos.ToString() + "  ·  Puntaje: " + puntajeNivel.ToString();
 			}
 			else {
@@ -167,38 +209,40 @@ namespace whav2 {
 			lblStats->TextAlign = ContentAlignment::MiddleCenter;
 			this->Controls->Add(lblStats);
 
-			btnSiguiente = gcnew Button();
-			btnSiguiente->Text = (nivel >= 3) ? "FINALIZAR" : "SIGUIENTE";
-			btnSiguiente->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Bold);
-			btnSiguiente->ForeColor = Color::FromArgb(236, 224, 196);
-			btnSiguiente->BackColor = Color::FromArgb(26, 36, 52);
-			btnSiguiente->FlatStyle = FlatStyle::Flat;
-			btnSiguiente->FlatAppearance->BorderSize = 1;
-			btnSiguiente->FlatAppearance->BorderColor = Color::FromArgb(140, 128, 104);
-			btnSiguiente->FlatAppearance->MouseOverBackColor = Color::FromArgb(36, 50, 70);
-			btnSiguiente->Cursor = Cursors::Hand;
-			btnSiguiente->Location = Point(48, 222);
-			btnSiguiente->Size = System::Drawing::Size(124, 38);
-			btnSiguiente->Click += gcnew EventHandler(this, &FormFinNivel::btnSiguiente_Click);
-			this->Controls->Add(btnSiguiente);
+			if (!esDerrota) {
+				btnSiguiente = gcnew Button();
+				btnSiguiente->Text = (nivel >= 3) ? "FINALIZAR" : "SIGUIENTE";
+				btnSiguiente->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Bold);
+				btnSiguiente->ForeColor = Color::FromArgb(236, 224, 196);
+				btnSiguiente->BackColor = Color::FromArgb(26, 36, 52);
+				btnSiguiente->FlatStyle = FlatStyle::Flat;
+				btnSiguiente->FlatAppearance->BorderSize = 1;
+				btnSiguiente->FlatAppearance->BorderColor = Color::FromArgb(140, 128, 104);
+				btnSiguiente->FlatAppearance->MouseOverBackColor = Color::FromArgb(36, 50, 70);
+				btnSiguiente->Cursor = Cursors::Hand;
+				btnSiguiente->Location = Point(48, 222);
+				btnSiguiente->Size = System::Drawing::Size(124, 38);
+				btnSiguiente->Click += gcnew EventHandler(this, &FormFinNivel::btnSiguiente_Click);
+				this->Controls->Add(btnSiguiente);
+			}
 
 			btnRejugar = gcnew Button();
-			btnRejugar->Text = "REJUGAR";
+			btnRejugar->Text = esDerrota ? "REINICIAR NIVEL" : "REJUGAR";
 			btnRejugar->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Bold);
-			btnRejugar->ForeColor = Color::FromArgb(228, 234, 242);
-			btnRejugar->BackColor = Color::FromArgb(24, 33, 46);
+			btnRejugar->ForeColor = esDerrota ? Color::FromArgb(236, 224, 196) : Color::FromArgb(228, 234, 242);
+			btnRejugar->BackColor = esDerrota ? Color::FromArgb(26, 36, 52) : Color::FromArgb(24, 33, 46);
 			btnRejugar->FlatStyle = FlatStyle::Flat;
 			btnRejugar->FlatAppearance->BorderSize = 1;
-			btnRejugar->FlatAppearance->BorderColor = Color::FromArgb(64, 78, 98);
+			btnRejugar->FlatAppearance->BorderColor = esDerrota ? Color::FromArgb(140, 128, 104) : Color::FromArgb(64, 78, 98);
 			btnRejugar->FlatAppearance->MouseOverBackColor = Color::FromArgb(34, 46, 64);
 			btnRejugar->Cursor = Cursors::Hand;
-			btnRejugar->Location = Point(182, 222);
-			btnRejugar->Size = System::Drawing::Size(116, 38);
+			btnRejugar->Location = esDerrota ? Point(64, 222) : Point(182, 222);
+			btnRejugar->Size = esDerrota ? System::Drawing::Size(166, 38) : System::Drawing::Size(116, 38);
 			btnRejugar->Click += gcnew EventHandler(this, &FormFinNivel::btnRejugar_Click);
 			this->Controls->Add(btnRejugar);
 
 			btnMenu = gcnew Button();
-			btnMenu->Text = "MENÚ";
+			btnMenu->Text = esDerrota ? "MENÚ PRINCIPAL" : "MENÚ";
 			btnMenu->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Regular);
 			btnMenu->ForeColor = Color::FromArgb(204, 214, 226);
 			btnMenu->BackColor = Color::FromArgb(20, 28, 40);
@@ -207,19 +251,27 @@ namespace whav2 {
 			btnMenu->FlatAppearance->BorderColor = Color::FromArgb(54, 66, 84);
 			btnMenu->FlatAppearance->MouseOverBackColor = Color::FromArgb(30, 42, 58);
 			btnMenu->Cursor = Cursors::Hand;
-			btnMenu->Location = Point(308, 222);
-			btnMenu->Size = System::Drawing::Size(124, 38);
+			btnMenu->Location = esDerrota ? Point(250, 222) : Point(308, 222);
+			btnMenu->Size = esDerrota ? System::Drawing::Size(166, 38) : System::Drawing::Size(124, 38);
 			btnMenu->Click += gcnew EventHandler(this, &FormFinNivel::btnMenu_Click);
 			this->Controls->Add(btnMenu);
 		}
 
 	public:
 		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel) {
-			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, -1, 0, 9);
+			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, -1, 0, 9, false);
+		}
+
+		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, bool esDerrota) {
+			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, -1, 0, 9, esDerrota);
 		}
 
 		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, int punt, int cVis, int cTot) {
-			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, punt, cVis, cTot);
+			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, punt, cVis, cTot, false);
+		}
+
+		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, int punt, int cVis, int cTot, bool esDerrota) {
+			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, punt, cVis, cTot, esDerrota);
 		}
 
 		int getAccion() { return accion; }

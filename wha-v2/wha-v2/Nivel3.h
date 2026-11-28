@@ -74,6 +74,7 @@ private:
 	bool correrActivo;
 	bool completado;
 	bool solicitaFinNivel;
+	bool solicitaDerrota;
 
 	bool dialogoActivo;
 	std::string dialogoNpc;
@@ -479,6 +480,7 @@ private:
 		enIntro = true;
 		completado = false;
 		solicitaFinNivel = false;
+		solicitaDerrota = false;
 		cerrarDialogo();
 		mensajeTemporal = "";
 		ticksMensaje = 0;
@@ -646,6 +648,12 @@ public:
 	bool consumirSolicitudFinNivel() {
 		bool val = solicitaFinNivel;
 		solicitaFinNivel = false;
+		return val;
+	}
+
+	bool consumirSolicitudDerrota() {
+		bool val = solicitaDerrota;
+		solicitaDerrota = false;
 		return val;
 	}
 
@@ -894,10 +902,7 @@ public:
 					mensajeTemporal = "¡Un Sombrero de Ala Ancha te emboscó! (-1 corazón)";
 					ticksMensaje = 90;
 					if (protagonista->getVidas() <= 0) {
-						iniciar();
-						enIntro = false;
-						mensajeTemporal = "Has caído en el desfiladero. Nivel 3 reiniciado.";
-						ticksMensaje = 120;
+						solicitaDerrota = true;
 						return;
 					}
 					break;
@@ -938,10 +943,7 @@ public:
 						mensajeTemporal = "¡Un disparo oscuro te alcanzó! (-1 corazón)";
 						ticksMensaje = 90;
 						if (protagonista->getVidas() <= 0) {
-							iniciar();
-							enIntro = false;
-							mensajeTemporal = "Has caído en el desfiladero. Nivel 3 reiniciado.";
-							ticksMensaje = 120;
+							solicitaDerrota = true;
 							return;
 						}
 					}

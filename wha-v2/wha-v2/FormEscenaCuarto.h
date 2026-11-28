@@ -11,8 +11,8 @@ namespace whav2 {
 
 	public ref class FormEscenaCuarto : public Form {
 	private:
-		int numCuarto;
 		int indiceActual;
+		String^ tituloEscena;
 		array<String^>^ rutas;
 		array<String^>^ textos;
 		Bitmap^ bmpActual;
@@ -70,7 +70,7 @@ namespace whav2 {
 				StringFormat^ sf = gcnew StringFormat();
 				sf->Alignment = StringAlignment::Center;
 				sf->LineAlignment = StringAlignment::Center;
-				g->DrawString("ESCENA DEL CUARTO " + numCuarto.ToString() + " (" + (indiceActual + 1).ToString() + ")", fInfo, Brushes::Khaki, RectangleF(16.0f, 70.0f, (float)w - 32.0f, 36.0f), sf);
+				g->DrawString(tituloEscena + " (" + (indiceActual + 1).ToString() + ")", fInfo, Brushes::Khaki, RectangleF(16.0f, 70.0f, (float)w - 32.0f, 36.0f), sf);
 				g->DrawString("Imagen pendiente: " + slot, fRuta, Brushes::LightSteelBlue, RectangleF(16.0f, 118.0f, (float)w - 32.0f, 32.0f), sf);
 				delete sf;
 				delete fInfo;
@@ -108,13 +108,13 @@ namespace whav2 {
 
 	public:
 		FormEscenaCuarto(int cuarto, String^ nombreCuarto, array<String^>^ imgs, array<String^>^ desc) {
-			numCuarto = cuarto;
 			indiceActual = 0;
+			tituloEscena = String::IsNullOrEmpty(nombreCuarto) ? "Pueblo de Kaln" : nombreCuarto;
 			rutas = imgs;
 			textos = desc;
 			bmpActual = nullptr;
 
-			this->Text = "Kaln - Cuarto " + cuarto.ToString();
+			this->Text = "Kaln - " + tituloEscena;
 			this->ClientSize = System::Drawing::Size(680, 480);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
@@ -125,7 +125,7 @@ namespace whav2 {
 			this->KeyDown += gcnew KeyEventHandler(this, &FormEscenaCuarto::FormEscenaCuarto_KeyDown);
 
 			lblTitulo = gcnew Label();
-			lblTitulo->Text = "CUARTO " + cuarto.ToString() + " · " + nombreCuarto;
+			lblTitulo->Text = tituloEscena;
 			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 13.0f, FontStyle::Bold);
 			lblTitulo->ForeColor = Color::FromArgb(214, 198, 166);
 			lblTitulo->Location = Point(28, 16);

@@ -135,6 +135,7 @@ private:
 	bool solicitaMinijuego;
 	bool solicitaTrollface;
 	bool solicitaFinNivel;
+	bool solicitaDerrota;
 
 	bool transicionPozoActiva;
 	bool transicionBajandoPozo;
@@ -1486,10 +1487,7 @@ private:
 		jugador->restarVida();
 		invulnerableTicks = 50;
 		if (jugador->getVidas() <= 0) {
-			iniciarNivel(1);
-			enIntro = false;
-			mensajeTemporal = "Has perdido todas tus vidas ante los Sombreros de Ala Ancha. Nivel reiniciado.";
-			ticksMensajeTemporal = 130;
+			solicitaDerrota = true;
 			return true;
 		}
 		int retrocesoX = jugador->getX() - 28;
@@ -1608,6 +1606,7 @@ public:
 		solicitaMinijuego = false;
 		solicitaTrollface = false;
 		solicitaFinNivel = false;
+		solicitaDerrota = false;
 		transicionPozoActiva = false;
 		transicionBajandoPozo = true;
 		ticksTransicionPozo = 0;
@@ -2146,6 +2145,12 @@ public:
 		return valor;
 	}
 
+	bool consumirSolicitudDerrota() {
+		bool valor = solicitaDerrota;
+		solicitaDerrota = false;
+		return valor;
+	}
+
 	void resolverMinijuego(bool exito) {
 		if (audioHabilitado) reproducirAudioNivel(1);
 		else audio.detener();
@@ -2163,10 +2168,7 @@ public:
 		else {
 			jugador->restarVida();
 			if (jugador->getVidas() <= 0) {
-				iniciarNivel(1);
-				enIntro = false;
-				mensajeTemporal = "Has agotado tus vidas. El nivel ha sido reiniciado.";
-				ticksMensajeTemporal = 120;
+				solicitaDerrota = true;
 			}
 			else {
 				vioMyrphon = true;
