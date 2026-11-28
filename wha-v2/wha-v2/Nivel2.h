@@ -34,6 +34,14 @@ struct AldeanoN2 {
 	bool huyendo;
 };
 
+struct ProyectilN2 {
+	int x;
+	int y;
+	char dir;
+	bool explotando;
+	int ticks;
+};
+
 class Nivel2 {
 private:
 	std::vector<std::string> mapa;
@@ -43,6 +51,7 @@ private:
 	std::vector<Arbol*> arboles;
 	std::vector<LibretaRecargaN2> libretas;
 	std::vector<AldeanoN2> aldeanos;
+	std::vector<ProyectilN2> proyectiles;
 	std::vector<std::vector<int>> mapaPasto;
 
 	bool cuartosVisitados[10];
@@ -50,18 +59,11 @@ private:
 	int puntaje;
 	int ticksJuego;
 	int ticksOleada;
-	int ticksPersecucion;
+	int ticksCooldownDisparo;
 	int ticksCooldownDanio;
 
 	int cargasHechizoAire;
 	bool tieneLibretaInicial;
-
-	bool proyectilActivo;
-	int proyX;
-	int proyY;
-	char proyDir;
-	bool proyExplotando;
-	int ticksProy;
 
 	int idCuartoActual;
 	bool solicitaEscenaCuarto;
@@ -99,6 +101,7 @@ private:
 		arboles.clear();
 		libretas.clear();
 		aldeanos.clear();
+		proyectiles.clear();
 	}
 
 	bool esCeldaTransitable(int col, int fila) {
@@ -238,13 +241,11 @@ private:
 		camY = 0;
 		ticksJuego = 0;
 		ticksOleada = 0;
-		ticksPersecucion = 0;
+		ticksCooldownDisparo = 0;
 		ticksCooldownDanio = 0;
 		cargasHechizoAire = 0;
 		tieneLibretaInicial = false;
-		proyectilActivo = false;
-		proyExplotando = false;
-		ticksProy = 0;
+		proyectiles.clear();
 		solicitaEscenaCuarto = false;
 		cuartoEscenaPendiente = 0;
 		enIntro = true;
@@ -293,7 +294,8 @@ private:
 			if (hayColision(ex, ey, 16, 16)) continue;
 
 			Enemigo* nuevo = new Enemigo(ex, ey, "Sanguijuela", 2, 1, 4, idCuartoActual);
-			int vel = 1 + (generados % 3);
+			int tirada = rng->Next(0, 100);
+			int vel = (tirada < 45) ? 2 : ((tirada < 80) ? rng->Next(3, 5) : rng->Next(5, 7));
 			nuevo->setVelocidad(vel);
 			enemigos.push_back(nuevo);
 			generados++;
@@ -498,6 +500,7 @@ public:
 		correrActivo = corriendo;
 		ticksJuego++;
 		if (ticksMensaje > 0) ticksMensaje--;
+		if (ticksCooldownDisparo > 0) ticksCooldownDisparo--;
 
 		ticksOleada++;
 		if (ticksOleada >= 400) {
@@ -505,19 +508,20 @@ public:
 			generarOleadaCercana();
 		}
 
-		if (proyectilActivo) {
-			if (!proyExplotando) {
-				if (proyDir == 'W') proyY -= 9;
-				else if (proyDir == 'S') proyY += 9;
-				else if (proyDir == 'A') proyX -= 9;
-				else if (proyDir == 'D') proyX += 9;
+		for (size_t k = 0; k < proyectiles.size(); ) {
+			ProyectilN2& pr = proyectiles[k];
+			if (!pr.explotando) {
+				if (pr.dir == 'W') pr.y -= 12;
+				else if (pr.dir == 'S') pr.y += 12;
+				else if (pr.dir == 'A') pr.x -= 12;
+				else if (pr.dir == 'D') pr.x += 12;
 
 				bool impacto = false;
 				for (size_t i = 0; i < enemigos.size(); i++) {
 					Enemigo* en = enemigos[i];
 					if (en != nullptr && en->getActivo()) {
-						if (proyX < en->getX() + en->getAncho() && proyX + 32 > en->getX() &&
-							proyY < en->getY() + en->getAlto() && proyY + 32 > en->getY()) {
+						if (pr.x < en->getX() + en->getAncho() && pr.x + 32 > en->getX() &&
+							pr.y < en->getY() + en->getAlto() && pr.y + 32 > en->getY()) {
 							en->setActivo(false);
 							puntaje += 15;
 							impacto = true;
@@ -527,20 +531,26 @@ public:
 						}
 					}
 				}
-				if (!impacto && hayColision(proyX + 6, proyY + 6, 20, 20)) {
+				if (!impacto && hayColision(pr.x + 6, pr.y + 6, 20, 20)) {
 					impacto = true;
 				}
 				if (impacto) {
-					proyExplotando = true;
-					ticksProy = 0;
+					pr.explotando = true;
+					pr.ticks = 0;
+				}
+				else if (pr.x < camX - 64 || pr.x > camX + 1024 || pr.y < camY - 64 || pr.y > camY + 664) {
+					proyectiles.erase(proyectiles.begin() + k);
+					continue;
 				}
 			}
 			else {
-				ticksProy++;
-				if (ticksProy > 15) {
-					proyectilActivo = false;
+				pr.ticks++;
+				if (pr.ticks > 10) {
+					proyectiles.erase(proyectiles.begin() + k);
+					continue;
 				}
 			}
+			k++;
 		}
 
 		if (protagonista != nullptr) {
@@ -566,11 +576,7 @@ public:
 			}
 		}
 
-		ticksPersecucion++;
-		if (ticksPersecucion >= 4) {
-			ticksPersecucion = 0;
-			persecucionEnemigos();
-		}
+		persecucionEnemigos();
 
 		actualizarAldeanos();
 
@@ -643,7 +649,7 @@ public:
 			ticksMensaje = 70;
 			return;
 		}
-		if (proyectilActivo) return;
+		if (ticksCooldownDisparo > 0 || (int)proyectiles.size() >= 12) return;
 
 		char dir = 'D';
 		if (protagonista->getDireccion() == 0) dir = 'S';
@@ -652,14 +658,16 @@ public:
 		else if (protagonista->getDireccion() == 3) dir = 'D';
 
 		cargasHechizoAire--;
+		ticksCooldownDisparo = 6;
 		GestorAudio::ReproducirSfxAccion();
 
-		proyX = protagonista->getX() + protagonista->getAncho() / 2 - 16;
-		proyY = protagonista->getY() + protagonista->getAlto() / 2 - 16;
-		proyDir = dir;
-		proyectilActivo = true;
-		proyExplotando = false;
-		ticksProy = 0;
+		ProyectilN2 nuevo;
+		nuevo.x = protagonista->getX() + protagonista->getAncho() / 2 - 16;
+		nuevo.y = protagonista->getY() + protagonista->getAlto() / 2 - 16;
+		nuevo.dir = dir;
+		nuevo.explotando = false;
+		nuevo.ticks = 0;
+		proyectiles.push_back(nuevo);
 
 		mensajeTemporal = "[HECHIZO] Ráfaga de aire. Cargas restantes: " + std::to_string(cargasHechizoAire);
 		ticksMensaje = 60;
@@ -880,7 +888,7 @@ private:
 	}
 
 	void dibujarHechizo(Graphics^ g) {
-		if (!proyectilActivo) return;
+		if (proyectiles.empty()) return;
 		Bitmap^ bmp = bmpHechizo;
 		if (bmp == nullptr) return;
 
@@ -890,22 +898,25 @@ private:
 		int frameW = bmp->Width / 4;
 		int frameH = bmp->Height / 4;
 
-		int idY = 3;
-		if (proyDir == 'W') idY = 0;
-		else if (proyDir == 'S') idY = 1;
-		else if (proyDir == 'A') idY = 2;
+		for (size_t k = 0; k < proyectiles.size(); k++) {
+			const ProyectilN2& pr = proyectiles[k];
+			int idY = 3;
+			if (pr.dir == 'W') idY = 0;
+			else if (pr.dir == 'S') idY = 1;
+			else if (pr.dir == 'A') idY = 2;
 
-		int idX = 0;
-		if (proyExplotando) {
-			idX = 1 + (ticksProy / 5);
-			if (idX > 3) idX = 3;
+			int idX = 0;
+			if (pr.explotando) {
+				idX = 1 + (pr.ticks / 4);
+				if (idX > 3) idX = 3;
+			}
+
+			int px = pr.x - camX;
+			int py = pr.y - camY;
+			Rectangle srcRect(idX * frameW, idY * frameH, frameW, frameH);
+			Rectangle destRect(px, py, frameW * 2, frameH * 2);
+			g->DrawImage(bmp, destRect, srcRect, GraphicsUnit::Pixel);
 		}
-
-		int px = proyX - camX;
-		int py = proyY - camY;
-		Rectangle srcRect(idX * frameW, idY * frameH, frameW, frameH);
-		Rectangle destRect(px, py, frameW * 2, frameH * 2);
-		g->DrawImage(bmp, destRect, srcRect, GraphicsUnit::Pixel);
 	}
 
 	void dibujarHUD(Graphics^ g) {
@@ -1013,17 +1024,28 @@ private:
 
 			int vel = en->getVelocidad();
 			if (vel < 1) vel = 1;
+			int paso = (dx != 0 && dy != 0 && vel >= 4) ? (vel * 3) / 4 : vel;
 
 			if (dx > 0) en->setIdY(2);
 			else if (dx < 0) en->setIdY(3);
 			else if (dy > 0) en->setIdY(1);
 			else if (dy < 0) en->setIdY(0);
 
-			if (dx != 0 && !hayColision(ex + dx * vel, ey, en->getAncho(), en->getAlto())) {
-				en->setX(ex + dx * vel);
+			if (dx != 0) {
+				for (int s = paso; s >= 1; s--) {
+					if (!hayColision(ex + dx * s, ey, en->getAncho(), en->getAlto())) {
+						en->setX(ex + dx * s);
+						break;
+					}
+				}
 			}
-			if (dy != 0 && !hayColision(en->getX(), ey + dy * vel, en->getAncho(), en->getAlto())) {
-				en->setY(ey + dy * vel);
+			if (dy != 0) {
+				for (int s = paso; s >= 1; s--) {
+					if (!hayColision(en->getX(), ey + dy * s, en->getAncho(), en->getAlto())) {
+						en->setY(ey + dy * s);
+						break;
+					}
+				}
 			}
 		}
 	}
