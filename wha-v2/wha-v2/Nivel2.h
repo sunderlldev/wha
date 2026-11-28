@@ -78,6 +78,7 @@ private:
 	bool correrActivo;
 	bool completado;
 	bool solicitaFinNivel;
+	bool solicitaDerrota;
 
 	gcroot<Bitmap^> bmpProtagonista;
 	gcroot<Bitmap^> bmpTileset;
@@ -273,7 +274,7 @@ private:
 		camX = 0;
 		camY = 0;
 		ticksJuego = 0;
-		ticksOleada = 320;
+		ticksOleada = 300;
 		ticksCooldownDisparo = 0;
 		ticksCooldownDanio = 0;
 		cargasHechizoAire = 0;
@@ -285,6 +286,7 @@ private:
 		correrActivo = false;
 		completado = false;
 		solicitaFinNivel = false;
+		solicitaDerrota = false;
 
 		for (int i = 0; i < 10; i++) cuartosVisitados[i] = false;
 		cuartosVisitados[5] = true;
@@ -304,29 +306,29 @@ private:
 		if (protagonista == nullptr) return;
 		System::Random^ rng = gcnew System::Random((int)((System::DateTime::Now.Ticks + ticksJuego * 131) & 0x7FFFFFFF));
 
-		int minLote = 25;
-		int maxLote = 30;
-		int capActivos = 45;
+		int minLote = 20;
+		int maxLote = 25;
+		int capActivos = 36;
 		if (cuartosExplorados <= 1) {
 			minLote = 4; maxLote = 6; capActivos = 8;
 		}
 		else if (cuartosExplorados == 2) {
-			minLote = 7; maxLote = 10; capActivos = 12;
+			minLote = 6; maxLote = 8; capActivos = 11;
 		}
 		else if (cuartosExplorados == 3) {
-			minLote = 10; maxLote = 13; capActivos = 16;
+			minLote = 8; maxLote = 11; capActivos = 14;
 		}
 		else if (cuartosExplorados == 4) {
-			minLote = 13; maxLote = 17; capActivos = 22;
+			minLote = 10; maxLote = 14; capActivos = 18;
 		}
 		else if (cuartosExplorados == 5) {
-			minLote = 16; maxLote = 20; capActivos = 28;
+			minLote = 13; maxLote = 17; capActivos = 22;
 		}
 		else if (cuartosExplorados == 6) {
-			minLote = 20; maxLote = 24; capActivos = 35;
+			minLote = 16; maxLote = 20; capActivos = 28;
 		}
 		else if (cuartosExplorados == 7) {
-			minLote = 22; maxLote = 26; capActivos = 40;
+			minLote = 18; maxLote = 22; capActivos = 32;
 		}
 
 		int activos = (int)enemigos.size();
@@ -344,7 +346,7 @@ private:
 			intentos++;
 			int offX = rng->Next(-440, 441);
 			int offY = rng->Next(-265, 266);
-			if (offX * offX + offY * offY < 160 * 160) continue;
+			if (offX * offX + offY * offY < 180 * 180) continue;
 
 			int ex = px + offX;
 			int ey = py + offY;
@@ -355,16 +357,16 @@ private:
 			int tirada = rng->Next(0, 100);
 			int vel = 2;
 			if (cuartosExplorados <= 3) {
-				vel = (tirada < 75) ? 2 : 3;
+				vel = (tirada < 80) ? 2 : 3;
 			}
 			else if (cuartosExplorados <= 5) {
-				vel = (tirada < 30) ? 2 : ((tirada < 75) ? rng->Next(3, 5) : 5);
+				vel = (tirada < 35) ? 2 : ((tirada < 80) ? rng->Next(3, 5) : 5);
 			}
 			else if (cuartosExplorados <= 7) {
-				vel = (tirada < 15) ? 3 : ((tirada < 60) ? 4 : rng->Next(5, 7));
+				vel = (tirada < 20) ? 3 : ((tirada < 65) ? 4 : rng->Next(5, 7));
 			}
 			else {
-				vel = (tirada < 10) ? 3 : ((tirada < 45) ? 4 : rng->Next(5, 7));
+				vel = (tirada < 15) ? 3 : ((tirada < 55) ? 4 : rng->Next(5, 7));
 			}
 			nuevo->setVelocidad(vel);
 			enemigos.push_back(nuevo);
@@ -466,6 +468,12 @@ public:
 	bool consumirSolicitudFinNivel() {
 		bool val = solicitaFinNivel;
 		solicitaFinNivel = false;
+		return val;
+	}
+
+	bool consumirSolicitudDerrota() {
+		bool val = solicitaDerrota;
+		solicitaDerrota = false;
 		return val;
 	}
 
@@ -591,22 +599,20 @@ public:
 	void interactuar() {
 		if (enIntro) {
 			enIntro = false;
-			solicitaEscenaCuarto = true;
-			cuartoEscenaPendiente = 5;
 			return;
 		}
 		activarHechizoAire();
 	}
 
 	void procesarTick(bool corriendo = false) {
-		if (enIntro) return;
+		if (enIntro || solicitaDerrota || completado) return;
 		correrActivo = corriendo;
 		ticksJuego++;
 		if (ticksMensaje > 0) ticksMensaje--;
 		if (ticksCooldownDisparo > 0) ticksCooldownDisparo--;
 
 		ticksOleada++;
-		if (ticksOleada >= 400) {
+		if (ticksOleada >= 420) {
 			ticksOleada = 0;
 			generarOleadaCercana();
 		}
@@ -673,13 +679,13 @@ public:
 					GestorAudio::ReproducirSfxAccion();
 					if (!tieneLibretaInicial) {
 						tieneLibretaInicial = true;
-						cargasHechizoAire += 15;
+						cargasHechizoAire += 16;
 						inventario->agregarItem("Libreta de Hechizos de Aire", "Permite lanzar ráfagas de aire con [Espacio] para repeler sanguijuelas.", "Herramienta Mágica");
-						mensajeTemporal = "[ITEM] Libreta de Aire obtenida (+15 cargas)";
+						mensajeTemporal = "[ITEM] Libreta de Aire obtenida (+16 cargas)";
 					}
 					else {
-						cargasHechizoAire = Math::Min(25, cargasHechizoAire + 8);
-						mensajeTemporal = "[RECARGA] +8 cargas de Aire (Total: " + std::to_string(cargasHechizoAire) + ")";
+						cargasHechizoAire = Math::Min(28, cargasHechizoAire + 9);
+						mensajeTemporal = "[RECARGA] +9 cargas de Aire (Total: " + std::to_string(cargasHechizoAire) + ")";
 					}
 					ticksMensaje = 90;
 				}
@@ -706,8 +712,8 @@ public:
 			}
 		}
 
-		if (enemigos.empty() && ticksJuego >= 60 && ticksOleada < 340) {
-			ticksOleada = 340;
+		if (enemigos.empty() && ticksJuego >= 60 && ticksOleada < 350) {
+			ticksOleada = 350;
 		}
 
 		if (ticksCooldownDanio > 0) {
@@ -1203,13 +1209,11 @@ private:
 			if (px < ex + ew && px + pw > ex && py < ey + eh && py + ph > ey) {
 				protagonista->restarVida();
 				GestorAudio::ReproducirSfxAccion();
-				ticksCooldownDanio = 42;
+				ticksCooldownDanio = 48;
 				mensajeTemporal = "[DAÑO] ¡Una sanguijuela sombría te ha golpeado!";
 				ticksMensaje = 70;
 				if (protagonista->getVidas() <= 0) {
-					reiniciarNivel();
-					mensajeTemporal = "Has perdido todas tus vidas. Nivel 2 reiniciado.";
-					ticksMensaje = 110;
+					solicitaDerrota = true;
 				}
 				break;
 			}

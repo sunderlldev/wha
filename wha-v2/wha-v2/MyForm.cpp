@@ -657,14 +657,16 @@ namespace whav2 {
 		timerJuego->Start();
 	}
 
-	void MyForm::AbrirFinNivel(int numNivel) {
+	void MyForm::AbrirFinNivel(int numNivel, bool esDerrota) {
 		timerJuego->Stop();
 		N1(ptrNivel1)->pausarAudio();
 
-		if (numNivel == 1) nivel1Completado = true;
-		else if (numNivel == 2) nivel2Completado = true;
-		else if (numNivel == 3) nivel3Completado = true;
-		GuardarProgresoNiveles();
+		if (!esDerrota) {
+			if (numNivel == 1) nivel1Completado = true;
+			else if (numNivel == 2) nivel2Completado = true;
+			else if (numNivel == 3) nivel3Completado = true;
+			GuardarProgresoNiveles();
+		}
 
 		int t = 0;
 		int objs = 0;
@@ -686,14 +688,14 @@ namespace whav2 {
 		}
 
 		FormFinNivel^ frm = (numNivel == 2)
-			? gcnew FormFinNivel(t, objs, extra, numNivel, N2(ptrNivel2)->getPuntaje(), N2(ptrNivel2)->getCuartosExplorados(), N2(ptrNivel2)->getTotalCuartos())
-			: gcnew FormFinNivel(t, objs, extra, numNivel);
+			? gcnew FormFinNivel(t, objs, extra, numNivel, N2(ptrNivel2)->getPuntaje(), N2(ptrNivel2)->getCuartosExplorados(), N2(ptrNivel2)->getTotalCuartos(), esDerrota)
+			: gcnew FormFinNivel(t, objs, extra, numNivel, esDerrota);
 		frm->ShowDialog(this);
 		int accion = frm->getAccion();
 		if (accion == 1) {
 			IniciarNivelSeleccionado(numNivel, true);
 		}
-		else if (accion == 3) {
+		else if (!esDerrota && accion == 3) {
 			if (numNivel == 1) IniciarNivelSeleccionado(2, true);
 			else if (numNivel == 2) IniciarNivelSeleccionado(3, true);
 			else {
@@ -767,8 +769,12 @@ namespace whav2 {
 				AbrirTrollface();
 				return;
 			}
+			if (N1(ptrNivel1)->consumirSolicitudDerrota()) {
+				AbrirFinNivel(1, true);
+				return;
+			}
 			if (N1(ptrNivel1)->consumirSolicitudFinNivel()) {
-				AbrirFinNivel(1);
+				AbrirFinNivel(1, false);
 				return;
 			}
 		}
@@ -804,34 +810,20 @@ namespace whav2 {
 						"sprites/Nivel2_Panaderia05.png"
 					};
 					desc = gcnew array<String^>{
-						"¡Un mago de sombrero puntiagudo!",
-						"¡El gato fue atrapado por los escombros!",
-						"¡Magia prohibida!",
-						"¿Está ayudándolo?",
-						"¿La magia se puede utilizar para curar?"
+						"Un mago de sombrero puntiagudo!",
+						"El gato fue atrapado por los escombros!",
+						"Magia prohibida!",
+						"Esta ayudandolo?",
+						"La magia se puede utilizar para curar?"
 					};
 				}
 				else if (cuartoEsc == 3) {
 					imgs = gcnew array<String^>{ "sprites/Nivel2_Abuelita01.png" };
-					desc = gcnew array<String^>{ "Casa de la viejita nada sospechosa..." };
+					desc = gcnew array<String^>{ "CASA DE LA VIEJITA NADA SOSPECHOSA" };
 				}
 				else if (cuartoEsc == 4) {
 					imgs = gcnew array<String^>{ "sprites/Nivel2_Inicio04.png" };
-					desc = gcnew array<String^>{ "Casa alquilada usada por un mago." };
-				}
-				else if (cuartoEsc == 5) {
-					imgs = gcnew array<String^>{
-						"sprites/Nivel2_Inicio01.png",
-						"sprites/Nivel2_Inicio02.png",
-						"sprites/Nivel2_Inicio03.png",
-						"sprites/Nivel2_Inicio04.png"
-					};
-					desc = gcnew array<String^>{
-						"Coco avanza entre la niebla nocturna de Kaln.",
-						"Tartah observa los callejones antes de separarse.",
-						"Las puertas del pueblo permanecen cerradas ante el peligro.",
-						"Las sanguijuelas sombrías comienzan a rodear las casas."
-					};
+					desc = gcnew array<String^>{ "CASA ALQUILADA USADA POR MAGO" };
 				}
 				else if (cuartoEsc == 6) {
 					imgs = gcnew array<String^>{
@@ -839,8 +831,8 @@ namespace whav2 {
 						"sprites/Nivel2_Moralis02.png"
 					};
 					desc = gcnew array<String^>{
-						"Hagan aviso.",
-						"El pueblo está siendo invadido por una sanguijuela mágica."
+						"Hagan aviso",
+						"El pueblo esta siendo invadido por una sanguijuela magica"
 					};
 				}
 				else if (cuartoEsc == 7) {
@@ -850,9 +842,9 @@ namespace whav2 {
 						"sprites/Nivel2_ChozaPueblo03.png"
 					};
 					desc = gcnew array<String^>{
-						"Verás, Tartah...",
-						"La razón por la que Coustas puede caminar...",
-						"...es por la semilla del árbol de plata."
+						"Veras Tartah",
+						"La razon por la que Coustas puede caminar",
+						"Es por la semilla del arbol de plata"
 					};
 				}
 				else if (cuartoEsc == 8) {
@@ -863,9 +855,9 @@ namespace whav2 {
 						"sprites/Nivel2_Taberna04.png"
 					};
 					desc = gcnew array<String^>{
-						"Tipo1: Sí, como te decía...",
-						"Tipo2: ¡Corran!",
-						"Tipo2: No sé qué sea esa cosa pero nos va a matar",
+						"Tipo1: Si como te decia...",
+						"Tipo2: Corran!",
+						"Tipo2: No sé que sea esa cosa pero nos va a matar",
 						"Tipo1: ah"
 					};
 				}
@@ -876,9 +868,9 @@ namespace whav2 {
 						"sprites/Nivel2_Botica03.png"
 					};
 					desc = gcnew array<String^>{
-						"Tipo1: ¡Ayuda! Mi amigo está herido",
-						"Medico1: Hay muchos heridos",
-						"Medico2: No hay suficientes médicos y siguen llegando más personas"
+						"Tipo1: Ayuda! Mi amigo esta herido",
+						"Medico1: Hay mucho heridos",
+						"Medico2: No hay suficientes medicos y siguen llegando más personas"
 					};
 				}
 				else {
@@ -892,14 +884,22 @@ namespace whav2 {
 				timerJuego->Start();
 				return;
 			}
+			if (N2(ptrNivel2)->consumirSolicitudDerrota()) {
+				AbrirFinNivel(2, true);
+				return;
+			}
 			if (N2(ptrNivel2)->consumirSolicitudFinNivel()) {
-				AbrirFinNivel(2);
+				AbrirFinNivel(2, false);
 				return;
 			}
 		}
 		else {
+			if (N3(ptrNivel3)->consumirSolicitudDerrota()) {
+				AbrirFinNivel(3, true);
+				return;
+			}
 			if (N3(ptrNivel3)->consumirSolicitudFinNivel()) {
-				AbrirFinNivel(3);
+				AbrirFinNivel(3, false);
 				return;
 			}
 		}
