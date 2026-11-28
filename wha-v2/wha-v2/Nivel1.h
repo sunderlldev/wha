@@ -1950,7 +1950,7 @@ public:
 		agregarObjeto(new BloqueMapa(109 * 32 + 4, 34 * 32 + 4, ObjetoLetrero, "Torre de Agott", "Letrero: Torre de Agott. Prohibido el paso sin autorización de Agott."));
 		agregarObjeto(new BloqueMapa(103 * 32 + 4, 14 * 32 + 4, ObjetoLetrero, "Cueva Misteriosa", "Letrero: Cueva Misteriosa. Peligro: Derrumbe. Usa magia ígnea (Pluma Térmica)."));
 		agregarObjeto(new BloqueMapa(16 * 32 + 4, 51 * 32 + 4, ObjetoLetrero, "Despacho de Qifrey", "Letrero: Despacho de Qifrey. Maestro del atelier y protector del agua."));
-		agregarObjeto(new BloqueMapa(mapa->getPuntoGatoX() + 4, mapa->getPuntoGatoY() + 4, ObjetoGato, "Gato del Atelier", "El gato blanco de Richeh."));
+		agregarObjeto(new BloqueMapa(mapa->getPuntoGatoX() + 4, mapa->getPuntoGatoY() + 4, ObjetoGato, "Gato del Atelier", "El gato gris de Richeh."));
 		agregarObjeto(new BloqueMapa(mapa->getPuntoTrollX() + 4, mapa->getPuntoTrollY() + 4, ObjetoTroll, "Grieta en la Pared", "Una grieta extraña oculta junto al muro del sendero..."));
 
 		BloqueMapa* myrphon = new BloqueMapa(116 * 32, 60 * 32, ObjetoMyrphon, "Myrphon", "La mascota de Richeh, perdida en el bosque.");
@@ -2097,7 +2097,7 @@ public:
 			BloqueMapa* objeto = listaObjetos[indiceObjetivo];
 			if (objeto->getTipo() == ObjetoGato) {
 				gatoAcariciado = true;
-				iniciarDialogoSimple("Coco", "Aprendiz de Maga", "Miau... El gato blanco de Richeh te observa y ronronea con calma.");
+				iniciarDialogoSimple("Coco", "Aprendiz de Maga", "Miau... El gato gris de Richeh te observa y ronronea con calma.");
 			}
 			else if (objeto->getTipo() == ObjetoTroll) {
 				solicitaTrollface = true;

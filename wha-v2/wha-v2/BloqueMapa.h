@@ -356,7 +356,14 @@ private:
 			alto = 24;
 		}
 		else if (tipo == ObjetoGato) {
-			icono = CrearIconoGato();
+			Bitmap^ hoja = CargarBitmapSeguro("sprites/Gato_Spritesheet.png");
+			if (hoja != nullptr && hoja->Width >= 314) {
+				icono = hoja;
+			}
+			else {
+				if (hoja != nullptr) delete hoja;
+				icono = CrearIconoGato();
+			}
 			ancho = 32;
 			alto = 32;
 		}
@@ -508,7 +515,8 @@ public:
 		int posY = (y - camY + flotacion) * zoom;
 		int anchoDestino = ancho * zoom;
 		int altoDestino = alto * zoom;
-		if (posX + anchoDestino < 0 || posX > g->VisibleClipBounds.Width ||
+		int margenClip = (tipo == ObjetoGato) ? 16 * zoom : 0;
+		if (posX + anchoDestino + margenClip < 0 || posX - margenClip > g->VisibleClipBounds.Width ||
 			posY + altoDestino < 0 || posY > g->VisibleClipBounds.Height) {
 			return;
 		}
@@ -521,6 +529,32 @@ public:
 
 		g->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::NearestNeighbor;
 		g->PixelOffsetMode = System::Drawing::Drawing2D::PixelOffsetMode::Half;
+
+		if (tipo == ObjetoGato && bmpIcono->Width >= 314 && bmpIcono->Height >= 16) {
+			static const int frames[10][2] = {
+				{ 0, 21 },
+				{ 31, 21 },
+				{ 64, 21 },
+				{ 95, 21 },
+				{ 128, 20 },
+				{ 160, 20 },
+				{ 191, 22 },
+				{ 223, 22 },
+				{ 250, 32 },
+				{ 282, 32 }
+			};
+			int idx = (tick / 20) % 10;
+			int sx = frames[idx][0];
+			int sw = frames[idx][1];
+			int sh = bmpIcono->Height;
+			int dw = sw * 2 * zoom;
+			int dh = sh * 2 * zoom;
+			int dx = posX + (anchoDestino - dw) / 2;
+			int dy = posY + (altoDestino - dh);
+			g->DrawImage(bmpIcono, Rectangle(dx, dy, dw, dh), Rectangle(sx, 0, sw, sh), GraphicsUnit::Pixel);
+			return;
+		}
+
 		g->DrawImage(bmpIcono, Rectangle(posX, posY, anchoDestino, altoDestino), 0, 0, bmpIcono->Width, bmpIcono->Height, GraphicsUnit::Pixel);
 	}
 };
