@@ -26,7 +26,7 @@ namespace whav2 {
 			try {
 				String^ rutaRef = ObtenerRutaGuardadoComun("reflexion_final.txt");
 				sw = gcnew StreamWriter(rutaRef, false, System::Text::Encoding::UTF8);
-				sw->WriteLine("=== PREGUNTA REFLEXIVA - WITCH HAT ATELIER (HITO 3) ===");
+				sw->WriteLine("=== REFLEXIÓN FINAL - WITCH HAT ATELIER ===");
 				sw->WriteLine("Fecha: " + DateTime::Now.ToString("dd/MM/yyyy HH:mm:ss"));
 				sw->WriteLine();
 				sw->WriteLine("Pregunta: ¿Con cuál de las tres perspectivas te sentiste más identificado y cómo cambió tu interpretación de los hechos?");
@@ -46,7 +46,7 @@ namespace whav2 {
 
 	public:
 		FormReflexion() {
-			this->Text = "Pregunta Reflexiva Final - Hito 3";
+			this->Text = "Reflexión Final - Witch Hat Atelier";
 			this->ClientSize = System::Drawing::Size(720, 540);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
