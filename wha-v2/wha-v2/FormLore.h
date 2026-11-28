@@ -9,9 +9,8 @@ namespace whav2 {
 	public ref class FormLore : public Form {
 	private:
 		int paginaActual;
-		Label^ lblTitulo;
-		Label^ lblSubtitulo;
-		TextBox^ txtContenido;
+		Label^ lblCapitulo;
+		Label^ lblContenido;
 		Label^ lblNumeroPagina;
 		Button^ btnAnterior;
 		Button^ btnSiguiente;
@@ -25,46 +24,46 @@ namespace whav2 {
 
 			switch (paginaActual) {
 			case 0:
-				lblSubtitulo->Text = "Capítulo I: El Secreto del Trazo Mágico";
-				txtContenido->Text =
+				lblCapitulo->Text = "CAPÍTULO I: EL SECRETO DEL TRAZO MÁGICO";
+				lblContenido->Text =
 					"En el mundo de Witch Hat Atelier, la magia no es un don divino ni un privilegio de sangre: "
-					"es un arte que se dibuja con tinta especial sobre pergamino mediante sellos mágicos.\r\n\r\n"
+					"es un arte que se dibuja con tinta especial sobre pergamino mediante sellos mágicos.\n\n"
 					"Sin embargo, este conocimiento es celosamente resguardado por los magos con el fin de proteger "
 					"al mundo del uso de la magia prohibida, aquella que altera directamente los cuerpos humanos y puede "
-					"causar catástrofes irreversibles.\r\n\r\n"
+					"causar catástrofes irreversibles.\n\n"
 					"Coco, una humilde niña sin linaje mágico que ayudaba en la sastrería de su madre, descubre accidentalmente "
-					"este secreto al observar en secreto al maestro Qifrey mientras dibujaba un conjuro protector.";
+					"este secreto al observar al maestro Qifrey mientras dibujaba un conjuro protector.";
 				break;
 			case 1:
-				lblSubtitulo->Text = "Capítulo II: El Atelier de Qifrey";
-				txtContenido->Text =
+				lblCapitulo->Text = "CAPÍTULO II: EL ATELIER DE QIFREY";
+				lblContenido->Text =
 					"Tras un trágico incidente donde la madre de Coco queda petrificada por un libro de magia prohibida "
 					"obsequiado por un enigmático Sombrero de Ala Ancha, el maestro Qifrey decide acogerla como su aprendiz "
-					"en su apartado atelier.\r\n\r\n"
+					"en su apartado atelier.\n\n"
 					"Allí, Coco convive con Agott, una aprendiz talentosa y estricta; Tetia, entusiasta y compasiva; "
-					"y Richeh, rebelde e introspectiva.\r\n\r\n"
+					"y Richeh, rebelde e introspectiva.\n\n"
 					"En este nivel, Coco explora los cuartos del atelier, recopila ingredientes de tinta y se esfuerza "
 					"por dominar el pulso de su plumilla para algún día deshacer la petrificación de su madre.";
 				break;
 			case 2:
-				lblSubtitulo->Text = "Capítulo III: El Laberinto de Kaln y Tartah";
-				txtContenido->Text =
+				lblCapitulo->Text = "CAPÍTULO III: EL LABERINTO DE KALN Y TARTAH";
+				lblContenido->Text =
 					"Tartah es un joven habitante del pueblo de Kaln que padece de una afección en la vista llamada "
-					"'ojos de plata', lo que le dificulta reconocer ciertos colores y trazos.\r\n\r\n"
+					"'ojos de plata', lo que le dificulta reconocer ciertos colores y trazos.\n\n"
 					"A pesar de no ser considerado un mago prodigio, Tartah posee un profundo ingenio práctico y un corazón "
-					"solidario, asistiendo en la botica y la plaza del pueblo.\r\n\r\n"
+					"solidario, asistiendo en la botica y la plaza del pueblo.\n\n"
 					"Su mirada revela las calles de Kaln desde la perspectiva de la gente común, los rumores sobre la Asamblea "
 					"de Magos y la inquietud provocada por misteriosas sombras que acechan en los callejones.";
 				break;
 			case 3:
-				lblSubtitulo->Text = "Capítulo IV: Coustas y la Prueba del Árbol de Plata";
-				txtContenido->Text =
+				lblCapitulo->Text = "CAPÍTULO IV: COUSTAS Y LA PRUEBA DEL ÁRBOL DE PLATA";
+				lblContenido->Text =
 					"Coustas, un enérgico bardo ambulante cuya vida cambia drásticamente tras perder la movilidad en sus piernas "
-					"durante un derrumbe, busca desesperadamente recuperar su libertad de viajar y componer música.\r\n\r\n"
+					"durante un derrumbe, busca desesperadamente recuperar su libertad de viajar y componer música.\n\n"
 					"En su camino hacia el Santuario Ancestral del Gran Árbol de Plata, Coustas se enfrenta a dilemas morales "
-					"sobre qué límites cruzar para sanar su cuerpo, tentado por las promesas de los Sombreros de Ala Ancha.\r\n\r\n"
+					"sobre qué límites cruzar para sanar su cuerpo, tentado por las promesas de los Sombreros de Ala Ancha.\n\n"
 					"En la obra original, este arco conecta las tres perspectivas: la inocencia y dedicación de Coco, la empatía "
-					"perseverante de Tartah, y la desgarradora búsqueda de esperanza de Coustas ante las sombras del destino.";
+					"perseverante de Tartah, y la búsqueda de esperanza de Coustas ante las sombras del destino.";
 				break;
 			}
 		}
@@ -91,77 +90,76 @@ namespace whav2 {
 		FormLore() {
 			paginaActual = 0;
 
-			this->Text = "Witch Hat Atelier - Lore de la Obra";
-			this->ClientSize = System::Drawing::Size(740, 520);
+			this->Text = "Lore de la Obra - Witch Hat Atelier";
+			this->ClientSize = System::Drawing::Size(740, 490);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->StartPosition = FormStartPosition::CenterParent;
-			this->BackColor = Color::FromArgb(14, 20, 31);
+			this->BackColor = Color::FromArgb(9, 14, 21);
 
 			pnlFondo = gcnew Panel();
 			pnlFondo->Location = Point(15, 15);
-			pnlFondo->Size = System::Drawing::Size(710, 490);
-			pnlFondo->BackColor = Color::FromArgb(21, 29, 44);
+			pnlFondo->Size = System::Drawing::Size(710, 460);
+			pnlFondo->BackColor = Color::FromArgb(10, 16, 24);
 			pnlFondo->BorderStyle = BorderStyle::None;
 			this->Controls->Add(pnlFondo);
 
-			lblTitulo = gcnew Label();
-			lblTitulo->Text = "W I T C H   H A T   A T E L I E R";
-			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 16, FontStyle::Bold);
-			lblTitulo->ForeColor = Color::FromArgb(235, 195, 105);
-			lblTitulo->Location = Point(20, 16);
-			lblTitulo->Size = System::Drawing::Size(670, 32);
-			lblTitulo->TextAlign = ContentAlignment::MiddleCenter;
-			pnlFondo->Controls->Add(lblTitulo);
+			lblCapitulo = gcnew Label();
+			lblCapitulo->Font = gcnew System::Drawing::Font("Segoe UI", 13.0f, FontStyle::Bold);
+			lblCapitulo->ForeColor = Color::FromArgb(245, 245, 245);
+			lblCapitulo->Location = Point(30, 22);
+			lblCapitulo->Size = System::Drawing::Size(650, 28);
+			lblCapitulo->TextAlign = ContentAlignment::MiddleLeft;
+			pnlFondo->Controls->Add(lblCapitulo);
 
-			lblSubtitulo = gcnew Label();
-			lblSubtitulo->Font = gcnew System::Drawing::Font("Segoe UI", 11, FontStyle::Italic);
-			lblSubtitulo->ForeColor = Color::FromArgb(120, 190, 255);
-			lblSubtitulo->Location = Point(20, 52);
-			lblSubtitulo->Size = System::Drawing::Size(670, 24);
-			lblSubtitulo->TextAlign = ContentAlignment::MiddleCenter;
-			pnlFondo->Controls->Add(lblSubtitulo);
+			Panel^ linea = gcnew Panel();
+			linea->Location = Point(30, 56);
+			linea->Size = System::Drawing::Size(650, 1);
+			linea->BackColor = Color::FromArgb(70, 214, 198, 166);
+			pnlFondo->Controls->Add(linea);
 
-			txtContenido = gcnew TextBox();
-			txtContenido->Multiline = true;
-			txtContenido->ReadOnly = true;
-			txtContenido->TabStop = false;
-			txtContenido->ScrollBars = ScrollBars::Vertical;
-			txtContenido->BackColor = Color::FromArgb(14, 20, 31);
-			txtContenido->ForeColor = Color::FromArgb(230, 238, 248);
-			txtContenido->Font = gcnew System::Drawing::Font("Segoe UI", 11, FontStyle::Regular);
-			txtContenido->Location = Point(30, 88);
-			txtContenido->Size = System::Drawing::Size(650, 315);
-			txtContenido->BorderStyle = BorderStyle::None;
-			pnlFondo->Controls->Add(txtContenido);
+			lblContenido = gcnew Label();
+			lblContenido->ForeColor = Color::FromArgb(242, 244, 247);
+			lblContenido->BackColor = Color::Transparent;
+			lblContenido->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Regular);
+			lblContenido->Location = Point(30, 74);
+			lblContenido->Size = System::Drawing::Size(650, 305);
+			lblContenido->TextAlign = ContentAlignment::TopLeft;
+			pnlFondo->Controls->Add(lblContenido);
 
 			lblNumeroPagina = gcnew Label();
 			lblNumeroPagina->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Bold);
 			lblNumeroPagina->ForeColor = Color::FromArgb(180, 190, 205);
-			lblNumeroPagina->Location = Point(280, 422);
-			lblNumeroPagina->Size = System::Drawing::Size(150, 30);
+			lblNumeroPagina->Location = Point(235, 396);
+			lblNumeroPagina->Size = System::Drawing::Size(160, 36);
 			lblNumeroPagina->TextAlign = ContentAlignment::MiddleCenter;
 			pnlFondo->Controls->Add(lblNumeroPagina);
 
 			btnAnterior = gcnew Button();
-			btnAnterior->Text = "◀ Anterior";
+			btnAnterior->Text = "Anterior";
 			btnAnterior->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Bold);
 			btnAnterior->ForeColor = Color::FromArgb(230, 238, 248);
 			btnAnterior->BackColor = Color::FromArgb(18, 27, 38);
 			btnAnterior->FlatStyle = FlatStyle::Flat;
-			btnAnterior->Location = Point(30, 420);
+			btnAnterior->FlatAppearance->BorderSize = 0;
+			btnAnterior->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
+			btnAnterior->Cursor = Cursors::Hand;
+			btnAnterior->Location = Point(30, 396);
 			btnAnterior->Size = System::Drawing::Size(120, 36);
 			btnAnterior->Click += gcnew EventHandler(this, &FormLore::btnAnterior_Click);
 			pnlFondo->Controls->Add(btnAnterior);
 
 			btnSiguiente = gcnew Button();
-			btnSiguiente->Text = "Siguiente ▶";
+			btnSiguiente->Text = "Siguiente";
 			btnSiguiente->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Bold);
 			btnSiguiente->ForeColor = Color::FromArgb(230, 238, 248);
 			btnSiguiente->BackColor = Color::FromArgb(18, 27, 38);
 			btnSiguiente->FlatStyle = FlatStyle::Flat;
-			btnSiguiente->Location = Point(560, 420);
+			btnSiguiente->FlatAppearance->BorderSize = 0;
+			btnSiguiente->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
+			btnSiguiente->Cursor = Cursors::Hand;
+			btnSiguiente->Location = Point(560, 396);
 			btnSiguiente->Size = System::Drawing::Size(120, 36);
 			btnSiguiente->Click += gcnew EventHandler(this, &FormLore::btnSiguiente_Click);
 			pnlFondo->Controls->Add(btnSiguiente);
@@ -172,8 +170,11 @@ namespace whav2 {
 			btnCerrar->ForeColor = Color::FromArgb(210, 215, 225);
 			btnCerrar->BackColor = Color::FromArgb(14, 22, 30);
 			btnCerrar->FlatStyle = FlatStyle::Flat;
-			btnCerrar->Location = Point(440, 420);
-			btnCerrar->Size = System::Drawing::Size(100, 36);
+			btnCerrar->FlatAppearance->BorderSize = 0;
+			btnCerrar->FlatAppearance->MouseOverBackColor = Color::FromArgb(24, 34, 46);
+			btnCerrar->Cursor = Cursors::Hand;
+			btnCerrar->Location = Point(440, 396);
+			btnCerrar->Size = System::Drawing::Size(105, 36);
 			btnCerrar->Click += gcnew EventHandler(this, &FormLore::btnCerrar_Click);
 			pnlFondo->Controls->Add(btnCerrar);
 

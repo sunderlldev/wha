@@ -40,7 +40,6 @@ public:
 
 	int getIdX() { return idX; }
 	int getIdY() { return idY; }
-
 	int getVidas() { return vidas; }
 	int getTinta() { return tinta; }
 	int getNivel() { return nivel; }
@@ -73,16 +72,6 @@ public:
 	void moverLibre(int desplazamientoX, int desplazamientoY) {
 		if (desplazamientoX != 0 || desplazamientoY != 0) {
 			enMovimiento = true;
-			if (desplazamientoX != 0 && desplazamientoY != 0) {
-				x += (desplazamientoX > 0) ? 3 : -3;
-				y += (desplazamientoY > 0) ? 3 : -3;
-			}
-			else if (desplazamientoX != 0) {
-				x += (desplazamientoX > 0) ? 4 : -4;
-			}
-			else {
-				y += (desplazamientoY > 0) ? 4 : -4;
-			}
 			if (desplazamientoX < 0) direccion = 1;
 			else if (desplazamientoX > 0) direccion = 3;
 			else if (desplazamientoY < 0) direccion = 2;
@@ -96,21 +85,22 @@ public:
 		idY = filaDireccion(direccion);
 	}
 
-	void animar() {
+	void animar(bool corriendo = false) {
+		ticksAnimacion++;
 		if (enMovimiento) {
-			ticksAnimacion++;
-			if (ticksAnimacion % Configuracion::FPSZeldaSprtChange == 0) {
+			int divisor = corriendo ? 1 : Configuracion::FPSZeldaSprtChange;
+			if (ticksAnimacion % divisor == 0) {
 				idX++;
 				if (idX >= Configuracion::cantZeldaWalking) idX = 0;
 			}
 			idY = 4 + filaDireccion(direccion);
 		}
 		else {
-			ticksAnimacion++;
-			if (ticksAnimacion % Configuracion::FPSZeldaSprtChange == 0) {
-				idX++;
-				if (idX >= Configuracion::cantZeldaQuiet) idX = 0;
-			}
+			int ciclo = ticksAnimacion % 90;
+			if (ciclo >= 82) idX = 2;
+			else if (ciclo >= 78 || ciclo <= 4) idX = 1;
+			else idX = 0;
+			if (idX >= Configuracion::cantZeldaQuiet) idX = 0;
 			idY = filaDireccion(direccion);
 		}
 	}

@@ -17,6 +17,13 @@ audit_log.txt
 *.zip
 
 # Archivos temporales y de pruebas
+*.obj
+*.pdb
+*.ilk
+/*.png
+partida_guardada.txt
+progreso_niveles.txt
+reflexion_final.txt
 /.gitnexus/
 /PC1_U20261B980/
 /PC1_U20261B980.zip

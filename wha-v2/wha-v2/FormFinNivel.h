@@ -5,22 +5,60 @@ namespace whav2 {
 	using namespace System;
 	using namespace System::Drawing;
 	using namespace System::Drawing::Drawing2D;
+	using namespace System::Drawing::Imaging;
 	using namespace System::Windows::Forms;
 
 	public ref class FormFinNivel : public Form {
 	private:
 		int accion;
+		int nivel;
 		int tiempo;
 		int objetos;
-		bool myrphonRescatado;
+		bool detalleExtra;
+		int puntajeNivel;
+		int cuartosVisitados;
+		int totalCuartos;
+		Bitmap^ bmpEstrellaPixel;
 		Button^ btnSiguiente;
 		Button^ btnRejugar;
 		Button^ btnMenu;
-		Panel^ panel;
+
+		static Bitmap^ CrearEstrellaPixel() {
+			static const char* patron[16] = {
+				".......OO.......",
+				"......OYYO......",
+				"......OYYO......",
+				".....OYYYYO.....",
+				".OOOOYLLLLYYOOO.",
+				"OYYYYLLLLLLYYYYO",
+				".OYYLLLLLLLLYYO.",
+				"..OYYLLLLLLYYO..",
+				"...OYYYYYYYYO...",
+				"...OYYGGGGYYO...",
+				"..OYYGG..GGYYO..",
+				"..OYG......GYO..",
+				".OYG........GYO.",
+				".OO..........OO.",
+				"................",
+				"................"
+			};
+			Bitmap^ bmp = gcnew Bitmap(16, 16, PixelFormat::Format32bppArgb);
+			for (int y = 0; y < 16; y++) {
+				for (int x = 0; x < 16; x++) {
+					char c = patron[y][x];
+					Color col = Color::Transparent;
+					if (c == 'O') col = Color::FromArgb(255, 74, 52, 24);
+					else if (c == 'G') col = Color::FromArgb(255, 168, 126, 48);
+					else if (c == 'Y') col = Color::FromArgb(255, 224, 182, 86);
+					else if (c == 'L') col = Color::FromArgb(255, 250, 228, 146);
+					bmp->SetPixel(x, y, col);
+				}
+			}
+			return bmp;
+		}
 
 		void btnSiguiente_Click(Object^ sender, EventArgs^ e) {
-			MessageBox::Show("El Nivel 2 estará disponible en la próxima entrega.\n\nPor ahora, el Atelier de Qifrey y el bosque de Serpentback quedan a tu disposición para explorar sus secretos.", "Continuará...", MessageBoxButtons::OK, MessageBoxIcon::Information);
-			accion = 0;
+			accion = 3;
 			this->DialogResult = System::Windows::Forms::DialogResult::OK;
 			this->Close();
 		}
@@ -41,148 +79,153 @@ namespace whav2 {
 		virtual void OnPaint(PaintEventArgs^ e) override {
 			Form::OnPaint(e);
 			Graphics^ g = e->Graphics;
-			g->SmoothingMode = SmoothingMode::AntiAlias;
+			g->SmoothingMode = SmoothingMode::None;
+			g->InterpolationMode = InterpolationMode::NearestNeighbor;
+			g->PixelOffsetMode = PixelOffsetMode::Half;
 
-			LinearGradientBrush^ fondo = gcnew LinearGradientBrush(this->ClientRectangle, Color::FromArgb(9, 14, 22), Color::FromArgb(20, 35, 28), LinearGradientMode::Vertical);
-			g->FillRectangle(fondo, this->ClientRectangle);
-			delete fondo;
+			SolidBrush^ bg = gcnew SolidBrush(Color::FromArgb(255, 12, 17, 25));
+			g->FillRectangle(bg, this->ClientRectangle);
+			delete bg;
 
-			SolidBrush^ halo = gcnew SolidBrush(Color::FromArgb(28, 220, 180, 90));
-			g->FillEllipse(halo, this->ClientSize.Width / 2 - 110, 18, 220, 220);
-			delete halo;
+			SolidBrush^ caja = gcnew SolidBrush(Color::FromArgb(255, 18, 25, 36));
+			g->FillRectangle(caja, 20, 20, 440, 270);
+			delete caja;
 
-			Pen^ rayo = gcnew Pen(Color::FromArgb(180, 226, 184, 82), 2.0f);
-			for (int i = 0; i < 12; i++) {
-				double angulo = i * Math::PI / 6.0;
-				int x1 = this->ClientSize.Width / 2 + (int)(Math::Cos(angulo) * 74);
-				int y1 = 128 + (int)(Math::Sin(angulo) * 74);
-				int x2 = this->ClientSize.Width / 2 + (int)(Math::Cos(angulo) * 96);
-				int y2 = 128 + (int)(Math::Sin(angulo) * 96);
-				g->DrawLine(rayo, x1, y1, x2, y2);
+			Pen^ bordeExt = gcnew Pen(Color::FromArgb(255, 214, 198, 166), 2.0f);
+			Pen^ bordeInt = gcnew Pen(Color::FromArgb(255, 58, 72, 92), 2.0f);
+			g->DrawRectangle(bordeExt, 20, 20, 440, 270);
+			g->DrawRectangle(bordeInt, 26, 26, 428, 258);
+			delete bordeExt;
+			delete bordeInt;
+
+			SolidBrush^ pxEsquina = gcnew SolidBrush(Color::FromArgb(255, 214, 198, 166));
+			g->FillRectangle(pxEsquina, 18, 18, 6, 6);
+			g->FillRectangle(pxEsquina, 456, 18, 6, 6);
+			g->FillRectangle(pxEsquina, 18, 286, 6, 6);
+			g->FillRectangle(pxEsquina, 456, 286, 6, 6);
+			delete pxEsquina;
+
+			if (bmpEstrellaPixel != nullptr) {
+				g->DrawImage(bmpEstrellaPixel, Rectangle(216, 40, 48, 48), 0, 0, 16, 16, GraphicsUnit::Pixel);
 			}
-			delete rayo;
-
-			SolidBrush^ oro = gcnew SolidBrush(Color::FromArgb(235, 200, 158, 78));
-			int centro = this->ClientSize.Width / 2;
-			g->FillPolygon(oro, gcnew array<Point>{
-				Point(centro, 82),
-				Point(centro + 14, 116),
-				Point(centro + 50, 116),
-				Point(centro + 21, 137),
-				Point(centro + 32, 172),
-				Point(centro, 150),
-				Point(centro - 32, 172),
-				Point(centro - 21, 137),
-				Point(centro - 50, 116),
-				Point(centro - 14, 116)
-			});
-			delete oro;
 		}
 
-	public:
-		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool rescate) {
+		void InicializarModal(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, int punt, int cVis, int cTot) {
 			tiempo = tiempoSegundos;
 			objetos = objetosRecogidos;
-			myrphonRescatado = rescate;
+			detalleExtra = extra;
+			nivel = numNivel;
+			puntajeNivel = punt;
+			cuartosVisitados = cVis;
+			totalCuartos = cTot;
 			accion = 0;
+			bmpEstrellaPixel = CrearEstrellaPixel();
 
-			this->Text = "Nivel 1 completado - Witch Hat Atelier";
-			this->ClientSize = System::Drawing::Size(720, 600);
+			this->Text = "Nivel " + nivel.ToString() + " completado";
+			this->ClientSize = System::Drawing::Size(480, 310);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->StartPosition = FormStartPosition::CenterParent;
-			this->BackColor = Color::FromArgb(9, 14, 22);
+			this->BackColor = Color::FromArgb(12, 17, 25);
 			this->DoubleBuffered = true;
 
-			panel = gcnew Panel();
-			panel->Location = Point(40, 210);
-			panel->Size = System::Drawing::Size(640, 330);
-			panel->BackColor = Color::FromArgb(225, 12, 19, 28);
-			panel->BorderStyle = BorderStyle::None;
-			this->Controls->Add(panel);
-
 			Label^ lblTitulo = gcnew Label();
-			lblTitulo->Text = "N I V E L   1   C O M P L E T A D O";
-			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 17.0f, FontStyle::Bold);
-			lblTitulo->ForeColor = Color::FromArgb(235, 200, 158, 78);
-			lblTitulo->Location = Point(20, 18);
-			lblTitulo->Size = System::Drawing::Size(600, 30);
+			lblTitulo->Text = "NIVEL " + nivel.ToString() + " COMPLETADO";
+			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 14.5f, FontStyle::Bold);
+			lblTitulo->ForeColor = Color::FromArgb(236, 224, 196);
+			lblTitulo->BackColor = Color::FromArgb(18, 25, 36);
+			lblTitulo->Location = Point(40, 102);
+			lblTitulo->Size = System::Drawing::Size(400, 30);
 			lblTitulo->TextAlign = ContentAlignment::MiddleCenter;
-			panel->Controls->Add(lblTitulo);
+			this->Controls->Add(lblTitulo);
 
 			Label^ lblSub = gcnew Label();
-			lblSub->Text = "El Atelier de Qifrey · La misión de Richeh";
-			lblSub->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Italic);
-			lblSub->ForeColor = Color::FromArgb(140, 200, 190);
-			lblSub->Location = Point(20, 50);
-			lblSub->Size = System::Drawing::Size(600, 24);
+			if (nivel == 2) lblSub->Text = "Tartah · Laberinto de Kaln";
+			else if (nivel == 3) lblSub->Text = detalleExtra ? "Coustas · Pacto de la Semilla Prohibida" : "Coustas · Voluntad del Árbol de Plata";
+			else lblSub->Text = "Coco · Atelier de Qifrey";
+			lblSub->Font = gcnew System::Drawing::Font("Segoe UI", 10.0f, FontStyle::Regular);
+			lblSub->ForeColor = Color::FromArgb(170, 184, 202);
+			lblSub->BackColor = Color::FromArgb(18, 25, 36);
+			lblSub->Location = Point(40, 134);
+			lblSub->Size = System::Drawing::Size(400, 22);
 			lblSub->TextAlign = ContentAlignment::MiddleCenter;
-			panel->Controls->Add(lblSub);
+			this->Controls->Add(lblSub);
 
 			Label^ lblStats = gcnew Label();
-			lblStats->Text =
-				"Tiempo de aventura:  " + tiempo.ToString() + " s\n"
-				"Objetos encontrados:  " + objetos.ToString() + " / 8\n"
-				"Myrphon:  " + (myrphonRescatado ? "rescatado" : "perdido") + "\n"
-				"Capa Mágica:  confeccionada";
-			lblStats->Font = gcnew System::Drawing::Font("Segoe UI", 11.0f, FontStyle::Regular);
-			lblStats->ForeColor = Color::FromArgb(226, 234, 244);
-			lblStats->Location = Point(150, 92);
-			lblStats->Size = System::Drawing::Size(340, 110);
-			panel->Controls->Add(lblStats);
-
-			Label^ lblCita = gcnew Label();
-			lblCita->Text = "\"La verdadera magia no reside en el linaje,\nsino en el trazo del corazón.\"";
-			lblCita->Font = gcnew System::Drawing::Font("Segoe UI", 10.0f, FontStyle::Italic);
-			lblCita->ForeColor = Color::FromArgb(160, 210, 170);
-			lblCita->Location = Point(60, 206);
-			lblCita->Size = System::Drawing::Size(520, 44);
-			lblCita->TextAlign = ContentAlignment::MiddleCenter;
-			panel->Controls->Add(lblCita);
+			if (nivel == 2 && puntajeNivel >= 0) {
+				lblStats->Text = "Tiempo: " + tiempo.ToString() + " s  ·  Cuartos: " + cuartosVisitados.ToString() + "/" + totalCuartos.ToString() + "  ·  Puntaje: " + puntajeNivel.ToString();
+			}
+			else {
+				lblStats->Text = "Tiempo: " + tiempo.ToString() + " s   ·   Objetos: " + objetos.ToString();
+			}
+			lblStats->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Regular);
+			lblStats->ForeColor = Color::FromArgb(228, 234, 242);
+			lblStats->BackColor = Color::FromArgb(18, 25, 36);
+			lblStats->Location = Point(40, 168);
+			lblStats->Size = System::Drawing::Size(400, 26);
+			lblStats->TextAlign = ContentAlignment::MiddleCenter;
+			this->Controls->Add(lblStats);
 
 			btnSiguiente = gcnew Button();
-			btnSiguiente->Text = "SIGUIENTE NIVEL";
-			btnSiguiente->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Bold);
-			btnSiguiente->ForeColor = Color::FromArgb(214, 198, 166);
-			btnSiguiente->BackColor = Color::FromArgb(18, 27, 38);
+			btnSiguiente->Text = (nivel >= 3) ? "FINALIZAR" : "SIGUIENTE";
+			btnSiguiente->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Bold);
+			btnSiguiente->ForeColor = Color::FromArgb(236, 224, 196);
+			btnSiguiente->BackColor = Color::FromArgb(26, 36, 52);
 			btnSiguiente->FlatStyle = FlatStyle::Flat;
-			btnSiguiente->FlatAppearance->BorderSize = 0;
-			btnSiguiente->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
-			btnSiguiente->Location = Point(60, 264);
-			btnSiguiente->Size = System::Drawing::Size(180, 42);
+			btnSiguiente->FlatAppearance->BorderSize = 1;
+			btnSiguiente->FlatAppearance->BorderColor = Color::FromArgb(140, 128, 104);
+			btnSiguiente->FlatAppearance->MouseOverBackColor = Color::FromArgb(36, 50, 70);
+			btnSiguiente->Cursor = Cursors::Hand;
+			btnSiguiente->Location = Point(48, 222);
+			btnSiguiente->Size = System::Drawing::Size(124, 38);
 			btnSiguiente->Click += gcnew EventHandler(this, &FormFinNivel::btnSiguiente_Click);
-			panel->Controls->Add(btnSiguiente);
+			this->Controls->Add(btnSiguiente);
 
 			btnRejugar = gcnew Button();
-			btnRejugar->Text = "REJUGAR NIVEL";
-			btnRejugar->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Bold);
-			btnRejugar->ForeColor = Color::FromArgb(226, 232, 240);
-			btnRejugar->BackColor = Color::FromArgb(18, 27, 38);
+			btnRejugar->Text = "REJUGAR";
+			btnRejugar->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Bold);
+			btnRejugar->ForeColor = Color::FromArgb(228, 234, 242);
+			btnRejugar->BackColor = Color::FromArgb(24, 33, 46);
 			btnRejugar->FlatStyle = FlatStyle::Flat;
-			btnRejugar->FlatAppearance->BorderSize = 0;
-			btnRejugar->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
-			btnRejugar->Location = Point(250, 264);
-			btnRejugar->Size = System::Drawing::Size(180, 42);
+			btnRejugar->FlatAppearance->BorderSize = 1;
+			btnRejugar->FlatAppearance->BorderColor = Color::FromArgb(64, 78, 98);
+			btnRejugar->FlatAppearance->MouseOverBackColor = Color::FromArgb(34, 46, 64);
+			btnRejugar->Cursor = Cursors::Hand;
+			btnRejugar->Location = Point(182, 222);
+			btnRejugar->Size = System::Drawing::Size(116, 38);
 			btnRejugar->Click += gcnew EventHandler(this, &FormFinNivel::btnRejugar_Click);
-			panel->Controls->Add(btnRejugar);
+			this->Controls->Add(btnRejugar);
 
 			btnMenu = gcnew Button();
-			btnMenu->Text = "VOLVER AL MENÚ";
-			btnMenu->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Regular);
-			btnMenu->ForeColor = Color::FromArgb(220, 228, 238);
-			btnMenu->BackColor = Color::FromArgb(14, 22, 30);
+			btnMenu->Text = "MENÚ";
+			btnMenu->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Regular);
+			btnMenu->ForeColor = Color::FromArgb(204, 214, 226);
+			btnMenu->BackColor = Color::FromArgb(20, 28, 40);
 			btnMenu->FlatStyle = FlatStyle::Flat;
-			btnMenu->FlatAppearance->BorderSize = 0;
-			btnMenu->FlatAppearance->MouseOverBackColor = Color::FromArgb(24, 34, 46);
-			btnMenu->Location = Point(440, 264);
-			btnMenu->Size = System::Drawing::Size(140, 42);
+			btnMenu->FlatAppearance->BorderSize = 1;
+			btnMenu->FlatAppearance->BorderColor = Color::FromArgb(54, 66, 84);
+			btnMenu->FlatAppearance->MouseOverBackColor = Color::FromArgb(30, 42, 58);
+			btnMenu->Cursor = Cursors::Hand;
+			btnMenu->Location = Point(308, 222);
+			btnMenu->Size = System::Drawing::Size(124, 38);
 			btnMenu->Click += gcnew EventHandler(this, &FormFinNivel::btnMenu_Click);
-			panel->Controls->Add(btnMenu);
+			this->Controls->Add(btnMenu);
+		}
+
+	public:
+		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel) {
+			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, -1, 0, 9);
+		}
+
+		FormFinNivel(int tiempoSegundos, int objetosRecogidos, bool extra, int numNivel, int punt, int cVis, int cTot) {
+			InicializarModal(tiempoSegundos, objetosRecogidos, extra, numNivel, punt, cVis, cTot);
 		}
 
 		int getAccion() { return accion; }
 
-		~FormFinNivel() {}
+		~FormFinNivel() {
+			if (bmpEstrellaPixel != nullptr) delete bmpEstrellaPixel;
+		}
 	};
 }

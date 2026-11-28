@@ -44,7 +44,7 @@ namespace whav2 {
 	public:
 		FormReflexion() {
 			this->Text = "Pregunta Reflexiva Final - Hito 3";
-			this->ClientSize = System::Drawing::Size(720, 520);
+			this->ClientSize = System::Drawing::Size(720, 540);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
@@ -53,7 +53,7 @@ namespace whav2 {
 
 			pnlContenedor = gcnew Panel();
 			pnlContenedor->Location = Point(15, 15);
-			pnlContenedor->Size = System::Drawing::Size(690, 490);
+			pnlContenedor->Size = System::Drawing::Size(690, 510);
 			pnlContenedor->BackColor = Color::FromArgb(21, 29, 44);
 			pnlContenedor->BorderStyle = BorderStyle::FixedSingle;
 			this->Controls->Add(pnlContenedor);
@@ -74,10 +74,10 @@ namespace whav2 {
 				"2. Tartah: La perseverancia del habitante común que lucha contra sus propias limitaciones físicas.\n"
 				"3. Coustas: El dolor desgarrador ante la pérdida y la tentación de cruzar líneas morales por esperanza.\n\n"
 				"¿Con cuál de estos tres personajes te sentiste más identificado y de qué manera cambió tu lectura de los hechos al pasar de una perspectiva a otra?";
-			lblPregunta->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Regular);
+			lblPregunta->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Regular);
 			lblPregunta->ForeColor = Color::FromArgb(200, 215, 235);
-			lblPregunta->Location = Point(25, 52);
-			lblPregunta->Size = System::Drawing::Size(640, 120);
+			lblPregunta->Location = Point(25, 50);
+			lblPregunta->Size = System::Drawing::Size(640, 146);
 			pnlContenedor->Controls->Add(lblPregunta);
 
 			txtRespuesta = gcnew TextBox();
@@ -86,8 +86,8 @@ namespace whav2 {
 			txtRespuesta->BackColor = Color::FromArgb(14, 20, 31);
 			txtRespuesta->ForeColor = Color::FromArgb(240, 246, 252);
 			txtRespuesta->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Regular);
-			txtRespuesta->Location = Point(25, 180);
-			txtRespuesta->Size = System::Drawing::Size(640, 230);
+			txtRespuesta->Location = Point(25, 204);
+			txtRespuesta->Size = System::Drawing::Size(640, 224);
 			txtRespuesta->BorderStyle = BorderStyle::FixedSingle;
 			pnlContenedor->Controls->Add(txtRespuesta);
 
@@ -97,7 +97,7 @@ namespace whav2 {
 			btnGuardar->ForeColor = Color::FromArgb(240, 246, 252);
 			btnGuardar->BackColor = Color::FromArgb(38, 70, 52);
 			btnGuardar->FlatStyle = FlatStyle::Flat;
-			btnGuardar->Location = Point(230, 428);
+			btnGuardar->Location = Point(230, 446);
 			btnGuardar->Size = System::Drawing::Size(230, 40);
 			btnGuardar->Click += gcnew EventHandler(this, &FormReflexion::btnGuardar_Click);
 			pnlContenedor->Controls->Add(btnGuardar);

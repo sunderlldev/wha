@@ -1,6 +1,9 @@
 #pragma once
 
 #include <gcroot.h>
+#include "BloqueMapa.h"
+#include "GestorAudio.h"
+#include "Utilidades.h"
 
 namespace whav2 {
 
@@ -25,16 +28,33 @@ namespace whav2 {
 		Bitmap^ bmpCoco;
 		Bitmap^ bmpMuro;
 		Bitmap^ bmpPiso;
+		Bitmap^ bmpEnemigo;
+		Bitmap^ bmpDisparo;
+		Bitmap^ bmpMyrphon;
 
 		int jugadorX;
 		int jugadorY;
+		int jugadorDir;
 		int myrphonTileX;
 		int myrphonTileY;
+		int myrphonDir;
+		int myrphonMovTicks;
 		array<int>^ enemigoTileX;
 		array<int>^ enemigoTileY;
 		array<int>^ enemigoDirX;
 		array<int>^ enemigoDirY;
 		array<int>^ enemigoTicks;
+
+		static const int MAX_DISPAROS = 12;
+		array<int>^ dispX;
+		array<int>^ dispY;
+		array<int>^ dispDx;
+		array<int>^ dispDy;
+		array<int>^ dispFila;
+		array<bool>^ dispActivo;
+		array<bool>^ dispImpacto;
+		array<int>^ dispCol;
+		array<int>^ dispTick;
 
 		bool arriba;
 		bool abajo;
@@ -49,49 +69,49 @@ namespace whav2 {
 		int frameCoco;
 		bool terminado;
 
-		String^ LeerArchivoTexto(String^ nombre) {
+		String^ BuscarArchivoSprite(String^ nombre) {
 			if (System::IO::File::Exists(nombre)) return nombre;
 			String^ baseDir = AppDomain::CurrentDomain->BaseDirectory;
-			String^ ruta1 = System::IO::Path::Combine(baseDir, nombre);
-			if (System::IO::File::Exists(ruta1)) return ruta1;
+			array<String^>^ prefijos = gcnew array<String^>{
+				"",
+				"..\\..\\wha-v2\\",
+				"..\\..\\..\\wha-v2\\wha-v2\\",
+				"..\\..\\..\\..\\wha-v2\\wha-v2\\"
+			};
+			for each (String^ pref in prefijos) {
+				String^ ruta = System::IO::Path::Combine(baseDir, pref + nombre);
+				if (System::IO::File::Exists(ruta)) return ruta;
+			}
 			return "";
 		}
 
 		Bitmap^ CargarBitmap(String^ nombre) {
-			String^ ruta = LeerArchivoTexto(nombre);
+			String^ ruta = BuscarArchivoSprite(nombre);
 			if (ruta != "") return gcnew Bitmap(ruta);
-			return gcnew Bitmap(32, 32);
+			return nullptr;
 		}
 
 		void ConstruirMapa() {
+			array<String^>^ filasFijas = gcnew array<String^>{
+				"########################",
+				"#......#........#......#",
+				"#.####.#.######.#.####.#",
+				"#.#..#...#....#...#..#.#",
+				"#.#..#####.##.#####..#.#",
+				"#..........##..........#",
+				"###.####.#....#.####.###",
+				"#...#....######....#...#",
+				"#.###.##........##.###.#",
+				"#.....#..######..#.....#",
+				"#.#####..#....#..#####.#",
+				"#........#.##.#........#",
+				"#.######...##...######.#",
+				"#......................#",
+				"########################"
+			};
 			mapa = gcnew List<String^>();
 			for (int f = 0; f < FILAS; f++) {
-				array<Char>^ fila = gcnew array<Char>(COLUMNAS);
-				for (int c = 0; c < COLUMNAS; c++) fila[c] = '.';
-				fila[0] = '#';
-				fila[COLUMNAS - 1] = '#';
-				if (f == 0 || f == FILAS - 1) {
-					for (int c = 0; c < COLUMNAS; c++) fila[c] = '#';
-				}
-				mapa->Add(gcnew String(fila));
-			}
-			int bloques[8][4] = {
-				{ 4, 2, 4, 2 }, { 15, 2, 4, 2 },
-				{ 4, 6, 4, 2 }, { 15, 6, 4, 2 },
-				{ 4, 10, 4, 2 }, { 15, 10, 4, 2 },
-				{ 10, 4, 3, 2 }, { 10, 9, 3, 2 }
-			};
-			for (int b = 0; b < 8; b++) {
-				for (int y = bloques[b][1]; y < bloques[b][1] + bloques[b][3]; y++) {
-					for (int x = bloques[b][0]; x < bloques[b][0] + bloques[b][2]; x++) {
-						if (y > 0 && y < FILAS - 1 && x > 0 && x < COLUMNAS - 1) {
-							String^ fila = mapa[y];
-							array<Char>^ chars = fila->ToCharArray();
-							chars[x] = '#';
-							mapa[y] = gcnew String(chars);
-						}
-					}
-				}
+				mapa->Add(filasFijas[f]);
 			}
 		}
 
@@ -112,13 +132,14 @@ namespace whav2 {
 		}
 
 		void ReiniciarJugador() {
-			jugadorX = 2 * TILE + 4;
+			jugadorX = 1 * TILE + 4;
 			jugadorY = 1 * TILE;
+			jugadorDir = 0;
 		}
 
 		void ReiniciarMinijuego() {
 			vidas = 3;
-			ticksRestantes = 30 * 40;
+			ticksRestantes = 45 * 40;
 			ticksAnimacion = 0;
 			invulnerableTicks = 0;
 			ticksMyrphon = 0;
@@ -128,10 +149,19 @@ namespace whav2 {
 
 			myrphonTileX = 21;
 			myrphonTileY = 13;
+			myrphonDir = 0;
+			myrphonMovTicks = 0;
 
-			enemigoTileX[0] = 20; enemigoTileY[0] = 2; enemigoDirX[0] = -1; enemigoDirY[0] = 0; enemigoTicks[0] = 0;
-			enemigoTileX[1] = 2; enemigoTileY[1] = 12; enemigoDirX[1] = 1; enemigoDirY[1] = 0; enemigoTicks[1] = 20;
-			enemigoTileX[2] = 12; enemigoTileY[2] = 7; enemigoDirX[2] = 0; enemigoDirY[2] = 1; enemigoTicks[2] = 10;
+			enemigoTileX[0] = 19; enemigoTileY[0] = 5; enemigoDirX[0] = -1; enemigoDirY[0] = 0; enemigoTicks[0] = 0;
+			enemigoTileX[1] = 8; enemigoTileY[1] = 8; enemigoDirX[1] = 1; enemigoDirY[1] = 0; enemigoTicks[1] = 15;
+			enemigoTileX[2] = 12; enemigoTileY[2] = 13; enemigoDirX[2] = 1; enemigoDirY[2] = 0; enemigoTicks[2] = 8;
+
+			for (int i = 0; i < MAX_DISPAROS; i++) {
+				dispActivo[i] = false;
+				dispImpacto[i] = false;
+				dispCol[i] = 0;
+				dispTick[i] = 0;
+			}
 		}
 
 		void MoverJugador(int dx, int dy) {
@@ -149,6 +179,11 @@ namespace whav2 {
 				int ny = jugadorY + dy * pasoY;
 				if (!EsPared(jugadorX, ny, 24, 32)) jugadorY = ny;
 			}
+			if (dx < 0) jugadorDir = 1;
+			else if (dx > 0) jugadorDir = 3;
+			else if (dy < 0) jugadorDir = 2;
+			else if (dy > 0) jugadorDir = 0;
+
 			ticksAnimacion++;
 			if (ticksAnimacion % 2 == 0) {
 				frameCoco++;
@@ -158,7 +193,7 @@ namespace whav2 {
 
 		void MoverMyrphon() {
 			ticksMyrphon++;
-			if (ticksMyrphon % 7 != 0) return;
+			if (ticksMyrphon % 9 != 0) return;
 			int direccion = aleatorio->Next(0, 4);
 			int dx = 0;
 			int dy = 0;
@@ -171,13 +206,41 @@ namespace whav2 {
 			if (nx > 0 && nx < COLUMNAS - 1 && ny > 0 && ny < FILAS - 1 && mapa[ny][nx] == '.') {
 				myrphonTileX = nx;
 				myrphonTileY = ny;
+				if (dx < 0) myrphonDir = 1;
+				else if (dx > 0) myrphonDir = 3;
+				else if (dy < 0) myrphonDir = 2;
+				else if (dy > 0) myrphonDir = 0;
+				myrphonMovTicks = 9;
+			}
+		}
+
+		void LanzarDisparoEnemigo(int idx) {
+			for (int p = 0; p < MAX_DISPAROS; p++) {
+				if (dispActivo[p]) continue;
+				int vel = 5;
+				dispX[p] = enemigoTileX[idx] * TILE + 4;
+				dispY[p] = enemigoTileY[idx] * TILE + 4;
+				dispDx[p] = enemigoDirX[idx] * vel;
+				dispDy[p] = enemigoDirY[idx] * vel;
+				if (enemigoDirY[idx] < 0) dispFila[p] = 0;
+				else if (enemigoDirY[idx] > 0) dispFila[p] = 1;
+				else if (enemigoDirX[idx] < 0) dispFila[p] = 2;
+				else dispFila[p] = 3;
+				dispActivo[p] = true;
+				dispImpacto[p] = false;
+				dispCol[p] = 0;
+				dispTick[p] = 0;
+				break;
 			}
 		}
 
 		void MoverEnemigos() {
 			for (int i = 0; i < 3; i++) {
 				enemigoTicks[i]++;
-				if (enemigoTicks[i] % 9 != 0) continue;
+				if (enemigoTicks[i] % 48 == 24) {
+					LanzarDisparoEnemigo(i);
+				}
+				if (enemigoTicks[i] % 8 != 0) continue;
 				int nx = enemigoTileX[i] + enemigoDirX[i];
 				int ny = enemigoTileY[i] + enemigoDirY[i];
 				if (nx > 0 && nx < COLUMNAS - 1 && ny > 0 && ny < FILAS - 1 && mapa[ny][nx] == '.') {
@@ -189,6 +252,54 @@ namespace whav2 {
 					enemigoDirY[i] = -enemigoDirY[i];
 				}
 			}
+		}
+
+		bool AplicarDanioAJugador(String^ mensajeDerrota) {
+			GestorAudio::ReproducirSfxAccion();
+			vidas--;
+			invulnerableTicks = 45;
+			ReiniciarJugador();
+			if (vidas <= 0) {
+				Fallar(mensajeDerrota);
+				return true;
+			}
+			return false;
+		}
+
+		bool ActualizarDisparos(Rectangle rectJugador) {
+			for (int p = 0; p < MAX_DISPAROS; p++) {
+				if (!dispActivo[p]) continue;
+				if (dispImpacto[p]) {
+					dispTick[p]++;
+					if (dispTick[p] % 3 == 0) {
+						dispCol[p]++;
+						if (dispCol[p] > 3) dispActivo[p] = false;
+					}
+					continue;
+				}
+				dispX[p] += dispDx[p];
+				dispY[p] += dispDy[p];
+				if (TileEn(dispX[p] + 12, dispY[p] + 12) == '#') {
+					dispImpacto[p] = true;
+					dispDx[p] = 0;
+					dispDy[p] = 0;
+					dispCol[p] = 1;
+					dispTick[p] = 0;
+					continue;
+				}
+				Rectangle rectDisp(dispX[p] + 5, dispY[p] + 5, 14, 14);
+				if (rectJugador.IntersectsWith(rectDisp)) {
+					dispImpacto[p] = true;
+					dispDx[p] = 0;
+					dispDy[p] = 0;
+					dispCol[p] = 1;
+					dispTick[p] = 0;
+					if (invulnerableTicks == 0) {
+						if (AplicarDanioAJugador("Un disparo mágico te alcanzó. Myrphon se perdió en el laberinto.")) return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		void Fallar(String^ mensaje) {
@@ -217,6 +328,7 @@ namespace whav2 {
 				return;
 			}
 			if (invulnerableTicks > 0) invulnerableTicks--;
+			if (myrphonMovTicks > 0) myrphonMovTicks--;
 
 			int dx = 0;
 			int dy = 0;
@@ -224,32 +336,31 @@ namespace whav2 {
 			else if (derecha) dx = 1;
 			if (arriba) dy = -1;
 			else if (abajo) dy = 1;
-			if (dx != 0 || dy != 0) MoverJugador(dx, dy);
+			if (dx != 0 || dy != 0) {
+				MoverJugador(dx, dy);
+				if (ticksRestantes % 9 == 0) GestorAudio::ReproducirSfxPaso();
+			}
 
 			MoverMyrphon();
 			MoverEnemigos();
 
-			int centroTileX = (jugadorX + 12) / TILE;
-			int centroTileY = (jugadorY + 20) / TILE;
-			if (centroTileX == myrphonTileX && centroTileY == myrphonTileY) {
+			Rectangle rectJugador(jugadorX + 3, jugadorY + 10, 18, 20);
+			Rectangle rectMyrphon(myrphonTileX * TILE + 2, myrphonTileY * TILE + 2, TILE - 4, TILE - 4);
+			if (rectJugador.IntersectsWith(rectMyrphon)) {
+				GestorAudio::ReproducirSfxAccion();
 				Ganar();
 				return;
 			}
 
-			Rectangle rectJugador(jugadorX + 4, jugadorY + 14, 16, 18);
 			for (int i = 0; i < 3; i++) {
-				Rectangle rectEnemigo(enemigoTileX[i] * TILE + 4, enemigoTileY[i] * TILE + 8, 24, 24);
+				Rectangle rectEnemigo(enemigoTileX[i] * TILE + 5, enemigoTileY[i] * TILE + 6, 22, 22);
 				if (rectJugador.IntersectsWith(rectEnemigo) && invulnerableTicks == 0) {
-					vidas--;
-					invulnerableTicks = 40;
-					ReiniciarJugador();
-					if (vidas <= 0) {
-						Fallar("Las sombras atraparon a Coco. Myrphon se perdió en el laberinto.");
-						return;
-					}
+					if (AplicarDanioAJugador("Las sombras atraparon a Coco. Myrphon se perdió en el laberinto.")) return;
 					break;
 				}
 			}
+
+			if (ActualizarDisparos(rectJugador)) return;
 
 			this->Invalidate();
 		}
@@ -263,29 +374,24 @@ namespace whav2 {
 		}
 
 		void DibujarMyrphon(Graphics^ g, int px, int py) {
-			int flotacion = (int)(Math::Sin(ticksAnimacion * 0.2) * 2.0);
-			py += flotacion;
-			SolidBrush^ aura = gcnew SolidBrush(Color::FromArgb(65, 240, 140, 210));
-			SolidBrush^ cuerpo = gcnew SolidBrush(Color::FromArgb(240, 226, 150, 210));
-			SolidBrush^ panza = gcnew SolidBrush(Color::FromArgb(240, 250, 220, 240));
-			SolidBrush^ ojos = gcnew SolidBrush(Color::FromArgb(255, 40, 30, 60));
-			SolidBrush^ pico = gcnew SolidBrush(Color::FromArgb(255, 242, 196, 80));
-			g->FillEllipse(aura, px - 2, py - 2, 36, 36);
-			g->FillEllipse(cuerpo, px + 4, py + 10, 24, 20);
-			g->FillEllipse(panza, px + 9, py + 17, 14, 11);
-			g->FillPolygon(cuerpo, gcnew array<Point>{ Point(px + 6, py + 11), Point(px + 8, py + 1), Point(px + 13, py + 10) });
-			g->FillPolygon(cuerpo, gcnew array<Point>{ Point(px + 26, py + 11), Point(px + 24, py + 1), Point(px + 19, py + 10) });
-			g->FillEllipse(ojos, px + 10, py + 15, 3, 4);
-			g->FillEllipse(ojos, px + 20, py + 15, 3, 4);
-			g->FillPolygon(pico, gcnew array<Point>{ Point(px + 16, py + 19), Point(px + 19, py + 21), Point(px + 16, py + 22) });
-			delete aura;
-			delete cuerpo;
-			delete panza;
-			delete ojos;
-			delete pico;
+			if (bmpMyrphon != nullptr) {
+				DibujarMyrphonSpritesheetComun(g, bmpMyrphon, px, py, myrphonDir, myrphonMovTicks > 0, ticksMyrphon, 0, 0, 1, TILE, TILE);
+			}
 		}
 
-		void DibujarEnemigo(Graphics^ g, int px, int py) {
+		void DibujarEnemigo(Graphics^ g, int idx, int px, int py) {
+			if (bmpEnemigo != nullptr && bmpEnemigo->Width >= 64 && bmpEnemigo->Height >= 96) {
+				int cellW = bmpEnemigo->Width / 4;
+				int cellH = bmpEnemigo->Height / 4;
+				int frame = (enemigoTicks[idx] / 6) % 4;
+				int fila = 0;
+				if (enemigoDirY[idx] > 0) fila = 0;
+				else if (enemigoDirY[idx] < 0) fila = 1;
+				else if (enemigoDirX[idx] < 0) fila = 2;
+				else if (enemigoDirX[idx] > 0) fila = 3;
+				g->DrawImage(bmpEnemigo, Rectangle(px + 2, py - 8, 28, 40), frame * cellW, fila * cellH, cellW, cellH, GraphicsUnit::Pixel);
+				return;
+			}
 			SolidBrush^ sombra = gcnew SolidBrush(Color::FromArgb(225, 28, 22, 38));
 			SolidBrush^ ojos = gcnew SolidBrush(Color::FromArgb(255, 230, 60, 70));
 			g->FillEllipse(sombra, px + 2, py + 6, 28, 26);
@@ -299,6 +405,18 @@ namespace whav2 {
 	protected:
 		virtual bool ProcessDialogKey(Keys keyData) override {
 			return false;
+		}
+
+		virtual void OnKeyPress(KeyPressEventArgs^ e) override {
+			e->Handled = true;
+		}
+
+		virtual void WndProc(Message% m) override {
+			if (m.Msg == 0x0120) {
+				m.Result = IntPtr(1 << 16);
+				return;
+			}
+			Form::WndProc(m);
 		}
 
 		virtual void OnPaint(PaintEventArgs^ e) override {
@@ -327,31 +445,50 @@ namespace whav2 {
 			g->DrawString("TIEMPO  " + segundos.ToString("00") + "s", fTiempo, colorTiempo, PointF((float)(this->ClientSize.Width - 230), 30.0f));
 			for (int i = 0; i < 3; i++) {
 				Color colorCorazon = (i < vidas) ? Color::FromArgb(255, 214, 56, 76) : Color::FromArgb(255, 58, 48, 54);
-				DibujarCorazon(g, 230 + i * 24, 46, colorCorazon);
+				DibujarCorazon(g, 385 + i * 24, 46, colorCorazon);
 			}
 
 			for (int f = 0; f < FILAS; f++) {
 				for (int c = 0; c < COLUMNAS; c++) {
 					Bitmap^ tile = (mapa[f][c] == '#') ? bmpMuro : bmpPiso;
-					g->DrawImage(tile, OFFSET_X + c * TILE, OFFSET_Y + f * TILE, TILE, TILE);
+					if (tile != nullptr) {
+						g->DrawImage(tile, OFFSET_X + c * TILE, OFFSET_Y + f * TILE, TILE, TILE);
+					}
+					else {
+						SolidBrush^ b = gcnew SolidBrush((mapa[f][c] == '#') ? Color::FromArgb(45, 52, 66) : Color::FromArgb(22, 26, 34));
+						g->FillRectangle(b, OFFSET_X + c * TILE, OFFSET_Y + f * TILE, TILE, TILE);
+						delete b;
+					}
 				}
 			}
 
-			DibujarEnemigo(g, OFFSET_X + enemigoTileX[0] * TILE, OFFSET_Y + enemigoTileY[0] * TILE);
-			DibujarEnemigo(g, OFFSET_X + enemigoTileX[1] * TILE, OFFSET_Y + enemigoTileY[1] * TILE);
-			DibujarEnemigo(g, OFFSET_X + enemigoTileX[2] * TILE, OFFSET_Y + enemigoTileY[2] * TILE);
+			for (int i = 0; i < 3; i++) {
+				DibujarEnemigo(g, i, OFFSET_X + enemigoTileX[i] * TILE, OFFSET_Y + enemigoTileY[i] * TILE);
+			}
+			if (bmpDisparo != nullptr && bmpDisparo->Width >= 4 && bmpDisparo->Height >= 4) {
+				int dCellW = bmpDisparo->Width / 4;
+				int dCellH = bmpDisparo->Height / 4;
+				for (int p = 0; p < MAX_DISPAROS; p++) {
+					if (!dispActivo[p]) continue;
+					int col = dispImpacto[p] ? dispCol[p] : 0;
+					if (col < 0) col = 0;
+					if (col > 3) col = 3;
+					g->DrawImage(bmpDisparo, Rectangle(OFFSET_X + dispX[p], OFFSET_Y + dispY[p], 24, 24),
+						col * dCellW, dispFila[p] * dCellH, dCellW, dCellH, GraphicsUnit::Pixel);
+				}
+			}
 			DibujarMyrphon(g, OFFSET_X + myrphonTileX * TILE, OFFSET_Y + myrphonTileY * TILE);
 
-			if (invulnerableTicks == 0 || (invulnerableTicks % 2 == 0)) {
+			if ((invulnerableTicks == 0 || (invulnerableTicks % 2 == 0)) && bmpCoco != nullptr) {
 				int frameX = frameCoco * 24;
-				int frameY = 4 * 32;
-				Rectangle destino(OFFSET_X + jugadorX - 12, OFFSET_Y + jugadorY - 32, 48, 64);
+				int frameY = (4 + jugadorDir) * 32;
+				Rectangle destino(OFFSET_X + jugadorX - 8, OFFSET_Y + jugadorY - 18, 40, 52);
 				Rectangle origen(frameX, frameY, 24, 32);
 				g->DrawImage(bmpCoco, destino, origen, GraphicsUnit::Pixel);
 			}
 
 			System::Drawing::Font^ fAyuda = gcnew System::Drawing::Font("Segoe UI", 9.0f, FontStyle::Bold);
-			g->DrawString("WASD / Flechas: moverte    |    Evita las sombras    |    ESC: abandonar", fAyuda, Brushes::LightSteelBlue, PointF(26.0f, (float)(this->ClientSize.Height - 34)));
+			g->DrawString("WASD / Flechas: moverte    |    Esquiva magos y disparos    |    ESC: abandonar", fAyuda, Brushes::LightSteelBlue, PointF(26.0f, (float)(this->ClientSize.Height - 34)));
 
 			delete panel;
 			delete borde;
@@ -376,12 +513,25 @@ namespace whav2 {
 			bmpCoco = CargarBitmap("sprites/Coco_Spritesheet.png");
 			bmpMuro = CargarBitmap("sprites/tile_muro.png");
 			bmpPiso = CargarBitmap("sprites/tile_camino.png");
+			bmpEnemigo = CargarBitmap("sprites/Mago_Cueva_Spritesheet.png");
+			bmpDisparo = CargarBitmap("sprites/Disparo_Cueva_Spritesheet.png");
+			bmpMyrphon = CargarBitmap("sprites/Myrphon_Spritesheet.png");
+
 			aleatorio = gcnew Random();
 			enemigoTileX = gcnew array<int>(3);
 			enemigoTileY = gcnew array<int>(3);
 			enemigoDirX = gcnew array<int>(3);
 			enemigoDirY = gcnew array<int>(3);
 			enemigoTicks = gcnew array<int>(3);
+			dispX = gcnew array<int>(MAX_DISPAROS);
+			dispY = gcnew array<int>(MAX_DISPAROS);
+			dispDx = gcnew array<int>(MAX_DISPAROS);
+			dispDy = gcnew array<int>(MAX_DISPAROS);
+			dispFila = gcnew array<int>(MAX_DISPAROS);
+			dispActivo = gcnew array<bool>(MAX_DISPAROS);
+			dispImpacto = gcnew array<bool>(MAX_DISPAROS);
+			dispCol = gcnew array<int>(MAX_DISPAROS);
+			dispTick = gcnew array<int>(MAX_DISPAROS);
 			arriba = false;
 			abajo = false;
 			izquierda = false;
@@ -410,6 +560,9 @@ namespace whav2 {
 			if (bmpCoco != nullptr) delete bmpCoco;
 			if (bmpMuro != nullptr) delete bmpMuro;
 			if (bmpPiso != nullptr) delete bmpPiso;
+			if (bmpEnemigo != nullptr) delete bmpEnemigo;
+			if (bmpDisparo != nullptr) delete bmpDisparo;
+			if (bmpMyrphon != nullptr) delete bmpMyrphon;
 		}
 
 	private:
@@ -422,6 +575,8 @@ namespace whav2 {
 		}
 
 		void FormMinijuego_KeyDown(Object^ sender, KeyEventArgs^ e) {
+			e->Handled = true;
+			e->SuppressKeyPress = true;
 			if (e->KeyCode == Keys::W || e->KeyCode == Keys::Up) arriba = true;
 			else if (e->KeyCode == Keys::S || e->KeyCode == Keys::Down) abajo = true;
 			else if (e->KeyCode == Keys::A || e->KeyCode == Keys::Left) izquierda = true;

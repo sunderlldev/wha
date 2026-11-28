@@ -17,6 +17,7 @@ namespace whav2 {
 		array<String^>^ rolesPersonajes;
 		array<String^>^ descripcionesPersonajes;
 		array<String^>^ confianzasPersonajes;
+		array<String^>^ spritesPersonajes;
 
 		Label^ CrearLabel(String^ texto, int x, int y, int ancho, int alto, float tam, FontStyle estilo, Color color) {
 			Label^ lbl = gcnew Label();
@@ -37,16 +38,17 @@ namespace whav2 {
 
 		void btnPersonajes_Click(Object^ sender, EventArgs^ e) {
 			if (nombresPersonajes == nullptr) return;
-			FormPersonajes^ frm = gcnew FormPersonajes(nombresPersonajes, rolesPersonajes, descripcionesPersonajes, confianzasPersonajes);
+			FormPersonajes^ frm = gcnew FormPersonajes(nombresPersonajes, rolesPersonajes, descripcionesPersonajes, confianzasPersonajes, spritesPersonajes);
 			frm->ShowDialog(this);
 		}
 
 	public:
-		void ConfigurarPersonajes(array<String^>^ nombres, array<String^>^ roles, array<String^>^ descripciones, array<String^>^ confianzas) {
+		void ConfigurarPersonajes(array<String^>^ nombres, array<String^>^ roles, array<String^>^ descripciones, array<String^>^ confianzas, array<String^>^ sprites) {
 			nombresPersonajes = nombres;
 			rolesPersonajes = roles;
 			descripcionesPersonajes = descripciones;
 			confianzasPersonajes = confianzas;
+			spritesPersonajes = sprites;
 			btnPersonajes->Visible = true;
 		}
 
@@ -87,15 +89,15 @@ namespace whav2 {
 			}
 
 			CrearLabel("ACCIONES", 30, 222, 340, 24, 11.0f, FontStyle::Bold, colorSeccion);
-			array<String^>^ teclasAcc = gcnew array<String^>{ "Espacio / Z", "1 · 2 · 3 · 4", "W / S", "I", "P", "M", "ESC" };
+			array<String^>^ teclasAcc = gcnew array<String^>{ "Shift", "Espacio / Z", "1 · 2 · 3 · 4", "Q / H", "F", "I / P", "M / ESC" };
 			array<String^>^ descAcc = gcnew array<String^>{
-				"Interactuar, leer, recoger y avanzar diálogos",
-				"Elegir una respuesta",
-				"Mover la selección de respuesta",
-				"Abrir el inventario",
-				"Personajes interactuados y confianza",
-				"Música on/off (inicia apagada)",
-				"Pausa"
+				"Mantener presionado para correr",
+				"Interactuar, leer, recoger o lanzar hechizo",
+				"Elegir respuesta en diálogos",
+				"Q: Misiones | H: Quitar/ver flecha guía",
+				"Capa de Vuelo (Nivel 3)",
+				"I: Inventario | P: Personajes y confianza",
+				"M: música on/off | ESC: salir de partida"
 			};
 			for (int i = 0; i < 7; i++) {
 				CrearLabel(teclasAcc[i], 34, 252 + i * 27, 118, 22, 10.0f, FontStyle::Bold, colorClave);

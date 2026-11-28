@@ -10,12 +10,37 @@ namespace whav2 {
 	private:
 		int nivelElegido;
 		Label^ lblTitulo;
-		Label^ lblSubtitulo;
 		Button^ btnNivel1;
 		Button^ btnNivel2;
 		Button^ btnNivel3;
 		Button^ btnCancelar;
 		Panel^ pnlContenedor;
+
+		Button^ CrearBotonNivel(String^ texto, int y, bool completado, bool inicial) {
+			Button^ boton = gcnew Button();
+			boton->Text = completado ? (texto + "   [COMPLETADO]") : texto;
+			boton->Font = gcnew System::Drawing::Font("Segoe UI", 10.5f, FontStyle::Bold);
+			if (completado) {
+				boton->ForeColor = Color::FromArgb(212, 248, 220);
+				boton->BackColor = Color::FromArgb(24, 62, 42);
+				boton->FlatStyle = FlatStyle::Flat;
+				boton->FlatAppearance->BorderSize = 1;
+				boton->FlatAppearance->BorderColor = Color::FromArgb(88, 174, 118);
+				boton->FlatAppearance->MouseOverBackColor = Color::FromArgb(32, 78, 52);
+			}
+			else {
+				boton->ForeColor = inicial ? Color::FromArgb(214, 198, 166) : Color::FromArgb(230, 236, 244);
+				boton->BackColor = Color::FromArgb(18, 27, 38);
+				boton->FlatStyle = FlatStyle::Flat;
+				boton->FlatAppearance->BorderSize = 0;
+				boton->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
+			}
+			boton->Cursor = Cursors::Hand;
+			boton->Location = Point(36, y);
+			boton->Size = System::Drawing::Size(448, 44);
+			pnlContenedor->Controls->Add(boton);
+			return boton;
+		}
 
 		void btnNivel1_Click(Object^ sender, EventArgs^ e) {
 			nivelElegido = 1;
@@ -41,86 +66,73 @@ namespace whav2 {
 			this->Close();
 		}
 
-	public:
-		FormSelectorNivel() {
+	private:
+		void InicializarSelector(bool c1, bool c2, bool c3) {
 			nivelElegido = 1;
 
-			this->Text = "Seleccionar Perspectiva y Nivel";
-			this->ClientSize = System::Drawing::Size(620, 420);
+			this->Text = "Seleccionar Nivel - Witch Hat Atelier";
+			this->ClientSize = System::Drawing::Size(550, 340);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->StartPosition = FormStartPosition::CenterParent;
-			this->BackColor = Color::FromArgb(14, 20, 31);
+			this->BackColor = Color::FromArgb(9, 14, 21);
 
 			pnlContenedor = gcnew Panel();
 			pnlContenedor->Location = Point(15, 15);
-			pnlContenedor->Size = System::Drawing::Size(590, 390);
-			pnlContenedor->BackColor = Color::FromArgb(21, 29, 44);
-			pnlContenedor->BorderStyle = BorderStyle::FixedSingle;
+			pnlContenedor->Size = System::Drawing::Size(520, 310);
+			pnlContenedor->BackColor = Color::FromArgb(10, 16, 24);
+			pnlContenedor->BorderStyle = BorderStyle::None;
 			this->Controls->Add(pnlContenedor);
 
 			lblTitulo = gcnew Label();
-			lblTitulo->Text = "S E L E C T O R   D E   N I V E L";
-			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 15, FontStyle::Bold);
-			lblTitulo->ForeColor = Color::FromArgb(235, 195, 105);
-			lblTitulo->Location = Point(20, 16);
-			lblTitulo->Size = System::Drawing::Size(550, 28);
-			lblTitulo->TextAlign = ContentAlignment::MiddleCenter;
+			lblTitulo->Text = "SELECCIONAR NIVEL";
+			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 16.0f, FontStyle::Bold);
+			lblTitulo->ForeColor = Color::FromArgb(214, 198, 166);
+			lblTitulo->Location = Point(36, 18);
+			lblTitulo->Size = System::Drawing::Size(448, 30);
+			lblTitulo->TextAlign = ContentAlignment::MiddleLeft;
 			pnlContenedor->Controls->Add(lblTitulo);
 
-			lblSubtitulo = gcnew Label();
-			lblSubtitulo->Text = "Elige la perspectiva narrativa que deseas jugar o evaluar:";
-			lblSubtitulo->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Regular);
-			lblSubtitulo->ForeColor = Color::FromArgb(180, 190, 205);
-			lblSubtitulo->Location = Point(20, 48);
-			lblSubtitulo->Size = System::Drawing::Size(550, 24);
-			lblSubtitulo->TextAlign = ContentAlignment::MiddleCenter;
-			pnlContenedor->Controls->Add(lblSubtitulo);
+			Panel^ linea = gcnew Panel();
+			linea->Location = Point(36, 56);
+			linea->Size = System::Drawing::Size(448, 1);
+			linea->BackColor = Color::FromArgb(70, 214, 198, 166);
+			pnlContenedor->Controls->Add(linea);
 
-			btnNivel1 = gcnew Button();
-			btnNivel1->Text = "NIVEL 1: COCO — El Atelier del Maestro Qifrey\n(Perspectiva: La Aprendiz que Descubre la Magia)";
-			btnNivel1->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Bold);
-			btnNivel1->ForeColor = Color::FromArgb(240, 246, 252);
-			btnNivel1->BackColor = Color::FromArgb(34, 68, 48);
-			btnNivel1->FlatStyle = FlatStyle::Flat;
-			btnNivel1->Location = Point(35, 86);
-			btnNivel1->Size = System::Drawing::Size(520, 56);
+			btnNivel1 = CrearBotonNivel("Nivel 1 - Coco: El Atelier de Qifrey", 76, c1, true);
 			btnNivel1->Click += gcnew EventHandler(this, &FormSelectorNivel::btnNivel1_Click);
-			pnlContenedor->Controls->Add(btnNivel1);
 
-			btnNivel2 = gcnew Button();
-			btnNivel2->Text = "NIVEL 2: TARTAH — El Laberinto del Pueblo de Kaln\n(Perspectiva: El Habitante con Ojos de Plata)";
-			btnNivel2->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Bold);
-			btnNivel2->ForeColor = Color::FromArgb(240, 246, 252);
-			btnNivel2->BackColor = Color::FromArgb(65, 52, 38);
-			btnNivel2->FlatStyle = FlatStyle::Flat;
-			btnNivel2->Location = Point(35, 154);
-			btnNivel2->Size = System::Drawing::Size(520, 56);
+			btnNivel2 = CrearBotonNivel("Nivel 2 - Tartah: El Laberinto de Kaln", 132, c2, false);
 			btnNivel2->Click += gcnew EventHandler(this, &FormSelectorNivel::btnNivel2_Click);
-			pnlContenedor->Controls->Add(btnNivel2);
 
-			btnNivel3 = gcnew Button();
-			btnNivel3->Text = "NIVEL 3: COUSTAS — La Emboscada y el Árbol de Plata\n(Perspectiva: El Bardo y la Desesperación por Sanar)";
-			btnNivel3->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Bold);
-			btnNivel3->ForeColor = Color::FromArgb(240, 246, 252);
-			btnNivel3->BackColor = Color::FromArgb(38, 54, 78);
-			btnNivel3->FlatStyle = FlatStyle::Flat;
-			btnNivel3->Location = Point(35, 222);
-			btnNivel3->Size = System::Drawing::Size(520, 56);
+			btnNivel3 = CrearBotonNivel("Nivel 3 - Coustas: El Árbol de Plata", 188, c3, false);
 			btnNivel3->Click += gcnew EventHandler(this, &FormSelectorNivel::btnNivel3_Click);
-			pnlContenedor->Controls->Add(btnNivel3);
 
 			btnCancelar = gcnew Button();
-			btnCancelar->Text = "Volver al Menú Principal";
+			btnCancelar->Text = "Volver";
 			btnCancelar->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Regular);
-			btnCancelar->ForeColor = Color::FromArgb(210, 215, 225);
-			btnCancelar->BackColor = Color::FromArgb(28, 36, 50);
+			btnCancelar->ForeColor = Color::FromArgb(210, 218, 228);
+			btnCancelar->BackColor = Color::FromArgb(14, 22, 30);
 			btnCancelar->FlatStyle = FlatStyle::Flat;
-			btnCancelar->Location = Point(195, 305);
-			btnCancelar->Size = System::Drawing::Size(200, 38);
+			btnCancelar->FlatAppearance->BorderSize = 0;
+			btnCancelar->FlatAppearance->MouseOverBackColor = Color::FromArgb(24, 34, 46);
+			btnCancelar->Cursor = Cursors::Hand;
+			btnCancelar->Location = Point(190, 252);
+			btnCancelar->Size = System::Drawing::Size(140, 36);
 			btnCancelar->Click += gcnew EventHandler(this, &FormSelectorNivel::btnCancelar_Click);
 			pnlContenedor->Controls->Add(btnCancelar);
+
+			this->ActiveControl = btnNivel1;
+		}
+
+	public:
+		FormSelectorNivel() {
+			InicializarSelector(false, false, false);
+		}
+
+		FormSelectorNivel(bool c1, bool c2, bool c3) {
+			InicializarSelector(c1, c2, c3);
 		}
 
 		int getNivelElegido() {

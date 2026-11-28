@@ -8,10 +8,21 @@ namespace whav2 {
 
 	public ref class FormCreditos : public Form {
 	private:
-		Label^ lblTitulo;
-		TextBox^ txtCreditos;
 		Button^ btnCerrar;
 		Panel^ pnlContenedor;
+
+		Label^ CrearLabel(String^ texto, int x, int y, int ancho, int alto, float tam, FontStyle estilo, Color color) {
+			Label^ lbl = gcnew Label();
+			lbl->Text = texto;
+			lbl->Font = gcnew System::Drawing::Font("Segoe UI", tam, estilo);
+			lbl->ForeColor = color;
+			lbl->BackColor = Color::Transparent;
+			lbl->Location = Point(x, y);
+			lbl->Size = System::Drawing::Size(ancho, alto);
+			lbl->TextAlign = ContentAlignment::MiddleLeft;
+			pnlContenedor->Controls->Add(lbl);
+			return lbl;
+		}
 
 		void btnCerrar_Click(Object^ sender, EventArgs^ e) {
 			this->Close();
@@ -19,66 +30,41 @@ namespace whav2 {
 
 	public:
 		FormCreditos() {
-			this->Text = "Witch Hat Atelier - Créditos del Proyecto";
-			this->ClientSize = System::Drawing::Size(640, 480);
+			this->Text = "Créditos - Witch Hat Atelier";
+			this->ClientSize = System::Drawing::Size(580, 420);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->StartPosition = FormStartPosition::CenterParent;
-			this->BackColor = Color::FromArgb(14, 20, 31);
+			this->BackColor = Color::FromArgb(9, 14, 21);
 
 			pnlContenedor = gcnew Panel();
 			pnlContenedor->Location = Point(15, 15);
-			pnlContenedor->Size = System::Drawing::Size(610, 450);
-			pnlContenedor->BackColor = Color::FromArgb(21, 29, 44);
+			pnlContenedor->Size = System::Drawing::Size(550, 390);
+			pnlContenedor->BackColor = Color::FromArgb(10, 16, 24);
 			pnlContenedor->BorderStyle = BorderStyle::None;
 			this->Controls->Add(pnlContenedor);
 
-			lblTitulo = gcnew Label();
-			lblTitulo->Text = "C R É D I T O S";
-			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 16, FontStyle::Bold);
-			lblTitulo->ForeColor = Color::FromArgb(235, 195, 105);
-			lblTitulo->Location = Point(20, 18);
-			lblTitulo->Size = System::Drawing::Size(570, 30);
-			lblTitulo->TextAlign = ContentAlignment::MiddleCenter;
-			pnlContenedor->Controls->Add(lblTitulo);
+			CrearLabel("CRÉDITOS", 30, 18, 490, 34, 17.0f, FontStyle::Bold, Color::FromArgb(214, 198, 166));
 
-			txtCreditos = gcnew TextBox();
-			txtCreditos->Multiline = true;
-			txtCreditos->ReadOnly = true;
-			txtCreditos->TabStop = false;
-			txtCreditos->ScrollBars = ScrollBars::Vertical;
-			txtCreditos->BackColor = Color::FromArgb(14, 20, 31);
-			txtCreditos->ForeColor = Color::FromArgb(230, 238, 248);
-			txtCreditos->Font = gcnew System::Drawing::Font("Segoe UI", 10, FontStyle::Regular);
-			txtCreditos->Location = Point(25, 60);
-			txtCreditos->Size = System::Drawing::Size(560, 315);
-			txtCreditos->BorderStyle = BorderStyle::None;
-			txtCreditos->Text =
-				"UNIVERSIDAD PERUANA DE CIENCIAS APLICADAS (UPC)\r\n"
-				"Facultad de Ingeniería - Ciencias de la Computación / Ingeniería de Software\r\n"
-				"Curso: Algoritmos (1ACC0265) - Ciclo Académico 2026-20\r\n\r\n"
-				"EQUIPO DE DESARROLLO:\r\n"
-				"  • Juan José Blas Cáceres (U20261B980)\r\n"
-				"  • Kiana Valentina Arancibia Romero (U202619105)\r\n\r\n"
-				"DOCENTES DEL CURSO:\r\n"
-				"  • Johann Cristian Berny Pérez Rojas\r\n"
-				"  • Henry Antonio Mendoza Puerta\r\n"
-				"  • Joel Hernán Flores Martínez\r\n"
-				"  • Edson Mendiolaza Cornejo\r\n"
-				"  • Flor Cagniy Cárdenas Mariño\r\n"
-				"  • Jorge Eduardo Díaz Suárez\r\n\r\n"
-				"OBRA ORIGINAL ADAPTADA:\r\n"
-				"  • 'Witch Hat Atelier' (Tongari Bōshi no Atorie)\r\n"
-				"  • Creadora y dibujante: Kamome Shirahama\r\n"
-				"  • Publicado por Kōdansha (Morning Two)\r\n\r\n"
-				"MOTOR Y TECNOLOGÍAS UTILIZADAS:\r\n"
-				"  • C++/CLI con Windows Forms y GDI+\r\n"
-				"  • Doble Búfer (BufferedGraphicsManager) a 40 FPS\r\n"
-				"  • Animaciones con Spritesheets de 24x32 px\r\n"
-				"  • Motor de Tilemap dinámico con matrices de caracteres\r\n"
-				"  • Arquitectura pura Orientada a Objetos (POO)";
-			pnlContenedor->Controls->Add(txtCreditos);
+			Panel^ linea = gcnew Panel();
+			linea->Location = Point(30, 58);
+			linea->Size = System::Drawing::Size(490, 1);
+			linea->BackColor = Color::FromArgb(70, 214, 198, 166);
+			pnlContenedor->Controls->Add(linea);
+
+			Color colorSeccion = Color::FromArgb(214, 198, 166);
+			Color colorTexto = Color::FromArgb(242, 245, 248);
+
+			CrearLabel("CREADORES:", 30, 76, 490, 24, 10.5f, FontStyle::Bold, colorSeccion);
+			CrearLabel("•  Juan José Blas Cáceres (U20261B980)", 44, 102, 476, 24, 10.5f, FontStyle::Regular, colorTexto);
+			CrearLabel("•  Kiana Valentina Arancibia Romero (U202619105)", 44, 128, 476, 24, 10.5f, FontStyle::Regular, colorTexto);
+
+			CrearLabel("OBRA ORIGINAL:", 30, 170, 490, 24, 10.5f, FontStyle::Bold, colorSeccion);
+			CrearLabel("•  'Witch Hat Atelier' (Tongari Bōshi no Atorie)", 44, 196, 476, 24, 10.5f, FontStyle::Regular, colorTexto);
+
+			CrearLabel("PROFESOR DE CURSO:", 30, 238, 490, 24, 10.5f, FontStyle::Bold, colorSeccion);
+			CrearLabel("•  Luis Alberto Raymundo Chacaltana", 44, 264, 476, 24, 10.5f, FontStyle::Regular, colorTexto);
 
 			btnCerrar = gcnew Button();
 			btnCerrar->Text = "Cerrar";
@@ -88,7 +74,8 @@ namespace whav2 {
 			btnCerrar->FlatStyle = FlatStyle::Flat;
 			btnCerrar->FlatAppearance->BorderSize = 0;
 			btnCerrar->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
-			btnCerrar->Location = Point(235, 392);
+			btnCerrar->Cursor = Cursors::Hand;
+			btnCerrar->Location = Point(205, 326);
 			btnCerrar->Size = System::Drawing::Size(140, 38);
 			btnCerrar->Click += gcnew EventHandler(this, &FormCreditos::btnCerrar_Click);
 			pnlContenedor->Controls->Add(btnCerrar);

@@ -11,116 +11,109 @@ namespace whav2 {
 		int accion;
 		Panel^ panelContenedor;
 		Button^ btnContinuar;
-		Button^ btnInventario;
-		Button^ btnPersonajes;
-		Button^ btnGuardar;
-		Button^ btnControles;
-		Button^ btnMenu;
+		Button^ btnSalirMenu;
 
 		void btnContinuar_Click(Object^ sender, EventArgs^ e) {
 			accion = 0;
-			this->DialogResult = System::Windows::Forms::DialogResult::OK;
-			this->Close();
-		}
-		void btnInventario_Click(Object^ sender, EventArgs^ e) {
-			accion = 1;
-			this->DialogResult = System::Windows::Forms::DialogResult::OK;
-			this->Close();
-		}
-		void btnPersonajes_Click(Object^ sender, EventArgs^ e) {
-			accion = 2;
-			this->DialogResult = System::Windows::Forms::DialogResult::OK;
-			this->Close();
-		}
-		void btnGuardar_Click(Object^ sender, EventArgs^ e) {
-			accion = 3;
-			this->DialogResult = System::Windows::Forms::DialogResult::OK;
-			this->Close();
-		}
-		void btnControles_Click(Object^ sender, EventArgs^ e) {
-			accion = 4;
-			this->DialogResult = System::Windows::Forms::DialogResult::OK;
-			this->Close();
-		}
-		void btnMenu_Click(Object^ sender, EventArgs^ e) {
-			accion = 5;
 			this->DialogResult = System::Windows::Forms::DialogResult::Cancel;
 			this->Close();
 		}
 
-		Button^ CrearBoton(String^ texto, int y, bool primario) {
-			Button^ boton = gcnew Button();
-			boton->Text = texto;
-			boton->Font = gcnew System::Drawing::Font("Segoe UI", 10.0f, primario ? FontStyle::Bold : FontStyle::Regular);
-			boton->ForeColor = primario ? Color::FromArgb(214, 198, 166) : Color::FromArgb(226, 232, 240);
-			boton->BackColor = Color::FromArgb(18, 27, 38);
-			boton->FlatStyle = FlatStyle::Flat;
-			boton->FlatAppearance->BorderSize = 0;
-			boton->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
-			boton->Cursor = Cursors::Hand;
-			boton->Location = Point(155, y);
-			boton->Size = System::Drawing::Size(220, 36);
-			panelContenedor->Controls->Add(boton);
-			return boton;
+		void btnSalirMenu_Click(Object^ sender, EventArgs^ e) {
+			accion = 5;
+			this->DialogResult = System::Windows::Forms::DialogResult::Yes;
+			this->Close();
+		}
+
+		void FormPausa_KeyDown(Object^ sender, KeyEventArgs^ e) {
+			if (e->KeyCode == Keys::Escape) {
+				e->Handled = true;
+				e->SuppressKeyPress = true;
+				accion = 0;
+				this->DialogResult = System::Windows::Forms::DialogResult::Cancel;
+				this->Close();
+			}
+		}
+
+	protected:
+		virtual void OnKeyPress(KeyPressEventArgs^ e) override {
+			e->Handled = true;
 		}
 
 	public:
-		FormPausa(String^ resumen) {
+		FormPausa(String^ textoProgreso) {
 			accion = 0;
-			this->Text = "Pausa - Witch Hat Atelier";
-			this->ClientSize = System::Drawing::Size(560, 600);
+			this->Text = "Salir de la partida";
+			this->ClientSize = System::Drawing::Size(520, 290);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->StartPosition = FormStartPosition::CenterParent;
 			this->BackColor = Color::FromArgb(9, 14, 21);
+			this->KeyPreview = true;
 
 			panelContenedor = gcnew Panel();
-			panelContenedor->Dock = DockStyle::Fill;
+			panelContenedor->Location = Point(15, 15);
+			panelContenedor->Size = System::Drawing::Size(490, 260);
 			panelContenedor->BackColor = Color::FromArgb(10, 16, 24);
 			this->Controls->Add(panelContenedor);
 
-			Label^ lblTitulo = gcnew Label();
-			lblTitulo->Text = "PAUSA";
-			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 18.0f, FontStyle::Bold);
-			lblTitulo->ForeColor = Color::FromArgb(214, 198, 166);
-			lblTitulo->Location = Point(30, 22);
-			lblTitulo->Size = System::Drawing::Size(500, 32);
-			lblTitulo->TextAlign = ContentAlignment::MiddleLeft;
-			panelContenedor->Controls->Add(lblTitulo);
-
-			Panel^ linea = gcnew Panel();
-			linea->Location = Point(30, 60);
-			linea->Size = System::Drawing::Size(500, 1);
-			linea->BackColor = Color::FromArgb(70, 214, 198, 166);
-			panelContenedor->Controls->Add(linea);
+			Label^ lblPregunta = gcnew Label();
+			lblPregunta->Text = "¿Estás seguro de que quieres salir de la partida?";
+			lblPregunta->Font = gcnew System::Drawing::Font("Segoe UI", 12.5f, FontStyle::Bold);
+			lblPregunta->ForeColor = Color::FromArgb(240, 244, 248);
+			lblPregunta->Location = Point(24, 26);
+			lblPregunta->Size = System::Drawing::Size(442, 34);
+			lblPregunta->TextAlign = ContentAlignment::MiddleCenter;
+			panelContenedor->Controls->Add(lblPregunta);
 
 			Label^ lblResumen = gcnew Label();
-			lblResumen->Text = resumen;
-			lblResumen->Font = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Regular);
-			lblResumen->ForeColor = Color::FromArgb(196, 210, 224);
-			lblResumen->Location = Point(30, 76);
-			lblResumen->Size = System::Drawing::Size(500, 96);
-			lblResumen->Padding = System::Windows::Forms::Padding(0, 4, 0, 0);
+			lblResumen->Text = textoProgreso;
+			lblResumen->Font = gcnew System::Drawing::Font("Segoe UI", 9.8f, FontStyle::Regular);
+			lblResumen->ForeColor = Color::FromArgb(202, 214, 228);
+			lblResumen->BackColor = Color::FromArgb(14, 22, 32);
+			lblResumen->Location = Point(28, 74);
+			lblResumen->Size = System::Drawing::Size(434, 102);
+			lblResumen->Padding = System::Windows::Forms::Padding(12);
+			lblResumen->TextAlign = ContentAlignment::MiddleCenter;
 			panelContenedor->Controls->Add(lblResumen);
 
-			btnContinuar = CrearBoton("CONTINUAR AVENTURA", 190, true);
+			btnSalirMenu = gcnew Button();
+			btnSalirMenu->Text = "Sí, salir al menú";
+			btnSalirMenu->Font = gcnew System::Drawing::Font("Segoe UI", 10.0f, FontStyle::Bold);
+			btnSalirMenu->ForeColor = Color::FromArgb(236, 174, 174);
+			btnSalirMenu->BackColor = Color::FromArgb(38, 22, 26);
+			btnSalirMenu->FlatStyle = FlatStyle::Flat;
+			btnSalirMenu->FlatAppearance->BorderSize = 0;
+			btnSalirMenu->FlatAppearance->MouseOverBackColor = Color::FromArgb(58, 30, 36);
+			btnSalirMenu->Cursor = Cursors::Hand;
+			btnSalirMenu->Location = Point(42, 198);
+			btnSalirMenu->Size = System::Drawing::Size(190, 40);
+			btnSalirMenu->Click += gcnew EventHandler(this, &FormPausa::btnSalirMenu_Click);
+			panelContenedor->Controls->Add(btnSalirMenu);
+
+			btnContinuar = gcnew Button();
+			btnContinuar->Text = "No, seguir jugando";
+			btnContinuar->Font = gcnew System::Drawing::Font("Segoe UI", 10.0f, FontStyle::Bold);
+			btnContinuar->ForeColor = Color::FromArgb(214, 198, 166);
+			btnContinuar->BackColor = Color::FromArgb(18, 27, 38);
+			btnContinuar->FlatStyle = FlatStyle::Flat;
+			btnContinuar->FlatAppearance->BorderSize = 0;
+			btnContinuar->FlatAppearance->MouseOverBackColor = Color::FromArgb(28, 40, 54);
+			btnContinuar->Cursor = Cursors::Hand;
+			btnContinuar->Location = Point(258, 198);
+			btnContinuar->Size = System::Drawing::Size(190, 40);
 			btnContinuar->Click += gcnew EventHandler(this, &FormPausa::btnContinuar_Click);
-			btnInventario = CrearBoton("INVENTARIO", 236, false);
-			btnInventario->Click += gcnew EventHandler(this, &FormPausa::btnInventario_Click);
-			btnPersonajes = CrearBoton("PERSONAJES", 282, false);
-			btnPersonajes->Click += gcnew EventHandler(this, &FormPausa::btnPersonajes_Click);
-			btnGuardar = CrearBoton("GUARDAR / CARGAR", 328, false);
-			btnGuardar->Click += gcnew EventHandler(this, &FormPausa::btnGuardar_Click);
-			btnControles = CrearBoton("CONTROLES", 374, false);
-			btnControles->Click += gcnew EventHandler(this, &FormPausa::btnControles_Click);
-			btnMenu = CrearBoton("VOLVER AL MENÚ", 420, false);
-			btnMenu->Click += gcnew EventHandler(this, &FormPausa::btnMenu_Click);
+			panelContenedor->Controls->Add(btnContinuar);
+
+			this->KeyDown += gcnew KeyEventHandler(this, &FormPausa::FormPausa_KeyDown);
 			this->ActiveControl = btnContinuar;
 		}
 
-		int getAccion() { return accion; }
-
 		~FormPausa() {}
+
+		int getAccion() {
+			return accion;
+		}
 	};
 }

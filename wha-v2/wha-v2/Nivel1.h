@@ -14,15 +14,17 @@
 #include "Utilidades.h"
 #include "Protagonista.h"
 #include "NPC.h"
+#include "Enemigo.h"
 #include "BloqueMapa.h"
 #include "Arbol.h"
 #include "CajaMovible.h"
-#include "MapaTileMatrix.h"
+#include "MapaNivel1.h"
 #include "Inventario.h"
 #include "GestorAudio.h"
 
 using namespace System;
 using namespace System::Drawing;
+using namespace System::Drawing::Imaging;
 
 enum TipoInteraccion {
 	INTERACCION_NINGUNA = 0,
@@ -37,25 +39,29 @@ enum TipoInteraccion {
 	INTERACCION_PARED_ROCA = 9
 };
 
-struct PersonajeInfo {
-	std::string nombre;
-	std::string rol;
-	std::string descripcion;
-	std::string confianza;
+struct GotaLluvia {
+	float x;
+	float y;
+	float velX;
+	float velY;
+	int largo;
 };
 
-class ControladorJuego {
+class Nivel1 {
 private:
 	Protagonista* jugador;
-	MapaTileMatrix* mapa;
-	MapaTileMatrix* mapaPozo;
-	MapaTileMatrix* mapaActual;
+	MapaNivel1* mapa;
+	MapaNivel1* mapaPozo;
+	MapaNivel1* mapaActual;
 	std::vector<NPC*> listaNPCs;
 	NPC* richehPozo;
+	std::vector<Enemigo*> listaEnemigos;
+	std::vector<ProyectilMago> proyectilesEnemigos;
 	std::vector<BloqueMapa*> listaObjetos;
 	std::vector<BloqueMapa*> objetosPozo;
 	std::vector<Arbol*> listaArboles;
 	std::vector<CajaMovible*> listaCajas;
+	std::vector<GotaLluvia> gotasLluvia;
 	BloqueMapa* myrphonObjeto;
 	BloqueMapa* pozoObjeto;
 	BloqueMapa* grimorioObjeto;
@@ -66,8 +72,11 @@ private:
 
 	gcroot<Bitmap^> bmpCoco;
 	gcroot<Bitmap^> bmpQifrey;
-	gcroot<Bitmap^> bmpTartah;
-	gcroot<Bitmap^> bmpCoustas;
+	gcroot<Bitmap^> bmpAgott;
+	gcroot<Bitmap^> bmpRicheh;
+	gcroot<Bitmap^> bmpEnemigo;
+	gcroot<Bitmap^> bmpDisparo;
+	gcroot<Bitmap^> bmpMyrphon;
 	gcroot<String^> ultimaUbicacion;
 	gcroot<String^> dialogoTextoManaged;
 
@@ -77,6 +86,8 @@ private:
 	int ticksJuego;
 	int ticksTituloUbicacion;
 	int ticksTituloNivel;
+	int invulnerableTicks;
+	bool enIntro;
 	bool enPozo;
 	int posAtelierX;
 	int posAtelierY;
@@ -97,6 +108,7 @@ private:
 	bool habloQifrey;
 	bool habloAgott;
 	bool habloRicheh;
+	bool pidioMantoQifrey;
 	int confianzaQifrey;
 	int confianzaAgott;
 	int confianzaRicheh;
@@ -108,10 +120,13 @@ private:
 	bool agottSabeMyrphon;
 	bool capaCrafteada;
 	bool tintaMagicaEntregada;
+	bool tintaSecundariaEntregada;
+	bool grimorioDescubierto;
 	bool libroEncontrado;
 	bool pozoDescubierto;
 	bool paredRocaRota;
 	bool entroTorre;
+	bool monologoCruceActivado;
 	bool gatoAcariciado;
 	bool trollDescubierto;
 	bool misionCompletada;
@@ -125,9 +140,15 @@ private:
 	bool transicionBajandoPozo;
 	int ticksTransicionPozo;
 
+	bool myrphonHuyendo;
+	bool myrphonEscapado;
+	int ticksMyrphonHuyendo;
+
 	bool myrphonCorriendo;
 	int ticksMyrphonCorriendo;
 	bool myrphonConRicheh;
+	bool vioMyrphon;
+	bool vioEnemigos;
 
 	int ticksMensajeTemporal;
 	std::string mensajeTemporal;
@@ -136,17 +157,46 @@ private:
 	int indiceObjetivo;
 	std::string promptInteraccion;
 	std::string objetivoActual;
+	bool guiaActiva;
 
 	static Bitmap^ CargarBitmapSeguro(String^ nombreArchivo) {
-		if (System::IO::File::Exists(nombreArchivo)) return gcnew Bitmap(nombreArchivo);
-		String^ baseDir = AppDomain::CurrentDomain->BaseDirectory;
-		String^ ruta1 = System::IO::Path::Combine(baseDir, nombreArchivo);
-		if (System::IO::File::Exists(ruta1)) return gcnew Bitmap(ruta1);
-		String^ ruta2 = System::IO::Path::Combine(baseDir, "..\\..\\wha-v2\\" + nombreArchivo);
-		if (System::IO::File::Exists(ruta2)) return gcnew Bitmap(ruta2);
-		String^ ruta3 = System::IO::Path::Combine(baseDir, "..\\..\\..\\wha-v2\\wha-v2\\" + nombreArchivo);
-		if (System::IO::File::Exists(ruta3)) return gcnew Bitmap(ruta3);
-		return gcnew Bitmap(32, 32);
+		return CargarBitmapSeguroComun(nombreArchivo, true);
+	}
+
+	static Bitmap^ CrearVariantePersonaje(Bitmap^ base, Color ropaOscura, Color ropaClara, Color peloOscuro, Color peloClaro) {
+		return CrearVarianteSpriteComun(base, ropaOscura, ropaClara, peloOscuro, peloClaro);
+	}
+
+	void inicializarLluvia() {
+		gotasLluvia.clear();
+		unsigned int sem = 13579u;
+		for (int i = 0; i < 110; i++) {
+			sem = sem * 1664525u + 1013904223u;
+			float gx = (float)(sem % Configuracion::ANCHO_JUEGO);
+			sem = sem * 1664525u + 1013904223u;
+			float gy = (float)(sem % Configuracion::ALTO_JUEGO);
+			sem = sem * 1664525u + 1013904223u;
+			GotaLluvia g;
+			g.x = gx;
+			g.y = gy;
+			g.velX = -2.4f - (float)(sem % 3) * 0.4f;
+			g.velY = 7.5f + (float)(sem % 4) * 1.1f;
+			g.largo = 7 + (int)(sem % 5);
+			gotasLluvia.push_back(g);
+		}
+	}
+
+	void actualizarLluvia() {
+		for (size_t i = 0; i < gotasLluvia.size(); i++) {
+			gotasLluvia[i].x += gotasLluvia[i].velX;
+			gotasLluvia[i].y += gotasLluvia[i].velY;
+			if (gotasLluvia[i].y > Configuracion::ALTO_JUEGO) {
+				gotasLluvia[i].y -= Configuracion::ALTO_JUEGO;
+			}
+			if (gotasLluvia[i].x < 0) {
+				gotasLluvia[i].x += Configuracion::ANCHO_JUEGO;
+			}
+		}
 	}
 
 	std::string textoConfianza(int valor) {
@@ -158,6 +208,9 @@ private:
 	void limpiarEntidades() {
 		for (size_t i = 0; i < listaNPCs.size(); i++) delete listaNPCs[i];
 		listaNPCs.clear();
+		for (size_t i = 0; i < listaEnemigos.size(); i++) delete listaEnemigos[i];
+		listaEnemigos.clear();
+		proyectilesEnemigos.clear();
 		for (size_t i = 0; i < listaObjetos.size(); i++) delete listaObjetos[i];
 		listaObjetos.clear();
 		for (size_t i = 0; i < objetosPozo.size(); i++) delete objetosPozo[i];
@@ -198,25 +251,25 @@ private:
 
 	void actualizarObjetivo() {
 		if (misionCompletada) {
-			objetivoActual = "¡Capa Mágica crafteada! ¡Misión cumplida!";
+			objetivoActual = "¡Capa Mágica crafteada! ¡Nivel 1 completado!";
 		}
 		else if (dioVaraRicheh && !paredRocaRota) {
-			objetivoActual = "Usar la Pluma Termica para quebrar la pared de la cueva";
+			objetivoActual = "Usa la Pluma Térmica en la Cueva Misteriosa (Norte)";
 		}
 		else if (myrphonRescatado && !dioVaraRicheh) {
-			objetivoActual = "Llevar a Myrphon de regreso con Richeh";
+			objetivoActual = "Lleva a Myrphon de regreso con Richeh al Sótano";
 		}
 		else if (misionMyrphonActiva) {
-			objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
+			objetivoActual = "Busca a Myrphon en el Laberinto Serpentback (Sur)";
 		}
 		else if (tieneItem("Fibra de Arbol") && tieneItem("Tinta magica") && tieneItem("Grimorio de Trazos")) {
 			objetivoActual = "Regresa con Qifrey para confeccionar tu Capa de Aprendiz";
 		}
-		else if (habloQifrey) {
-			objetivoActual = "Reunir Fibra de Arbol, Tinta magica y Grimorio de Trazos";
+		else if (pidioMantoQifrey) {
+			objetivoActual = "Reúne Fibra de Árbol, Tinta mágica y Grimorio de Trazos";
 		}
 		else {
-			objetivoActual = "Hablar con Maestro Qifrey";
+			objetivoActual = "Sal de la Choza y habla con el Maestro Qifrey al sur";
 		}
 	}
 
@@ -230,50 +283,63 @@ private:
 		listaArboles.push_back(arbol);
 	}
 
+	bool zonaDespejadaDeArboles(int col, int fila) {
+		if (col <= 4 || col >= Configuracion::COLUMNAS_MAPA_NIVEL1 - 5) return false;
+		if (fila <= 4 || fila >= Configuracion::FILAS_MAPA_NIVEL1 - 5) return false;
+		if (col >= 7 && col <= 32 && fila >= 4 && fila <= 69) return false;
+		if (col <= 16 && fila >= 33 && fila <= 39) return false;
+		if (col >= 43 && col <= 61 && fila >= 4 && fila <= 75) return false;
+		if (col >= 84 && col <= 137 && fila >= 8 && fila <= 72) return false;
+		for (int dr = -2; dr <= 2; dr++) {
+			for (int dc = -2; dc <= 2; dc++) {
+				if (mapa->getCaracter(col + dc, fila + dr) != ',') return false;
+			}
+		}
+		int cx = col * Configuracion::TILE_SIZE;
+		int cy = fila * Configuracion::TILE_SIZE;
+		for (size_t i = 0; i < listaArboles.size(); i++) {
+			int ax = listaArboles[i]->getX() + listaArboles[i]->getAncho() / 2;
+			int ay = listaArboles[i]->getBaseY();
+			if (std::abs(ax - cx) < 120 && std::abs(ay - cy) < 104) return false;
+		}
+		return true;
+	}
+
 	void crearArboles() {
-		crearArbol(ArbolGigante, 16, 60);
-		crearArbol(ArbolGigante, 26, 70);
-		crearArbol(ArbolGigante, 60, 64);
-		crearArbol(ArbolGigante, 88, 68);
-		crearArbol(ArbolGigante, 92, 20);
-		crearArbol(ArbolGigante, 108, 17);
-		crearArbol(ArbolGigante, 104, 18);
-		crearArbol(ArbolGigante, 82, 58);
-		crearArbol(ArbolGigante, 12, 48);
-		crearArbol(ArbolGigante, 44, 60);
-		crearArbol(ArbolGigante, 58, 10);
-		crearArbol(ArbolGigante, 98, 70);
-		crearArbol(ArbolGigante, 96, 56);
-		crearArbol(ArbolGigante, 108, 57);
-		crearArbol(ArbolGigante, 97, 65);
-		crearArbol(ArbolGigante, 109, 65);
-		crearArbol(ArbolGigante, 16, 63);
-		crearArbol(ArbolGigante, 29, 64);
-		crearArbol(ArbolGigante, 24, 71);
+		int fijos[][2] = {
+			{ 36, 15 }, { 38, 52 }, { 68, 16 }, { 71, 52 },
+			{ 75, 26 }, { 77, 62 }, { 140, 18 }, { 141, 52 },
+			{ 139, 69 }, { 66, 68 }, { 36, 66 }, { 10, 72 }
+		};
+		for (int i = 0; i < 12; i++) {
+			if (zonaDespejadaDeArboles(fijos[i][0], fijos[i][1])) {
+				crearArbol(ArbolGigante, fijos[i][0], fijos[i][1]);
+			}
+		}
 
 		unsigned int semilla = 20261118u;
 		int colocados = 0;
 		int intentos = 0;
-		while (colocados < 240 && intentos < 12000) {
+		while (colocados < 110 && intentos < 12000) {
 			intentos++;
 			semilla = semilla * 1664525u + 1013904223u;
-			int fila = 4 + (int)(semilla % (Configuracion::FILAS_MAPA_NIVEL1 - 8));
+			int fila = 5 + (int)(semilla % (Configuracion::FILAS_MAPA_NIVEL1 - 10));
 			semilla = semilla * 1664525u + 1013904223u;
-			int columna = 4 + (int)(semilla % (Configuracion::COLUMNAS_MAPA_NIVEL1 - 8));
-			if (mapa->getCaracter(columna, fila) != ',') continue;
+			int columna = 5 + (int)(semilla % (Configuracion::COLUMNAS_MAPA_NIVEL1 - 10));
+			if (!zonaDespejadaDeArboles(columna, fila)) continue;
 			crearArbol(ArbolPino, columna, fila);
 			colocados++;
 		}
 
 		colocados = 0;
 		intentos = 0;
-		while (colocados < 100 && intentos < 8000) {
+		while (colocados < 65 && intentos < 9000) {
 			intentos++;
 			semilla = semilla * 1664525u + 1013904223u;
 			int fila = 5 + (int)(semilla % (Configuracion::FILAS_MAPA_NIVEL1 - 10));
 			semilla = semilla * 1664525u + 1013904223u;
 			int columna = 5 + (int)(semilla % (Configuracion::COLUMNAS_MAPA_NIVEL1 - 10));
-			if (mapa->getCaracter(columna, fila) != ',') continue;
+			if (!zonaDespejadaDeArboles(columna, fila)) continue;
 			crearArbol(ArbolFrondoso, columna, fila);
 			colocados++;
 		}
@@ -313,23 +379,26 @@ private:
 		dialogoNpc = npc;
 		estadoDialogo = estadoInicial;
 		if (npc == "Qifrey") {
+			habloQifrey = true;
 			dialogoHablante = "Qifrey";
 			dialogoRol = "Maestro Hechicero";
 			dialogoConfianza = confianzaQifrey;
 		}
 		else if (npc == "Agott") {
+			habloAgott = true;
 			dialogoHablante = "Agott";
 			dialogoRol = "Aprendiz de Maga";
 			dialogoConfianza = confianzaAgott;
 		}
 		else if (npc == "Richeh") {
+			habloRicheh = true;
 			dialogoHablante = "Richeh";
 			dialogoRol = "Aprendiz de Maga";
 			dialogoConfianza = confianzaRicheh;
 		}
 		else {
 			dialogoHablante = "Letrero";
-			dialogoRol = "Informacion";
+			dialogoRol = "Información";
 			dialogoConfianza = 0;
 		}
 		actualizarDialogoV1();
@@ -357,40 +426,40 @@ private:
 			switch (estadoDialogo) {
 			case 1:
 				dialogoLineas.push_back("Hola, Coco. ¿Qué necesitas en el taller hoy?");
-				dialogoOpciones.push_back("[1] Maestro Qifrey, ¿podrias ayudarme a confeccionar mi Manto de Aprendiz?");
+				dialogoOpciones.push_back("[1] Maestro Qifrey, ¿podrías ayudarme a confeccionar mi Manto de Aprendiz?");
 				dialogoOpciones.push_back("[2] Solo venía a explorar el taller y ver tus libros.");
 				dialogoOpciones.push_back("[3] Maestro, necesito materiales especiales para mis prácticas.");
-				if (tieneItem("Frasco de Tinta") || tieneItem("Tinta de Viento")) {
+				if (!tintaSecundariaEntregada && (tieneItem("Frasco de Tinta") || tieneItem("Tinta de Viento"))) {
 					dialogoOpciones.push_back("[4] ¡Maestro, encontré una tinta especial explorando el taller!");
 				}
 				break;
 			case 10:
 				dialogoLineas.push_back("Para confeccionar tu Manto de Aprendiz necesito 3 elementos del atelier:");
-				dialogoLineas.push_back("Fibra del Arbol de Plata, Tinta magica de conjuracion y el Grimorio de Trazos.");
-				dialogoLineas.push_back("¡Explora el taller, la cueva misteriosa y la torre este para reunirlos!");
+				dialogoLineas.push_back("Fibra del Árbol de Plata, Tinta mágica de conjuración y el Grimorio de Trazos.");
+				dialogoLineas.push_back("¡Cruza el puente al este, explora la Torre de Agott y la Cueva Misteriosa!");
 				dialogoOpciones.push_back("[1] Está bien, iré a buscarlos por el atelier.");
 				break;
 			case 11:
 				dialogoLineas.push_back("¡Excelente trabajo! Has reunido los componentes indispensables.");
-				dialogoLineas.push_back("Tratando fibras del Arbol de Plata y sellos protectores...");
-				dialogoLineas.push_back("¡Aqui esta tu Capa de Aprendiz!");
-				dialogoLineas.push_back("Recuerda que su forro repele la hechiceria exterior.");
+				dialogoLineas.push_back("Tratando fibras del Árbol de Plata y sellos protectores...");
+				dialogoLineas.push_back("¡Aquí está tu Capa de Aprendiz!");
+				dialogoLineas.push_back("Recuerda que su forro repele la hechicería exterior.");
 				dialogoOpciones.push_back("[1] ¡Entendido!");
 				break;
 			case 12:
-				dialogoLineas.push_back("[CONFECCION EXITOSA: Capa Magica obtenida]");
-				dialogoLineas.push_back("Se consumieron: Fibra de Arbol, Tinta magica y Grimorio de Trazos.");
-				dialogoLineas.push_back("La Capa Magica ha sido equipada y agregada a tu inventario.");
+				dialogoLineas.push_back("[CONFECCIÓN EXITOSA: Capa Mágica obtenida]");
+				dialogoLineas.push_back("Se consumieron: Fibra de Árbol, Tinta mágica y Grimorio de Trazos.");
+				dialogoLineas.push_back("La Capa Mágica ha sido equipada y agregada a tu inventario.");
 				dialogoOpciones.push_back("[1] ¡Muchas gracias, Maestro Qifrey!");
 				break;
 			case 15:
 				dialogoLineas.push_back("Te queda excelente la Capa Mágica, Coco.");
-				dialogoLineas.push_back("Recuerda usar tus alas de aprendiz\ncon verdadera sabiduría y responsabilidad.");
+				dialogoLineas.push_back("Recuerda usar tus alas de aprendiz con sabiduría y responsabilidad.");
 				dialogoOpciones.push_back("[1] ¡Gracias, Maestro Qifrey!");
 				break;
 			case 20:
 				dialogoLineas.push_back("Eres bienvenida en el taller siempre, Coco.");
-				dialogoLineas.push_back("Cuídate de las corrientes del gran río.\nCruza siempre por los puentes arcanos.");
+				dialogoLineas.push_back("Cuídate de las corrientes del gran río. Cruza siempre por el puente.");
 				dialogoOpciones.push_back("[1] Gracias por el consejo, Maestro.");
 				break;
 			case 30:
@@ -423,21 +492,19 @@ private:
 				break;
 			case 35:
 				dialogoLineas.push_back("En la hechicería no existe tal cosa como un material 'básico'.");
-				dialogoLineas.push_back("Los sellos no despiertan con tinta ordinaria; solo la tinta de conjuracion,");
-				dialogoLineas.push_back("nacida de la savia del Arbol de Plata, canaliza el flujo magico al pergamino.");
-				dialogoLineas.push_back("Es la única que poseo en el taller... ¿Aún deseas aceptarla, Coco?");
+				dialogoLineas.push_back("Solo la tinta de conjuración, nacida de la savia del Árbol de Plata,");
+				dialogoLineas.push_back("canaliza el flujo mágico al pergamino. ¿Aún deseas aceptarla, Coco?");
 				dialogoOpciones.push_back("[1] ¡Sí, por favor! Prometo cuidarla y esforzarme al máximo.");
 				break;
 			case 40:
 				dialogoLineas.push_back("¡Increíble hallazgo, Coco! Esta tinta arcaica es justo lo");
 				dialogoLineas.push_back("que necesitábamos en el taller para restaurar pergaminos.");
 				dialogoLineas.push_back("Demuestras una gran curiosidad y respeto por este atelier.");
-				dialogoLineas.push_back("¡Has demostrado ser una verdadera amiga y gran aprendiz!");
 				dialogoOpciones.push_back("[1] ¡Me alegra mucho ser de ayuda, Maestro!");
 				break;
 			case 41:
 				dialogoLineas.push_back("[MISIÓN SECUNDARIA COMPLETADA]");
-				dialogoLineas.push_back("Entregaste la tinta arcaica al Maestro Qifrey.");
+				dialogoLineas.push_back("Entregaste la tinta especial al Maestro Qifrey.");
 				dialogoLineas.push_back("Tu nivel de confianza con Qifrey ahora es: Amigos (+50 pts)");
 				dialogoOpciones.push_back("[1] Continuar explorando");
 				break;
@@ -447,7 +514,7 @@ private:
 				dialogoOpciones.push_back("[1] Volver");
 				break;
 			default:
-				dialogoLineas.push_back("Continua tu aprendizaje con dedicacion, Coco.");
+				dialogoLineas.push_back("Continúa tu aprendizaje con dedicación, Coco.");
 				dialogoOpciones.push_back("[1] Salir");
 				break;
 			}
@@ -459,12 +526,12 @@ private:
 				dialogoOpciones.push_back("[1] Siguiente");
 				break;
 			case 201:
-				dialogoLineas.push_back("A la joven y pequeña Coco, ¿por qué entraste a mi torre?");
-				dialogoOpciones.push_back("[1] Necesito encontrar un Grimorio de Trazos que perdi.");
+				dialogoLineas.push_back("La joven y pequeña Coco... ¿por qué entraste a mi torre?");
+				dialogoOpciones.push_back("[1] Necesito encontrar un Grimorio de Trazos para mi práctica.");
 				dialogoOpciones.push_back("[2] ¿A ti qué te importa, Agott?");
 				break;
 			case 202:
-				dialogoLineas.push_back("Puedes encontrarlo en este montón de cajas si quieres...\nAl final, solo son basura.");
+				dialogoLineas.push_back("Puedes buscarlo empujando esas cajas si quieres...\nAl final, solo guardo basura ahí.");
 				dialogoOpciones.push_back("[1] Entendido");
 				break;
 			case 203:
@@ -473,34 +540,34 @@ private:
 				break;
 			case 210:
 				dialogoLineas.push_back("¿Qué pasó ahora, niña?");
-				if (libroEncontrado || tieneItem("Grimorio de Trazos")) {
-					dialogoOpciones.push_back("[1] Solo pasaba por aqui, ya recupere el Grimorio de Trazos, Agott.");
+				if (tieneItem("Grimorio de Trazos") || capaCrafteada) {
+					dialogoOpciones.push_back("[1] Solo pasaba por aquí, ya recuperé el Grimorio de Trazos, Agott.");
 				}
 				else {
 					dialogoOpciones.push_back("[1] Sigo buscando el Grimorio de Trazos, necesito ayuda...");
 				}
-				if (myrphonRescatado) {
-					dialogoOpciones.push_back("[2] Recuperé a su mascota, está a salvo con Richeh.");
+				if (myrphonRescatado && !agottSabeMyrphon) {
+					dialogoOpciones.push_back("[2] Recuperé a la mascota de Richeh, está a salvo en el sótano.");
 				}
 				break;
 			case 211:
-				dialogoLineas.push_back("No esperaba que lo encontraras en esta basura, jaja.");
+				dialogoLineas.push_back("No esperaba que lo encontraras entre tantas cajas, jaja.");
 				dialogoOpciones.push_back("[1] Continuar");
 				break;
 			case 212:
-				dialogoLineas.push_back("Sabia que te costaria trabajo... Prueba empujando las cajas de mi torre.");
+				dialogoLineas.push_back("Sabía que te costaría trabajo... Sigue empujando esas cajas.");
 				dialogoOpciones.push_back("[1] Gracias por nada...");
 				break;
 			case 220:
 				dialogoLineas.push_back("¿Por qué sigues aquí, Coco? No eres bienvenida.");
-				if (libroEncontrado || tieneItem("Grimorio de Trazos")) {
-					dialogoOpciones.push_back("[1] Nada, solo quería burlarme de tu cara.");
+				if (tieneItem("Grimorio de Trazos") || capaCrafteada) {
+					dialogoOpciones.push_back("[1] Nada, solo quería demostrar que lo encontré sola.");
 				}
 				else {
 					dialogoOpciones.push_back("[1] ¡Sigo buscando algo, deja de molestar!");
 				}
-				if (myrphonRescatado) {
-					dialogoOpciones.push_back("[2] Recuperé a su mascota, está a salvo con Richeh.");
+				if (myrphonRescatado && !agottSabeMyrphon) {
+					dialogoOpciones.push_back("[2] Recuperé a la mascota de Richeh, está a salvo en el sótano.");
 				}
 				break;
 			case 221:
@@ -508,8 +575,8 @@ private:
 				dialogoOpciones.push_back("[1] Salir");
 				break;
 			case 222:
-				dialogoLineas.push_back("¿Qué demonios estás buscando?");
-				dialogoOpciones.push_back("[1] ¡¡QUÉ TE IMPORTA!!");
+				dialogoLineas.push_back("¿Qué demonios estás buscando en mi torre?");
+				dialogoOpciones.push_back("[1] ¡Ya lo verás!");
 				break;
 			case 223:
 				dialogoLineas.push_back("...");
@@ -517,7 +584,7 @@ private:
 				break;
 			case 230:
 				dialogoLineas.push_back("El taller ya volvió a la normalidad.");
-				dialogoLineas.push_back("Deja de perder el tiempo y concéntrate en tu viaje.");
+				dialogoLineas.push_back("Deja de perder el tiempo y concéntrate en tu práctica.");
 				dialogoOpciones.push_back("[1] Salir");
 				break;
 			case 231:
@@ -556,7 +623,7 @@ private:
 			case 300:
 				dialogoLineas.push_back("*llorando*");
 				dialogoOpciones.push_back("[1] Hola, ¿por qué estás llorando?");
-				dialogoOpciones.push_back("[2] Disculpa... caí a este pozo buscando un objeto mágico...");
+				dialogoOpciones.push_back("[2] Disculpa... bajé por este pozo buscando un objeto mágico...");
 				break;
 			case 301:
 				dialogoLineas.push_back("...No es de tu incumbencia. Vete...");
@@ -567,7 +634,7 @@ private:
 			case 302:
 				dialogoLineas.push_back("¿Ayudarme?... No creo que puedas.");
 				dialogoLineas.push_back("...Mi Myrphon todavía no regresa. Se quedó atrapado");
-				dialogoLineas.push_back("en esa horrible cueva Serpentback tras el ataque...");
+				dialogoLineas.push_back("en el laberinto Serpentback tras el ataque...");
 				dialogoLineas.push_back("...Si de verdad quieres ayudar, trae a Myrphon de vuelta a este cuarto.");
 				dialogoOpciones.push_back("[1] ¡Acepto, traeré a Myrphon de vuelta!");
 				break;
@@ -577,23 +644,23 @@ private:
 				dialogoOpciones.push_back("[1] Salir...");
 				break;
 			case 304:
-				dialogoLineas.push_back("(Se seca las lagrimas desesperada con su tunica)");
-				dialogoLineas.push_back("¡¿D-De verdad harias eso por mi?! ¡Muchas gracias, por favor!");
-				dialogoLineas.push_back("¡Date prisa! Ese laberinto es muy peligroso y Myrphon no sabe defenderse...");
-				dialogoLineas.push_back("¡Traelo a salvo, por lo que mas quieras!");
-				dialogoOpciones.push_back("[1] ¡No te preocupes, lo traere de vuelta!");
+				dialogoLineas.push_back("(Se seca las lágrimas desesperada con su túnica)");
+				dialogoLineas.push_back("¡¿D-De verdad harías eso por mí?! ¡Muchas gracias!");
+				dialogoLineas.push_back("¡Date prisa! Serpentback está al sur del cruce y es muy peligroso...");
+				dialogoLineas.push_back("¡Tráelo a salvo, por lo que más quieras!");
+				dialogoOpciones.push_back("[1] ¡No te preocupes, lo traeré de vuelta!");
 				break;
 			case 310:
-				dialogoLineas.push_back("¿Un objeto magico?... Tengo la Pluma Termica (Searneedle) de Olruggio.");
-				dialogoLineas.push_back("Su punta se calienta al rojo vivo para quebrar roca, pero yo solo dibujo sellos diminutos.");
-				dialogoLineas.push_back("...No te la dare gratis mientras mi pobre Myrphon siga atrapado en la oscuridad.");
+				dialogoLineas.push_back("¿Un objeto mágico?... Tengo la Pluma Térmica (Searneedle) de Olruggio.");
+				dialogoLineas.push_back("Su punta se calienta al rojo vivo para quebrar roca.");
+				dialogoLineas.push_back("...No te la daré mientras mi pobre Myrphon siga atrapado en la oscuridad.");
 				dialogoOpciones.push_back("[1] Lamento escuchar eso... ¿Cómo te puedo ayudar a recuperarlo?");
 				dialogoOpciones.push_back("[2] Vaya, qué mal, y... ¿por un simple animal te pones a llorar?");
 				break;
 			case 311:
-				dialogoLineas.push_back("Mi Myrphon se asusto por el ataque de los Sombreros de Ala Ancha en Serpentback...");
-				dialogoLineas.push_back("Si entras alli y lo rescatas, la Pluma Termica sera tuya. ¿Aceptas?");
-				dialogoOpciones.push_back("[1] Sí.");
+				dialogoLineas.push_back("Mi Myrphon se asustó por el ataque de los Sombreros de Ala Ancha en Serpentback...");
+				dialogoLineas.push_back("Si vas al sur del cruce y lo rescatas, la Pluma Térmica será tuya. ¿Aceptas?");
+				dialogoOpciones.push_back("[1] Sí, lo rescataré.");
 				break;
 			case 312:
 				dialogoLineas.push_back("¡No es un simple animal! ¡Es mi amigo!");
@@ -607,9 +674,9 @@ private:
 				break;
 			case 321:
 				dialogoLineas.push_back("(Te mira de reojo de forma desconfiada) ...¿De verdad?...");
-				dialogoLineas.push_back("...Está bien. Se perdió en el laberinto Serpentback tras el ataque");
-				dialogoLineas.push_back("de Sombreros de Ala Ancha. Tráelo de vuelta a este cuarto.");
-				dialogoLineas.push_back("Traelo sano y salvo. Si lo logras, te entregare la Pluma Termica. No me falles.");
+				dialogoLineas.push_back("...Está bien. Se perdió en el laberinto Serpentback al sur del cruce");
+				dialogoLineas.push_back("tras el ataque de los Sombreros de Ala Ancha.");
+				dialogoLineas.push_back("Tráelo sano y salvo. Si lo logras, te entregaré la Pluma Térmica.");
 				dialogoOpciones.push_back("[1] ¡Haré lo mejor que pueda y te lo traeré!");
 				break;
 			case 330:
@@ -622,25 +689,25 @@ private:
 				dialogoOpciones.push_back("[1] Entendido...");
 				break;
 			case 350:
-				dialogoLineas.push_back("(Sus ojos se abren de par en par al ver al animal) \"¡¡Myrphon!!\"");
+				dialogoLineas.push_back("(Sus ojos se abren de par en par al ver a su pincelero) \"¡¡Myrphon!!\"");
 				dialogoOpciones.push_back("[1] Aquí está, sano y salvo.");
 				break;
 			case 351:
 				dialogoLineas.push_back("(Abraza fuertemente a su mascota mientras llora de alegría)");
 				dialogoLineas.push_back("¡Muchas gracias! Pensé que no volvería a verlo...");
-				dialogoLineas.push_back("Lo prometido es deuda. Toma la Pluma Termica Searneedle de Olruggio.");
-				dialogoLineas.push_back("Usa su calor para fracturar y fundir el muro de roca de la cueva misteriosa.");
+				dialogoLineas.push_back("Lo prometido es deuda. Toma la Pluma Térmica Searneedle de Olruggio.");
+				dialogoLineas.push_back("Úsala para fundir el muro de roca de la Cueva Misteriosa (al norte del cruce).");
 				dialogoOpciones.push_back("[1] ¡Muchas gracias, Richeh!");
 				break;
 			case 360:
-				dialogoLineas.push_back("( •u• ): ¡Hola! Myrphon y yo estamos muy felices");
-				dialogoLineas.push_back("gracias a ti. ¡¡Ten cuidado en tus viajes!!");
+				dialogoLineas.push_back("(•u•): ¡Hola! Myrphon y yo estamos muy felices gracias a ti.");
+				dialogoLineas.push_back("¡Ten cuidado en tus viajes, Coco!");
 				dialogoOpciones.push_back("[1] ¡Nos vemos, Richeh!");
 				break;
 			default:
 				dialogoLineas.push_back("*llorando*");
 				dialogoOpciones.push_back("[1] Hola, ¿por qué estás llorando?");
-				dialogoOpciones.push_back("[2] Disculpa... caí a este pozo buscando un objeto mágico...");
+				dialogoOpciones.push_back("[2] Disculpa... bajé por este pozo buscando un objeto mágico...");
 				break;
 			}
 		}
@@ -654,7 +721,7 @@ private:
 				break;
 			case 401:
 				dialogoLineas.push_back("...Richeh rechaza la rigidez de la Gran Sala y prefiere");
-				dialogoLineas.push_back("dibujar unicamente la magia que nace de su propio corazon.");
+				dialogoLineas.push_back("dibujar únicamente la magia que nace de su propio corazón.");
 				dialogoOpciones.push_back("[1] Cerrar");
 				break;
 			case 402:
@@ -677,17 +744,15 @@ private:
 				break;
 			case 410:
 				dialogoLineas.push_back("[DIARIO DEL ATELIER: MYRPHON PERDIDO]");
-				dialogoLineas.push_back("Richeh, compañera de cuarto de Agott, no le gustan las visitas");
-				dialogoLineas.push_back("desde que se perdió Myrphon, un pequeño pingüino con rasgos de grifo.");
-				dialogoLineas.push_back("Myrphon se perdió tras el ataque inesperado de unos magos oscuros");
-				dialogoLineas.push_back("en el laberinto subterráneo Serpentback durante el segundo examen...");
+				dialogoLineas.push_back("Richeh, compañera de cuarto de Agott, no admite visitas");
+				dialogoLineas.push_back("desde que se perdió Myrphon, su pequeño pincelero.");
+				dialogoLineas.push_back("Se extravió tras el ataque de unos Sombreros de Ala Ancha");
+				dialogoLineas.push_back("en Serpentback durante el segundo examen...");
 				dialogoOpciones.push_back("[1] Continuar...");
 				break;
 			case 411:
-				dialogoLineas.push_back("...El examen evaluaba si un aprendiz usa la magia en secreto.");
-				dialogoLineas.push_back("Se canceló por el caos, el pobre Myrphon quedó atrapado.");
-				dialogoLineas.push_back("Richeh y Agott tienen la esperanza de que algún aventurero");
-				dialogoLineas.push_back("valiente pueda encontrarlo sano y salvo.");
+				dialogoLineas.push_back("...El examen se canceló por el caos y Myrphon quedó atrapado.");
+				dialogoLineas.push_back("Richeh y Agott esperan que alguien valiente lo traiga de vuelta.");
 				dialogoOpciones.push_back("[1] Cerrar");
 				break;
 			default:
@@ -723,6 +788,8 @@ private:
 		if (dialogoNpc == "Qifrey") {
 			if (estadoDialogo == 1) {
 				if (opcion == 1) {
+					pidioMantoQifrey = true;
+					actualizarObjetivo();
 					if (capaCrafteada) estadoDialogo = 15;
 					else if (tieneItem("Fibra de Arbol") && tieneItem("Tinta magica") && tieneItem("Grimorio de Trazos")) estadoDialogo = 11;
 					else estadoDialogo = 10;
@@ -733,7 +800,7 @@ private:
 					else estadoDialogo = 30;
 				}
 				else if (opcion == 4) {
-					if (tieneItem("Frasco de Tinta") || tieneItem("Tinta de Viento")) estadoDialogo = 40;
+					if (!tintaSecundariaEntregada && (tieneItem("Frasco de Tinta") || tieneItem("Tinta de Viento"))) estadoDialogo = 40;
 					else {
 						cerrarDialogo();
 						return;
@@ -751,10 +818,10 @@ private:
 					quitarItem("Fibra de Arbol");
 					quitarItem("Tinta magica");
 					quitarItem("Grimorio de Trazos");
-					agregarItem("Capa Magica", "Manto de aprendiz tejido con fibras del Arbol de Plata. Protege y repele la hechiceria.", "Equipamiento Magico");
+					agregarItem("Capa Magica", "Manto de aprendiz tejido con fibras del Árbol de Plata. Protege y repele la hechicería.", "Equipamiento Mágico");
 					capaCrafteada = true;
 					confianzaQifrey = 2;
-					objetivoActual = "¡Capa Mágica crafteada! ¡Misión cumplida!";
+					actualizarObjetivo();
 					estadoDialogo = 12;
 					actualizarDialogoV1();
 				}
@@ -807,7 +874,7 @@ private:
 					else if (agregarItem("Tinta magica", "Tinta de plata otorgada por Qifrey para trazar sellos.", "Consumible Mágico")) {
 						tintaMagicaEntregada = true;
 						if (confianzaQifrey < 1) confianzaQifrey = 1;
-						objetivoActual = "Buscar Fibra de Arbol y Grimorio de Trazos";
+						actualizarObjetivo();
 						estadoDialogo = 33;
 					}
 					else estadoDialogo = 99;
@@ -820,8 +887,9 @@ private:
 				return;
 			}
 			if (estadoDialogo == 40) {
-				quitarItem("Frasco de Tinta");
-				quitarItem("Tinta de Viento");
+				if (tieneItem("Frasco de Tinta")) quitarItem("Frasco de Tinta");
+				else if (tieneItem("Tinta de Viento")) quitarItem("Tinta de Viento");
+				tintaSecundariaEntregada = true;
 				confianzaQifrey = 2;
 				estadoDialogo = 41;
 				actualizarDialogoV1();
@@ -854,15 +922,15 @@ private:
 				return;
 			}
 			if (estadoDialogo == 210) {
-				if (opcion == 2 && myrphonRescatado) estadoDialogo = 231;
-				else if (libroEncontrado || tieneItem("Grimorio de Trazos")) estadoDialogo = 211;
+				if (opcion == 2 && myrphonRescatado && !agottSabeMyrphon) estadoDialogo = 231;
+				else if (tieneItem("Grimorio de Trazos") || capaCrafteada) estadoDialogo = 211;
 				else estadoDialogo = 212;
 				actualizarDialogoV1();
 				return;
 			}
 			if (estadoDialogo == 220) {
-				if (opcion == 2 && myrphonRescatado) estadoDialogo = 231;
-				else if (libroEncontrado || tieneItem("Grimorio de Trazos")) {
+				if (opcion == 2 && myrphonRescatado && !agottSabeMyrphon) estadoDialogo = 231;
+				else if (tieneItem("Grimorio de Trazos") || capaCrafteada) {
 					if (confianzaAgott > 0) confianzaAgott--;
 					estadoDialogo = 221;
 				}
@@ -883,7 +951,7 @@ private:
 			}
 			if (estadoDialogo == 235) {
 				agottSabeMyrphon = true;
-				confianzaAgott++;
+				confianzaAgott = 2;
 				cerrarDialogo();
 				return;
 			}
@@ -910,8 +978,12 @@ private:
 			if (estadoDialogo == 302) {
 				misionMyrphonActiva = true;
 				if (confianzaRicheh < 2) confianzaRicheh++;
-				objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
-				if (myrphonObjeto != nullptr) myrphonObjeto->setVisible(true);
+				if (myrphonObjeto != nullptr) {
+					myrphonObjeto->setX(116 * 32);
+					myrphonObjeto->setY(60 * 32);
+					myrphonObjeto->setVisible(true);
+				}
+				actualizarObjetivo();
 				estadoDialogo = 304;
 				actualizarDialogoV1();
 				return;
@@ -932,8 +1004,12 @@ private:
 			}
 			if (estadoDialogo == 311) {
 				misionMyrphonActiva = true;
-				objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
-				if (myrphonObjeto != nullptr) myrphonObjeto->setVisible(true);
+				if (myrphonObjeto != nullptr) {
+					myrphonObjeto->setX(116 * 32);
+					myrphonObjeto->setY(60 * 32);
+					myrphonObjeto->setVisible(true);
+				}
+				actualizarObjetivo();
 				estadoDialogo = 304;
 				actualizarDialogoV1();
 				return;
@@ -953,8 +1029,12 @@ private:
 			if (estadoDialogo == 321) {
 				misionMyrphonActiva = true;
 				richehEnojada = false;
-				objetivoActual = "Buscar a Myrphon en el laberinto Serpentback";
-				if (myrphonObjeto != nullptr) myrphonObjeto->setVisible(true);
+				if (myrphonObjeto != nullptr) {
+					myrphonObjeto->setX(116 * 32);
+					myrphonObjeto->setY(60 * 32);
+					myrphonObjeto->setVisible(true);
+				}
+				actualizarObjetivo();
 				estadoDialogo = 304;
 				actualizarDialogoV1();
 				return;
@@ -977,13 +1057,13 @@ private:
 				dioVaraRicheh = true;
 				misionMyrphonActiva = false;
 				if (!tieneItem("Pluma Termica")) {
-					agregarItem("Pluma Termica", "Pluma Searneedle creada por Olruggio. Calienta su punta al rojo vivo, fundiendo y quebrando roca solida.", "Herramienta Arcana");
-					mensajeTemporal = "[Recibiste: Pluma Termica]";
-					ticksMensajeTemporal = 90;
+					agregarItem("Pluma Termica", "Pluma Searneedle creada por Olruggio. Calienta su punta al rojo vivo para fundir roca sólida.", "Herramienta Arcana");
+					mensajeTemporal = "[Recibiste: Pluma Térmica]";
+					ticksMensajeTemporal = 100;
 				}
 				confianzaRicheh = 2;
-				objetivoActual = "Usar la Pluma Termica para quebrar la pared de la cueva";
 				myrphonConRicheh = true;
+				actualizarObjetivo();
 				cerrarDialogo();
 				return;
 			}
@@ -1047,6 +1127,7 @@ private:
 		if (ticksTypewriter % 2 != 0) return;
 		caracteresVisibles += 2;
 		if (caracteresVisibles > texto->Length) caracteresVisibles = texto->Length;
+		if (ticksTypewriter % 4 == 0) GestorAudio::ReproducirSfxDialogo();
 	}
 
 	bool posicionLibre(int nuevoX, int nuevoY) {
@@ -1054,6 +1135,17 @@ private:
 		if (nuevoX + jugador->getAncho() > mapaActual->getAnchoTotalPixels()) return false;
 		if (nuevoY + jugador->getAlto() > mapaActual->getAltoTotalPixels()) return false;
 		if (mapaActual->esColisionSolida(nuevoX + 3, nuevoY + 14, jugador->getAncho() - 6, jugador->getAlto() - 16)) return false;
+
+		if (!enPozo && !misionMyrphonActiva) {
+			int centroNuevoCol = (nuevoX + jugador->getAncho() / 2) / Configuracion::TILE_SIZE;
+			int centroNuevoFila = (nuevoY + jugador->getAlto() / 2) / Configuracion::TILE_SIZE;
+			if (centroNuevoCol >= 115 && centroNuevoFila >= 55 && centroNuevoFila <= 66) {
+				mensajeTemporal = "Coco: Está muy oscuro por aquí... debería volver (habla con Richeh primero).";
+				ticksMensajeTemporal = 85;
+				return false;
+			}
+		}
+
 		Rectangle rect(nuevoX + 3, nuevoY + 14, jugador->getAncho() - 6, jugador->getAlto() - 16);
 		for (size_t i = 0; i < listaNPCs.size(); i++) {
 			if (rect.IntersectsWith(listaNPCs[i]->getCollisionRect())) return false;
@@ -1080,36 +1172,30 @@ private:
 	bool estaEnTorre() {
 		int cx = jugador->getX() + jugador->getAncho() / 2;
 		int cy = jugador->getY() + jugador->getAlto() / 2;
-		int col = cx / Configuracion::TILE_SIZE;
-		int fila = cy / Configuracion::TILE_SIZE;
-		return col >= 35 && col <= 47 && fila >= 13 && fila <= 19;
+		return mapa->determinarCuarto(cx, cy) == 3;
 	}
 
 	void actualizarObjetivoCercano() {
 		promptInteraccion = "";
 		tipoObjetivo = INTERACCION_NINGUNA;
 		indiceObjetivo = -1;
-		if (dialogoActivo || transicionPozoActiva || myrphonCorriendo) return;
-		if (ticksMensajeTemporal > 0 && !mensajeTemporal.empty()) {
-			promptInteraccion = "";
-			return;
-		}
+		if (enIntro || dialogoActivo || transicionPozoActiva || myrphonCorriendo || myrphonHuyendo) return;
 
 		int centroX = jugador->getX() + jugador->getAncho() / 2;
 		int centroY = jugador->getY() + jugador->getAlto() / 2;
 
 		if (enPozo) {
-			if (abs(centroX - mapaPozo->getPuntoSalidaPozoX()) <= 60 && abs(centroY - mapaPozo->getPuntoSalidaPozoY()) <= 60) {
+			if (abs(centroX - (mapaPozo->getPuntoSalidaPozoX() + 32)) <= 64 && abs(centroY - (mapaPozo->getPuntoSalidaPozoY() + 32)) <= 64) {
 				tipoObjetivo = INTERACCION_SALIDA_POZO;
 				promptInteraccion = "Presiona [Espacio] para subir a la torre";
 				return;
 			}
-			if (abs(centroX - 22 * 32) <= 42 && abs(centroY - 11 * 32) <= 42) {
+			if (abs(centroX - (13 * 32 + 16)) <= 42 && abs(centroY - (5 * 32 + 16)) <= 42) {
 				tipoObjetivo = INTERACCION_LETRERO_CURIOSIDADES;
 				promptInteraccion = "Presiona [Espacio] para leer: Curiosidades de Richeh";
 				return;
 			}
-			if (abs(centroX - 38 * 32) <= 42 && abs(centroY - 11 * 32) <= 42) {
+			if (abs(centroX - (19 * 32 + 16)) <= 42 && abs(centroY - (5 * 32 + 16)) <= 42) {
 				tipoObjetivo = INTERACCION_LETRERO_DIARIO;
 				promptInteraccion = "Presiona [Espacio] para leer: Diario del Atelier";
 				return;
@@ -1124,8 +1210,8 @@ private:
 
 		if (!paredRocaRota && mapa->estaCercaParedRoca(jugador->getX(), jugador->getY(), jugador->getAncho(), jugador->getAlto())) {
 			tipoObjetivo = INTERACCION_PARED_ROCA;
-			if (tieneItem("Pluma Termica")) promptInteraccion = "ENTER / ESPACIO: Usar Pluma Termica para quebrar la pared de roca";
-			else promptInteraccion = "Coco: La pared de roca esta agrietada... Necesito una pluma termica para quebrarla.";
+			if (tieneItem("Pluma Termica")) promptInteraccion = "Presiona [Espacio] para usar Pluma Térmica y romper la roca";
+			else promptInteraccion = "Coco: La pared de roca está agrietada... Necesito una pluma térmica.";
 			return;
 		}
 
@@ -1151,7 +1237,11 @@ private:
 		Rectangle rectJugador = jugador->getRectangle();
 		for (size_t i = 0; i < listaObjetos.size(); i++) {
 			if (!listaObjetos[i]->getVisible()) continue;
-			if (!listaObjetos[i]->getInteractionRect().IntersectsWith(rectJugador)) continue;
+			if (listaObjetos[i]->getTipo() == ObjetoTroll) {
+				Rectangle rectTroll(listaObjetos[i]->getX() - 6, 33 * 32, 48, 7 * 32);
+				if (!rectTroll.IntersectsWith(rectJugador)) continue;
+			}
+			else if (!listaObjetos[i]->getInteractionRect().IntersectsWith(rectJugador)) continue;
 			int d = distanciaAlCentro(listaObjetos[i]);
 			if (d >= mejor) continue;
 			mejor = d;
@@ -1164,17 +1254,22 @@ private:
 			else {
 				tipoObjetivo = INTERACCION_OBJETO;
 				if (tipo == ObjetoGato) promptInteraccion = "Presiona [Espacio] para acariciar al gato de Richeh";
-				else if (tipo == ObjetoTroll) promptInteraccion = "Presiona [Espacio] para examinar el portal extraño";
+				else if (tipo == ObjetoTroll) promptInteraccion = "Presiona [Espacio] para investigar el borde oculto";
 				else if (tipo == ObjetoMontonCajas) promptInteraccion = "Presiona [Espacio] para revisar las cajas";
-				else if (tipo == ObjetoMyrphon) promptInteraccion = "Presiona [Espacio] para entrar al laberinto Serpentback";
+				else if (tipo == ObjetoMyrphon) promptInteraccion = "Presiona [Espacio] para entrar al Laberinto Serpentback";
 				else if (tipo == ObjetoLetrero) promptInteraccion = "Presiona [Espacio] para leer el letrero";
 				else promptInteraccion = "Presiona [Espacio] para recoger: " + listaObjetos[i]->getNombre();
 			}
+		}
+
+		if (tipoObjetivo == INTERACCION_NINGUNA && estaEnTorre()) {
+			promptInteraccion = "Empuja las cajas de madera para descubrir qué esconden";
 		}
 	}
 
 	void bajarPozo() {
 		if (transicionPozoActiva) return;
+		GestorAudio::ReproducirSfxAccion();
 		posAtelierX = jugador->getX();
 		posAtelierY = jugador->getY();
 		transicionPozoActiva = true;
@@ -1186,6 +1281,7 @@ private:
 
 	void subirPozo() {
 		if (transicionPozoActiva) return;
+		GestorAudio::ReproducirSfxAccion();
 		transicionPozoActiva = true;
 		transicionBajandoPozo = false;
 		ticksTransicionPozo = 60;
@@ -1209,6 +1305,10 @@ private:
 		else {
 			enPozo = false;
 			mapaActual = mapa;
+			if (posAtelierX <= 0 || posAtelierY <= 0) {
+				posAtelierX = 120 * 32;
+				posAtelierY = 36 * 32;
+			}
 			jugador->setX(posAtelierX);
 			jugador->setY(posAtelierY);
 			jugador->detener();
@@ -1221,6 +1321,27 @@ private:
 	}
 
 	void actualizarCorridaMyrphon() {
+		if (myrphonHuyendo) {
+			ticksMyrphonHuyendo++;
+			if (myrphonObjeto != nullptr) {
+				int targetX = 131 * 32;
+				int curX = myrphonObjeto->getX();
+				if (curX < targetX) myrphonObjeto->setX(curX + 6);
+			}
+			if (ticksMyrphonHuyendo >= 65) {
+				myrphonHuyendo = false;
+				myrphonEscapado = true;
+				ticksMyrphonHuyendo = 0;
+				if (myrphonObjeto != nullptr) {
+					myrphonObjeto->setX(131 * 32);
+					myrphonObjeto->setY(60 * 32);
+				}
+				mensajeTemporal = "Myrphon huyó al Laberinto Serpentback. ¡Pulsa [Espacio] frente a la entrada!";
+				ticksMensajeTemporal = 120;
+			}
+			return;
+		}
+
 		if (!myrphonCorriendo) return;
 		ticksMyrphonCorriendo++;
 		if (ticksMyrphonCorriendo < 50) return;
@@ -1239,20 +1360,21 @@ private:
 			return;
 		}
 		objeto->recolectar();
+		GestorAudio::ReproducirSfxAccion();
 		if (nombre == "Grimorio de Trazos") libroEncontrado = true;
 		mensajeTemporal = "[Recogiste: " + nombre + "]";
-		ticksMensajeTemporal = 80;
+		ticksMensajeTemporal = 85;
 		actualizarObjetivo();
 	}
 
 	void crearCajasTorre() {
 		std::srand((unsigned int)std::time(NULL));
 		std::vector<std::pair<int, int> > candidatos;
-		for (int y = 14; y <= 18; y++) {
-			for (int x = 36; x <= 46; x++) {
-				if (x == 41 && y == 16) continue;
-				if ((x == 40 || x == 41) && y == 18) continue;
-				candidatos.push_back(std::make_pair(x, y));
+		int cols[] = { 117, 121, 125 };
+		int rows[] = { 32, 36, 40 };
+		for (int r = 0; r < 3; r++) {
+			for (int c = 0; c < 3; c++) {
+				candidatos.push_back(std::make_pair(cols[c], rows[r]));
 			}
 		}
 		for (int i = (int)candidatos.size() - 1; i > 0; i--) {
@@ -1261,7 +1383,7 @@ private:
 			candidatos[i] = candidatos[j];
 			candidatos[j] = temp;
 		}
-		int numCajas = 6 + (rand() % 3);
+		int numCajas = 6;
 		if (numCajas > (int)candidatos.size()) numCajas = (int)candidatos.size();
 		int indiceLibro = rand() % numCajas;
 		int indicePozo = (indiceLibro + 1 + (rand() % (numCajas - 1))) % numCajas;
@@ -1275,8 +1397,8 @@ private:
 		for (size_t i = 0; i < listaCajas.size(); i++) {
 			CajaMovible* caja = listaCajas[i];
 			if (caja->getContenido() == CajaGrimorio && grimorioObjeto != nullptr) {
-				grimorioObjeto->setX(caja->getTileX() * 32 + 4);
-				grimorioObjeto->setY(caja->getTileY() * 32 + 4);
+				grimorioObjeto->setX(caja->getTileX() * 32 + 16);
+				grimorioObjeto->setY(caja->getTileY() * 32 + 16);
 				grimorioObjeto->setVisible(false);
 			}
 			if (caja->getContenido() == CajaPozo && pozoObjeto != nullptr) {
@@ -1288,12 +1410,12 @@ private:
 	}
 
 	bool cajaDestinoLibre(CajaMovible* caja, int tx, int ty) {
-		if (tx < 35 || tx > 47 || ty < 13 || ty > 19) return false;
-		if (mapa->esColisionSolida(tx * 32 + 4, ty * 32 + 4, 24, 24)) return false;
-		Rectangle destino(tx * 32, ty * 32, 32, 32);
+		if (tx < 113 || tx + 1 > 133 || ty < 30 || ty + 1 > 44) return false;
+		if (mapa->esColisionSolida(tx * 32 + 4, ty * 32 + 4, 56, 56)) return false;
+		Rectangle destino(tx * 32, ty * 32, 64, 64);
 		for (size_t i = 0; i < listaCajas.size(); i++) {
 			if (listaCajas[i] == caja) continue;
-			if (listaCajas[i]->getTileX() == tx && listaCajas[i]->getTileY() == ty) return false;
+			if (destino.IntersectsWith(listaCajas[i]->getRectangle())) return false;
 		}
 		for (size_t i = 0; i < listaNPCs.size(); i++) {
 			if (destino.IntersectsWith(listaNPCs[i]->getCollisionRect())) return false;
@@ -1317,17 +1439,17 @@ private:
 				cajasMovidasContador++;
 			}
 			caja->mover(dx, dy);
-			if (caja->getContenido() == CajaGrimorio && !libroEncontrado) {
-				libroEncontrado = true;
+			if (caja->getContenido() == CajaGrimorio && !grimorioDescubierto) {
+				grimorioDescubierto = true;
 				if (grimorioObjeto != nullptr) {
-					grimorioObjeto->setX(origenX * 32 + 4);
-					grimorioObjeto->setY(origenY * 32 + 4);
+					grimorioObjeto->setX(origenX * 32 + 16);
+					grimorioObjeto->setY(origenY * 32 + 16);
 					grimorioObjeto->setVisible(true);
 				}
-				if (cajasMovidasContador == 1) mensajeTemporal = "Coco: ¡Pff, a la primera!";
-				else if (cajasMovidasContador == 2) mensajeTemporal = "Coco: ¡Bueno, no costó tanto encontrarlo!";
-				else mensajeTemporal = "Coco: ¡Por fin, lo encontré!";
-				ticksMensajeTemporal = 90;
+				if (cajasMovidasContador == 1) mensajeTemporal = "Coco: ¡Pff, a la primera! Ahí está el Grimorio.";
+				else if (cajasMovidasContador == 2) mensajeTemporal = "Coco: ¡Bueno, no costó tanto encontrar el Grimorio!";
+				else mensajeTemporal = "Coco: ¡Por fin encontré el Grimorio de Trazos!";
+				ticksMensajeTemporal = 95;
 				actualizarObjetivo();
 			}
 			else if (caja->getContenido() == CajaPozo && !pozoDescubierto) {
@@ -1353,14 +1475,98 @@ private:
 		return false;
 	}
 
+	void crearEnemigosNivel1() {
+		listaEnemigos.push_back(new Enemigo(88 * 32, 46 * 32, 1, 41 * 32, 57 * 32, "Sombrero de Ala Ancha", 2));
+		listaEnemigos.push_back(new Enemigo(94 * 32, 60 * 32, 0, 92 * 32, 112 * 32, "Sombrero de Ala Ancha", 2));
+		listaEnemigos.push_back(new Enemigo(104 * 32, 63 * 32, 1, 59 * 32, 68 * 32, "Sombrero de Ala Ancha", 2));
+	}
+
+	bool aplicarDanioEnemigoNivel1(const std::string& mensaje) {
+		GestorAudio::ReproducirSfxAccion();
+		jugador->restarVida();
+		invulnerableTicks = 50;
+		if (jugador->getVidas() <= 0) {
+			iniciarNivel(1);
+			enIntro = false;
+			mensajeTemporal = "Has perdido todas tus vidas ante los Sombreros de Ala Ancha. Nivel reiniciado.";
+			ticksMensajeTemporal = 130;
+			return true;
+		}
+		int retrocesoX = jugador->getX() - 28;
+		if (posicionLibre(retrocesoX, jugador->getY())) jugador->setX(retrocesoX);
+		mensajeTemporal = mensaje;
+		ticksMensajeTemporal = 90;
+		return false;
+	}
+
+	bool proyectilGolpeaObstaculo(int px, int py) {
+		if (px < 0 || py < 0 || px + 24 > mapaActual->getAnchoTotalPixels() || py + 24 > mapaActual->getAltoTotalPixels()) return true;
+		if (mapaActual->esColisionSolida(px + 6, py + 6, 12, 12)) return true;
+		Rectangle rectP(px + 6, py + 6, 12, 12);
+		for (size_t i = 0; i < listaArboles.size(); i++) {
+			if (rectP.IntersectsWith(listaArboles[i]->getTrunkRect())) return true;
+		}
+		return false;
+	}
+
+	void actualizarEnemigosNivel1() {
+		if (enPozo || enIntro || dialogoActivo || transicionPozoActiva || myrphonHuyendo) return;
+		if (invulnerableTicks > 0) invulnerableTicks--;
+
+		Rectangle rectJugador(jugador->getX() + 4, jugador->getY() + 10, jugador->getAncho() - 8, jugador->getAlto() - 12);
+		for (size_t i = 0; i < listaEnemigos.size(); i++) {
+			Enemigo* e = listaEnemigos[i];
+			if (e == nullptr || !e->getActivo()) continue;
+			e->moverPatrulla();
+			if (distanciaAlCentro(e) <= 420) vioEnemigos = true;
+			if ((ticksJuego + (int)i * 21) % 68 == 0 && distanciaAlCentro(e) <= 460 && proyectilesEnemigos.size() < 16) {
+				proyectilesEnemigos.push_back(ProyectilMago::CrearPorDireccion(e->getX() + 4, e->getY() + 4, e->getDireccion(), 5));
+			}
+			if (invulnerableTicks == 0 && rectJugador.IntersectsWith(e->getCollisionRect())) {
+				aplicarDanioEnemigoNivel1("¡Un Sombrero de Ala Ancha te atacó! (-1 corazón)");
+				return;
+			}
+		}
+
+		for (size_t i = 0; i < proyectilesEnemigos.size(); ) {
+			ProyectilMago& p = proyectilesEnemigos[i];
+			if (p.impactando) {
+				p.avanzarImpacto();
+				if (!p.activo) {
+					proyectilesEnemigos.erase(proyectilesEnemigos.begin() + i);
+					continue;
+				}
+				i++;
+				continue;
+			}
+			p.x += p.dx;
+			p.y += p.dy;
+			p.distanciaRecorrida += (p.dx != 0 ? (p.dx > 0 ? p.dx : -p.dx) : (p.dy > 0 ? p.dy : -p.dy));
+			if (p.distanciaRecorrida > 420 || proyectilGolpeaObstaculo(p.x, p.y)) {
+				p.iniciarImpacto();
+				i++;
+				continue;
+			}
+			if (rectJugador.IntersectsWith(p.getCollisionRect())) {
+				p.iniciarImpacto();
+				if (invulnerableTicks == 0) {
+					if (aplicarDanioEnemigoNivel1("¡Un disparo oscuro te alcanzó! (-1 corazón)")) return;
+				}
+			}
+			i++;
+		}
+	}
+
 public:
-	ControladorJuego() {
+	Nivel1() {
 		camX = 0;
 		camY = 0;
 		nivelActual = 1;
 		ticksJuego = 0;
 		ticksTituloUbicacion = 0;
 		ticksTituloNivel = 0;
+		invulnerableTicks = 0;
+		enIntro = true;
 		enPozo = false;
 		posAtelierX = 0;
 		posAtelierY = 0;
@@ -1376,6 +1582,7 @@ public:
 		habloQifrey = false;
 		habloAgott = false;
 		habloRicheh = false;
+		pidioMantoQifrey = false;
 		confianzaQifrey = 0;
 		confianzaAgott = 1;
 		confianzaRicheh = 1;
@@ -1387,10 +1594,13 @@ public:
 		agottSabeMyrphon = false;
 		capaCrafteada = false;
 		tintaMagicaEntregada = false;
+		tintaSecundariaEntregada = false;
+		grimorioDescubierto = false;
 		libroEncontrado = false;
 		pozoDescubierto = false;
 		paredRocaRota = false;
 		entroTorre = false;
+		monologoCruceActivado = false;
 		gatoAcariciado = false;
 		trollDescubierto = false;
 		misionCompletada = false;
@@ -1401,6 +1611,9 @@ public:
 		transicionPozoActiva = false;
 		transicionBajandoPozo = true;
 		ticksTransicionPozo = 0;
+		myrphonHuyendo = false;
+		myrphonEscapado = false;
+		ticksMyrphonHuyendo = 0;
 		myrphonCorriendo = false;
 		ticksMyrphonCorriendo = 0;
 		myrphonConRicheh = false;
@@ -1412,23 +1625,31 @@ public:
 		grimorioObjeto = nullptr;
 		richehPozo = nullptr;
 		cajasMovidasContador = 0;
-		audioHabilitado = false;
+		audioHabilitado = true;
+		guiaActiva = true;
+		GestorAudio::SetSfxHabilitado(true);
 
 		bmpCoco = CargarBitmapSeguro("sprites/Coco_Spritesheet.png");
 		bmpQifrey = CargarBitmapSeguro("sprites/Qifrey_Spritesheet.png");
-		bmpTartah = CargarBitmapSeguro("sprites/Tartah_Spritesheet.png");
-		bmpCoustas = CargarBitmapSeguro("sprites/Coustas_Spritesheet.png");
+		bmpAgott = CargarBitmapSeguro("sprites/Agott_Spritesheet.png");
+		bmpRicheh = CargarBitmapSeguro("sprites/Richeh_Spritesheet.png");
+		bmpEnemigo = CargarBitmapSeguro("sprites/Mago_Cueva_Spritesheet.png");
+		bmpDisparo = CargarBitmapSeguro("sprites/Disparo_Cueva_Spritesheet.png");
+		bmpMyrphon = CargarBitmapSeguro("sprites/Myrphon_Spritesheet.png");
 
-		mapa = new MapaTileMatrix();
-		mapaPozo = new MapaTileMatrix();
+		inicializarLluvia();
+
+		mapa = new MapaNivel1();
+		mapaPozo = new MapaNivel1();
 		mapaPozo->cargarPozo();
 		mapaActual = mapa;
 		inventario = new Inventario();
 		jugador = new Protagonista(mapa->getPuntoInicioX() + 4, mapa->getPuntoInicioY(), 1);
 		iniciarNivel(1);
+		asegurarPartidaRegenerativa();
 	}
 
-	~ControladorJuego() {
+	~Nivel1() {
 		audio.detener();
 		limpiarEntidades();
 		if (jugador != nullptr) delete jugador;
@@ -1444,17 +1665,219 @@ public:
 	int getCapacidadInventario() { return inventario->getCapacidad(); }
 	bool getMisionCompletada() { return misionCompletada; }
 	bool getMyrphonRescatado() { return myrphonRescatado; }
+	bool getEnIntro() { return enIntro; }
+	bool getEnTorre() { return !enPozo && estaEnTorre(); }
+	bool getGuiaActiva() { return guiaActiva; }
+	void alternarGuia() { guiaActiva = !guiaActiva; }
+
+	void obtenerMisiones(std::vector<MisionInfo>& lista, int& indiceActual) {
+		lista.clear();
+		bool paso1 = pidioMantoQifrey;
+		bool paso2 = tieneItem("Grimorio de Trazos") || capaCrafteada;
+		bool paso3 = pozoDescubierto || habloRicheh || dioVaraRicheh;
+		bool paso4 = misionMyrphonActiva || myrphonRescatado || dioVaraRicheh;
+		bool paso5 = dioVaraRicheh;
+		bool paso6 = paredRocaRota && (tieneItem("Fibra de Arbol") || capaCrafteada);
+		bool paso7 = tieneItem("Tinta magica") || capaCrafteada;
+		bool paso8 = misionCompletada;
+
+		lista.push_back(MisionInfo{ "1. Hablar con el Maestro Qifrey", "Sal de la choza y baja por el sendero sur hasta su despacho.", paso1 });
+		lista.push_back(MisionInfo{ "2. Conseguir el Grimorio de Trazos", "Cruza el puente al este, entra a la Torre de Agott y empuja las cajas.", paso2 });
+		lista.push_back(MisionInfo{ "3. Bajar al sótano oculto", "Descubre el pozo debajo de las cajas en la torre y desciende.", paso3 });
+		lista.push_back(MisionInfo{ "4. Aceptar el rescate de Myrphon", "Habla con Richeh en el sótano y ofrece ayudar a buscar a su mascota.", paso4 });
+		lista.push_back(MisionInfo{ "5. Rescatar a Myrphon y volver con Richeh", "Atrapa a Myrphon en el laberinto Serpentback y recibe la Pluma Térmica.", paso5 });
+		lista.push_back(MisionInfo{ "6. Romper la Cueva Misteriosa", "Ve al noreste, quiebra la roca con la Pluma Térmica y recoge la Fibra.", paso6 });
+		lista.push_back(MisionInfo{ "7. Obtener la Tinta mágica", "Pídele materiales especiales para tus prácticas al Maestro Qifrey.", paso7 });
+		lista.push_back(MisionInfo{ "8. Confeccionar la Capa de Aprendiz", "Regresa con Qifrey y entrégale los tres componentes reunidos.", paso8 });
+
+		indiceActual = 7;
+		for (int i = 0; i < (int)lista.size(); i++) {
+			if (!lista[i].completada) {
+				indiceActual = i;
+				break;
+			}
+		}
+	}
+
+	void obtenerGuiaPasoActual(std::string& titulo, std::string& detalle, int& pasoNum, int& totalPasos, int& targetX, int& targetY, bool& mostrarFlecha) {
+		totalPasos = 8;
+		mostrarFlecha = true;
+		if (misionCompletada) {
+			pasoNum = 8;
+			titulo = "Nivel completado";
+			detalle = "Capa de Aprendiz lista";
+			targetX = mapa->getPuntoQifreyX() + 14;
+			targetY = mapa->getPuntoQifreyY() + 16;
+			return;
+		}
+		if (!pidioMantoQifrey) {
+			pasoNum = 1;
+			titulo = "Habla con el Maestro Qifrey";
+			detalle = "Sigue el camino hacia el sur hasta su despacho";
+			targetX = mapa->getPuntoQifreyX() + 14;
+			targetY = mapa->getPuntoQifreyY() + 16;
+			return;
+		}
+		if (!tieneItem("Grimorio de Trazos") && !capaCrafteada) {
+			pasoNum = 2;
+			if (enPozo) {
+				titulo = "Sube de la torre";
+				detalle = "Ve hacia las escaleras de salida";
+				targetX = mapaPozo->getPuntoSalidaPozoX() + 32;
+				targetY = mapaPozo->getPuntoSalidaPozoY() + 32;
+			}
+			else if (grimorioDescubierto && grimorioObjeto != nullptr && grimorioObjeto->getVisible()) {
+				titulo = "Recoge el Grimorio de Trazos";
+				detalle = "Acércate al pergamino revelado para recogerlo";
+				targetX = grimorioObjeto->getX() + 16;
+				targetY = grimorioObjeto->getY() + 16;
+			}
+			else if (estaEnTorre()) {
+				titulo = "Busca el Grimorio en la Torre";
+				detalle = "Empuja las cajas de esta habitación";
+				targetX = 112 * 32;
+				targetY = 36 * 32;
+				mostrarFlecha = false;
+			}
+			else {
+				titulo = "Ve a la Torre de Agott";
+				detalle = "Cruza el puente al este y busca el grimorio";
+				targetX = 112 * 32;
+				targetY = 36 * 32;
+			}
+			return;
+		}
+		if (!dioVaraRicheh) {
+			if (!misionMyrphonActiva) {
+				pasoNum = (pozoDescubierto || enPozo) ? 4 : 3;
+				if (enPozo && richehPozo != nullptr) {
+					titulo = "Habla con Richeh";
+					detalle = "Acércate en el sótano y ofrece tu ayuda";
+					targetX = richehPozo->getX() + 14;
+					targetY = richehPozo->getY() + 16;
+				}
+				else if (pozoDescubierto && pozoObjeto != nullptr && pozoObjeto->getVisible()) {
+					titulo = "Baja por el pozo oculto";
+					detalle = "Acércate al pozo descubierto para descender";
+					targetX = pozoObjeto->getX() + 32;
+					targetY = pozoObjeto->getY() + 32;
+				}
+				else if (estaEnTorre()) {
+					titulo = "Encuentra el pozo oculto";
+					detalle = "Empuja las cajas de esta habitación";
+					targetX = 112 * 32;
+					targetY = 36 * 32;
+					mostrarFlecha = false;
+				}
+				else {
+					titulo = "Vuelve a la Torre de Agott";
+					detalle = "Busca entre las cajas de la torre";
+					targetX = 112 * 32;
+					targetY = 36 * 32;
+				}
+				return;
+			}
+			if (!myrphonRescatado) {
+				pasoNum = 5;
+				if (enPozo) {
+					titulo = "Sal del sótano";
+					detalle = "Sube por las escaleras hacia la torre";
+					targetX = mapaPozo->getPuntoSalidaPozoX() + 32;
+					targetY = mapaPozo->getPuntoSalidaPozoY() + 32;
+				}
+				else if (myrphonEscapado) {
+					titulo = "Atrapa a Myrphon";
+					detalle = "Acércate a la entrada del laberinto Serpentback";
+					targetX = 131 * 32 + 16;
+					targetY = 60 * 32 + 16;
+				}
+				else {
+					titulo = "Busca a Myrphon al sureste";
+					detalle = "Toma el desvío sur desde el cruce";
+					targetX = 118 * 32;
+					targetY = 60 * 32;
+				}
+				return;
+			}
+			pasoNum = 5;
+			if (enPozo && richehPozo != nullptr) {
+				titulo = "Entrega a Myrphon a Richeh";
+				detalle = "Habla con Richeh en el sótano";
+				targetX = richehPozo->getX() + 14;
+				targetY = richehPozo->getY() + 16;
+			}
+			else {
+				titulo = "Regresa con Richeh al sótano";
+				detalle = "Vuelve al pozo de la Torre de Agott";
+				targetX = (pozoObjeto != nullptr && pozoObjeto->getVisible()) ? pozoObjeto->getX() + 32 : 122 * 32;
+				targetY = (pozoObjeto != nullptr && pozoObjeto->getVisible()) ? pozoObjeto->getY() + 32 : 36 * 32;
+			}
+			return;
+		}
+		if (!paredRocaRota) {
+			pasoNum = 6;
+			if (enPozo) {
+				titulo = "Sube del sótano";
+				detalle = "Usa las escaleras para volver a la torre";
+				targetX = mapaPozo->getPuntoSalidaPozoX() + 32;
+				targetY = mapaPozo->getPuntoSalidaPozoY() + 32;
+			}
+			else {
+				titulo = "Rompe la roca de la cueva";
+				detalle = "Ve al noreste y usa la Pluma Térmica";
+				targetX = 106 * 32 + 16;
+				targetY = 15 * 32 + 16;
+			}
+			return;
+		}
+		if (!tieneItem("Fibra de Arbol") && !capaCrafteada) {
+			pasoNum = 6;
+			titulo = "Recoge la Fibra de Árbol";
+			detalle = "Entra a la cueva noreste para tomarla";
+			targetX = 114 * 32 + 16;
+			targetY = 14 * 32 + 16;
+			return;
+		}
+		if (!tieneItem("Tinta magica") && !capaCrafteada) {
+			pasoNum = 7;
+			titulo = "Consigue la Tinta mágica";
+			detalle = "Pide materiales especiales al Maestro Qifrey";
+			targetX = mapa->getPuntoQifreyX() + 14;
+			targetY = mapa->getPuntoQifreyY() + 16;
+			return;
+		}
+		pasoNum = 8;
+		titulo = "Confecciona tu Capa";
+		detalle = "Entrega los tres componentes a Qifrey";
+		targetX = mapa->getPuntoQifreyX() + 14;
+		targetY = mapa->getPuntoQifreyY() + 16;
+	}
 	std::string getInventarioNombre(int indice) { return inventario->getItem(indice).nombre; }
 	std::string getInventarioDescripcion(int indice) { return inventario->getItem(indice).descripcion; }
 	std::string getInventarioTipo(int indice) { return inventario->getItem(indice).tipo; }
 	std::string getObjetivo() { return objetivoActual; }
 	std::string getResumenConfianza(int indice) { return textoConfianza(indice); }
 
+	void reordenarCajasTorre() {
+		if (enPozo || !estaEnTorre()) return;
+		for (size_t i = 0; i < listaCajas.size(); i++) {
+			listaCajas[i]->restaurarOrigen();
+		}
+		if (jugador->getX() >= 115 * 32) {
+			jugador->setX(114 * 32);
+			jugador->setY(36 * 32);
+		}
+		mensajeTemporal = "Cajas de la torre restauradas a su lugar inicial.";
+		ticksMensajeTemporal = 85;
+	}
+
 	void iniciarNivel(int numNivel) {
-		nivelActual = 1;
+		nivelActual = numNivel;
 		ticksJuego = 0;
 		ticksTituloUbicacion = 0;
 		ticksTituloNivel = 160;
+		invulnerableTicks = 0;
+		enIntro = true;
 		enPozo = false;
 		mapaActual = mapa;
 		limpiarEntidades();
@@ -1469,6 +1892,7 @@ public:
 		habloQifrey = false;
 		habloAgott = false;
 		habloRicheh = false;
+		pidioMantoQifrey = false;
 		confianzaQifrey = 0;
 		confianzaAgott = 1;
 		confianzaRicheh = 1;
@@ -1480,49 +1904,69 @@ public:
 		agottSabeMyrphon = false;
 		capaCrafteada = false;
 		tintaMagicaEntregada = false;
+		tintaSecundariaEntregada = false;
+		grimorioDescubierto = false;
 		libroEncontrado = false;
 		pozoDescubierto = false;
 		paredRocaRota = false;
 		entroTorre = false;
+		monologoCruceActivado = false;
 		gatoAcariciado = false;
 		trollDescubierto = false;
 		misionCompletada = false;
 		finMostrado = false;
+		myrphonHuyendo = false;
+		myrphonEscapado = false;
+		ticksMyrphonHuyendo = 0;
+		myrphonCorriendo = false;
+		ticksMyrphonCorriendo = 0;
+		myrphonConRicheh = false;
+		vioMyrphon = false;
+		vioEnemigos = false;
 		ultimaUbicacion = nullptr;
 		cerrarDialogo();
-		objetivoActual = "Hablar con Maestro Qifrey";
 
-		listaNPCs.push_back(new NPC(19 * 32 + 4, 16 * 32, 1, "Qifrey", "Maestro Hechicero"));
-		listaNPCs.push_back(new NPC(41 * 32 + 4, 16 * 32, 2, "Agott", "Aprendiz de Maga"));
+		NPC* qifrey = new NPC(mapa->getPuntoQifreyX() + 4, mapa->getPuntoQifreyY(), 1, "Qifrey", "Maestro Hechicero");
+		qifrey->setMirada(0);
+		NPC* agott = new NPC(mapa->getPuntoAgottX() + 4, mapa->getPuntoAgottY(), 2, "Agott", "Aprendiz de Maga");
+		agott->setMirada(0);
+		listaNPCs.push_back(qifrey);
+		listaNPCs.push_back(agott);
 
-		agregarObjeto(new BloqueMapa(68 * 32 + 4, 40 * 32 + 4, ObjetoVial, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran río."));
-		agregarObjeto(new BloqueMapa(59 * 32 + 4, 7 * 32 + 4, ObjetoHoja, "Fibra de Arbol", "Fibras del Arbol de Plata para tejer el manto de aprendiz."));
-		agregarObjeto(new BloqueMapa(62 * 32 + 4, 7 * 32 + 4, ObjetoVial, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en la cueva misteriosa."));
-		grimorioObjeto = new BloqueMapa(0, 0, ObjetoPergamino, "Grimorio de Trazos", "Repleto de circulos, flechas y vectores magicos... No se entiende nada si intentas leerlo como un libro ordinario.");
+		agregarObjeto(new BloqueMapa(47 * 32 + 4, 21 * 32 + 4, ObjetoVial, "Tinta de Viento", "Esencia de tinta de viento encontrada junto a la orilla del gran río."));
+		agregarObjeto(new BloqueMapa(114 * 32 + 4, 14 * 32 + 4, ObjetoHoja, "Fibra de Arbol", "Fibras del Árbol de Plata para tejer el manto de aprendiz."));
+		agregarObjeto(new BloqueMapa(120 * 32 + 4, 16 * 32 + 4, ObjetoVial, "Frasco de Tinta", "Frasco con tinta arcaica de plata preservada en la cueva misteriosa."));
+
+		grimorioObjeto = new BloqueMapa(0, 0, ObjetoPergamino, "Grimorio de Trazos", "Repleto de círculos, flechas y vectores mágicos... No se entiende nada como un libro ordinario.");
 		grimorioObjeto->setVisible(false);
 		agregarObjeto(grimorioObjeto);
+
 		pozoObjeto = new BloqueMapa(0, 0, ObjetoPozo, "Pozo de Agott", "Un pozo oculto entre las cajas de la torre.");
 		pozoObjeto->setVisible(false);
 		agregarObjeto(pozoObjeto);
-		agregarObjeto(new BloqueMapa(26 * 32 + 4, 26 * 32 + 4, ObjetoLetrero, "Letrero del Atelier", "Letrero: Choza de Trazos. Dibuja runas con pasión y cuida tus pergaminos."));
-		agregarObjeto(new BloqueMapa(30 * 32 + 4, 27 * 32 + 4, ObjetoLetrero, "Historia del Manga", "Letrero: Historia del Manga. Witch Hat Atelier fue creado por la mangaka Kamome Shirahama e inició su publicación el 22 de julio de 2016. Comenzó a lanzarse de forma mensual en la revista Morning Two de la editorial Kodansha, destacando por su magia basada en el arte del dibujo."));
-		agregarObjeto(new BloqueMapa(55 * 32 + 4, 21 * 32 + 4, ObjetoLetrero, "Enciclopedia Mágica", "Letrero: Enciclopedia Mágica. Las tres sendas del Atelier: hacia el norte la cueva misteriosa, al este la Torre de Agott, y al sur el sendero hacia el despacho del maestro Qifrey."));
-		agregarObjeto(new BloqueMapa(33 * 32 + 4, 21 * 32 + 4, ObjetoLetrero, "Torre de Agott", "Letrero: Torre de Agott. Prohibido el paso sin autorización de Agott."));
-		agregarObjeto(new BloqueMapa(27 * 32 + 4, 22 * 32 + 4, ObjetoLetrero, "Despacho de Qifrey", "Letrero: Despacho de Qifrey. Maestro del atelier y protector del agua."));
-		agregarObjeto(new BloqueMapa(63 * 32 + 4, 12 * 32 + 4, ObjetoLetrero, "Cueva Misteriosa", "Letrero: Cueva Misteriosa. Peligro: Derrumbe. Usa magia ígnea."));
-		agregarObjeto(new BloqueMapa(23 * 32 + 4, 66 * 32 + 4, ObjetoGato, "Gato del Atelier", "El gato blanco de Richeh."));
-		agregarObjeto(new BloqueMapa(110 * 32 + 4, 10 * 32 + 4, ObjetoTroll, "Portal Olvidado", "Un portal extraño que no lleva a ninguna parte..."));
-		BloqueMapa* myrphon = new BloqueMapa(102 * 32 + 4, 60 * 32 + 4, ObjetoMyrphon, "Myrphon", "La mascota de Richeh, perdida en el bosque.");
+
+		agregarObjeto(new BloqueMapa(17 * 32 + 4, 17 * 32 + 4, ObjetoLetrero, "Letrero: Choza de Trazos", "Letrero: Choza de Trazos. Dibuja runas con pasión y cuida tus pergaminos."));
+		agregarObjeto(new BloqueMapa(26 * 32 + 4, 35 * 32 + 4, ObjetoLetrero, "Historia del Manga", "Letrero: Historia del Manga. Witch Hat Atelier fue creado por Kamome Shirahama en julio de 2016 (revista Morning Two, Kodansha), destacando por su magia basada en el arte del dibujo."));
+		agregarObjeto(new BloqueMapa(86 * 32 + 4, 36 * 32 + 4, ObjetoLetrero, "Enciclopedia Mágica", "Letrero: Cruce de los Tres Caminos. Norte: Cueva Misteriosa. Este: Torre de Agott. Sur: Laberinto Serpentback."));
+		agregarObjeto(new BloqueMapa(109 * 32 + 4, 34 * 32 + 4, ObjetoLetrero, "Torre de Agott", "Letrero: Torre de Agott. Prohibido el paso sin autorización de Agott."));
+		agregarObjeto(new BloqueMapa(103 * 32 + 4, 14 * 32 + 4, ObjetoLetrero, "Cueva Misteriosa", "Letrero: Cueva Misteriosa. Peligro: Derrumbe. Usa magia ígnea (Pluma Térmica)."));
+		agregarObjeto(new BloqueMapa(16 * 32 + 4, 51 * 32 + 4, ObjetoLetrero, "Despacho de Qifrey", "Letrero: Despacho de Qifrey. Maestro del atelier y protector del agua."));
+		agregarObjeto(new BloqueMapa(mapa->getPuntoGatoX() + 4, mapa->getPuntoGatoY() + 4, ObjetoGato, "Gato del Atelier", "El gato blanco de Richeh."));
+		agregarObjeto(new BloqueMapa(mapa->getPuntoTrollX() + 4, mapa->getPuntoTrollY() + 4, ObjetoTroll, "Grieta en la Pared", "Una grieta extraña oculta junto al muro del sendero..."));
+
+		BloqueMapa* myrphon = new BloqueMapa(116 * 32, 60 * 32, ObjetoMyrphon, "Myrphon", "La mascota de Richeh, perdida en el bosque.");
 		myrphon->setVisible(false);
 		agregarObjeto(myrphon);
 
 		crearArboles();
 		crearCajasTorre();
+		crearEnemigosNivel1();
 
-		agregarObjetoPozo(new BloqueMapa(10 * 32 + 4, 6 * 32 + 4, ObjetoPozo, "Salida del pozo", "Subir a la torre de Agott."));
-		agregarObjetoPozo(new BloqueMapa(22 * 32 + 4, 11 * 32 + 4, ObjetoLetrero, "Curiosidades de Richeh", "DATO CURIOSO DE RICHEH"));
-		agregarObjetoPozo(new BloqueMapa(38 * 32 + 4, 11 * 32 + 4, ObjetoLetrero, "Diario del Atelier", "DIARIO DEL ATELIER"));
-		richehPozo = new NPC(14 * 32 + 4, 8 * 32, 3, "Richeh", "Aprendiz de Maga");
+		agregarObjetoPozo(new BloqueMapa(mapaPozo->getPuntoSalidaPozoX(), mapaPozo->getPuntoSalidaPozoY(), ObjetoSalidaEscaleras, "Escaleras de salida", "Subir a la torre de Agott."));
+		agregarObjetoPozo(new BloqueMapa(13 * 32 + 4, 5 * 32 + 4, ObjetoLetrero, "Curiosidades de Richeh", "DATO CURIOSO DE RICHEH"));
+		agregarObjetoPozo(new BloqueMapa(19 * 32 + 4, 5 * 32 + 4, ObjetoLetrero, "Diario del Atelier", "DIARIO DEL ATELIER"));
+		richehPozo = new NPC(12 * 32 + 4, 8 * 32, 3, "Richeh", "Aprendiz de Maga");
+		richehPozo->setMirada(0);
 
 		myrphonConRicheh = false;
 		myrphonCorriendo = false;
@@ -1536,34 +1980,32 @@ public:
 		iniciarNivel(1);
 	}
 
-	void moverJugador(int dx, int dy) {
-		if (dialogoActivo || transicionPozoActiva || myrphonCorriendo) return;
+	void moverJugador(int dx, int dy, bool corriendo = false) {
+		if (enIntro || dialogoActivo || transicionPozoActiva || myrphonCorriendo || myrphonHuyendo) return;
 		if (dx == 0 && dy == 0) {
 			jugador->setEnMovimiento(false);
 			return;
 		}
-		int pasoX = 6;
-		int pasoY = 6;
-		if (dx != 0 && dy != 0) {
-			pasoX = 4;
-			pasoY = 4;
-		}
-		if (dx != 0) {
-			int nuevoX = jugador->getX() + dx * pasoX;
-			if (posicionLibre(nuevoX, jugador->getY())) {
-				Rectangle rectSig(nuevoX + 3, jugador->getY() + 14, jugador->getAncho() - 6, jugador->getAlto() - 16);
-				bool puedeMover = true;
-				if (hayCajaEn(rectSig)) puedeMover = intentarEmpujarCaja(dx, 0, rectSig);
-				if (puedeMover) jugador->setX(nuevoX);
+		int repeticiones = corriendo ? 2 : 1;
+		int paso = corriendo ? ((dx != 0 && dy != 0) ? 4 : 5) : ((dx != 0 && dy != 0) ? 4 : 6);
+		for (int rep = 0; rep < repeticiones; rep++) {
+			if (dx != 0) {
+				int nuevoX = jugador->getX() + dx * paso;
+				if (posicionLibre(nuevoX, jugador->getY())) {
+					Rectangle rectSig(nuevoX + 3, jugador->getY() + 14, jugador->getAncho() - 6, jugador->getAlto() - 16);
+					bool puedeMover = true;
+					if (hayCajaEn(rectSig)) puedeMover = intentarEmpujarCaja(dx, 0, rectSig);
+					if (puedeMover) jugador->setX(nuevoX);
+				}
 			}
-		}
-		if (dy != 0) {
-			int nuevoY = jugador->getY() + dy * pasoY;
-			if (posicionLibre(jugador->getX(), nuevoY)) {
-				Rectangle rectSig(jugador->getX() + 3, nuevoY + 14, jugador->getAncho() - 6, jugador->getAlto() - 16);
-				bool puedeMover = true;
-				if (hayCajaEn(rectSig)) puedeMover = intentarEmpujarCaja(0, dy, rectSig);
-				if (puedeMover) jugador->setY(nuevoY);
+			if (dy != 0) {
+				int nuevoY = jugador->getY() + dy * paso;
+				if (posicionLibre(jugador->getX(), nuevoY)) {
+					Rectangle rectSig(jugador->getX() + 3, nuevoY + 14, jugador->getAncho() - 6, jugador->getAlto() - 16);
+					bool puedeMover = true;
+					if (hayCajaEn(rectSig)) puedeMover = intentarEmpujarCaja(0, dy, rectSig);
+					if (puedeMover) jugador->setY(nuevoY);
+				}
 			}
 		}
 		if (dx < 0) jugador->setDireccion(1);
@@ -1571,6 +2013,8 @@ public:
 		else if (dy < 0) jugador->setDireccion(2);
 		else if (dy > 0) jugador->setDireccion(0);
 		jugador->setEnMovimiento(true);
+		int freqPaso = corriendo ? 6 : 10;
+		if (ticksJuego % freqPaso == 0) GestorAudio::ReproducirSfxPaso();
 	}
 
 	void detenerJugador() {
@@ -1578,6 +2022,11 @@ public:
 	}
 
 	void interactuar() {
+		if (enIntro) {
+			enIntro = false;
+			ticksTituloNivel = 140;
+			return;
+		}
 		if (dialogoActivo) {
 			if (!textoDialogoCompleto()) {
 				String^ texto = dialogoTextoManaged;
@@ -1587,12 +2036,13 @@ public:
 			if (!dialogoOpciones.empty()) {
 				int indice = dialogoOpcionSeleccionada;
 				if (indice < 0 || indice >= (int)dialogoOpciones.size()) indice = 0;
+				GestorAudio::ReproducirSfxDialogo();
 				procesarOpcionDialogo(indice + 1);
 			}
 			else cerrarDialogo();
 			return;
 		}
-		if (transicionPozoActiva || myrphonCorriendo) return;
+		if (transicionPozoActiva || myrphonCorriendo || myrphonHuyendo) return;
 		actualizarObjetivoCercano();
 		if (tipoObjetivo == INTERACCION_QIFREY) {
 			habloQifrey = true;
@@ -1628,13 +2078,14 @@ public:
 				quitarItem("Pluma Termica");
 				mapa->romperParedRoca();
 				paredRocaRota = true;
-				mensajeTemporal = "Punta incandescente aplicada: La pared de roca se quebro.";
-				ticksMensajeTemporal = 100;
+				GestorAudio::ReproducirSfxAccion();
+				mensajeTemporal = "Punta incandescente aplicada: La pared de roca se quebró.";
+				ticksMensajeTemporal = 110;
 				actualizarObjetivo();
 			}
 			else {
-				mensajeTemporal = "Coco: La pared de roca esta agrietada... Necesito una pluma termica para quebrarla.";
-				ticksMensajeTemporal = 90;
+				mensajeTemporal = "Coco: La pared de roca está agrietada... Necesito una pluma térmica para quebrarla.";
+				ticksMensajeTemporal = 95;
 			}
 			return;
 		}
@@ -1647,7 +2098,7 @@ public:
 			BloqueMapa* objeto = listaObjetos[indiceObjetivo];
 			if (objeto->getTipo() == ObjetoGato) {
 				gatoAcariciado = true;
-				iniciarDialogoSimple("Coco", "Aprendiz de Maga", "Miau... El gato blanco de Richeh te observa y ronronea.");
+				iniciarDialogoSimple("Coco", "Aprendiz de Maga", "Miau... El gato blanco de Richeh te observa y ronronea con calma.");
 			}
 			else if (objeto->getTipo() == ObjetoTroll) {
 				solicitaTrollface = true;
@@ -1656,7 +2107,7 @@ public:
 				if (misionMyrphonActiva && !myrphonRescatado) solicitaMinijuego = true;
 			}
 			else if (objeto->getTipo() == ObjetoLetrero) {
-				iniciarDialogoSimple("Letrero", "Informacion", objeto->getDescripcion());
+				iniciarDialogoSimple("Letrero", "Información", objeto->getDescripcion());
 			}
 			else if (objeto->getTipo() == ObjetoMontonCajas) {
 				recogerItem(objeto);
@@ -1696,23 +2147,33 @@ public:
 	}
 
 	void resolverMinijuego(bool exito) {
-		reanudarAudioNivel();
+		if (audioHabilitado) reproducirAudioNivel(1);
+		else audio.detener();
 		if (exito) {
+			vioMyrphon = true;
+			vioEnemigos = true;
 			myrphonRescatado = true;
 			if (myrphonObjeto != nullptr) myrphonObjeto->setVisible(false);
-			objetivoActual = "Llevar a Myrphon de regreso con Richeh";
-			mensajeTemporal = "¡Atrapaste a Myrphon! Llévaselo de regreso a Richeh.";
-			ticksMensajeTemporal = 120;
+			jugador->setX(124 * 32);
+			jugador->setY(60 * 32);
+			actualizarObjetivo();
+			mensajeTemporal = "¡Atrapaste a Myrphon! Llévaselo de regreso a Richeh en el sótano.";
+			ticksMensajeTemporal = 130;
 		}
 		else {
 			jugador->restarVida();
 			if (jugador->getVidas() <= 0) {
 				iniciarNivel(1);
+				enIntro = false;
 				mensajeTemporal = "Has agotado tus vidas. El nivel ha sido reiniciado.";
 				ticksMensajeTemporal = 120;
 			}
 			else {
-				mensajeTemporal = "Myrphon se escapó... Inténtalo de nuevo.";
+				vioMyrphon = true;
+				vioEnemigos = true;
+				jugador->setX(124 * 32);
+				jugador->setY(60 * 32);
+				mensajeTemporal = "Myrphon se escapó... Inténtalo de nuevo en la entrada.";
 				ticksMensajeTemporal = 100;
 				actualizarObjetivo();
 			}
@@ -1723,26 +2184,61 @@ public:
 		trollDescubierto = true;
 	}
 
-	void procesarTick(Graphics^ g, int viewW, int viewH, int zoom) {
+	void procesarTick(Graphics^ g, int viewW, int viewH, int zoom, bool corriendo = false) {
 		if (g == nullptr || viewW <= 0 || viewH <= 0) return;
+
+		if (enIntro) {
+			dibujarPantallaIntro(g, viewW, viewH);
+			return;
+		}
+
 		ticksJuego++;
 		if (ticksTituloUbicacion > 0) ticksTituloUbicacion--;
 		if (ticksTituloNivel > 0) ticksTituloNivel--;
 		if (ticksMensajeTemporal > 0) ticksMensajeTemporal--;
 		audio.actualizar();
-		jugador->animar();
+		jugador->animar(corriendo);
 		actualizarTextoAnimado();
 		actualizarCorridaMyrphon();
+		actualizarLluvia();
+		actualizarEnemigosNivel1();
 
 		if (transicionPozoActiva) {
 			if (ticksTransicionPozo > 0) ticksTransicionPozo--;
 			if (ticksTransicionPozo <= 0) finalizarTransicionPozo();
 		}
 
-		if (!enPozo && !dialogoActivo && !transicionPozoActiva && !myrphonCorriendo && !entroTorre && estaEnTorre()) {
-			entroTorre = true;
-			habloAgott = true;
-			iniciarDialogo("Agott", 200);
+		if (!enPozo && !dialogoActivo && !transicionPozoActiva && !myrphonCorriendo) {
+			int cx = jugador->getX() + jugador->getAncho() / 2;
+			int cy = jugador->getY() + jugador->getAlto() / 2;
+			int col = cx / Configuracion::TILE_SIZE;
+			int fila = cy / Configuracion::TILE_SIZE;
+
+			if (!entroTorre && estaEnTorre()) {
+				entroTorre = true;
+				habloAgott = true;
+				iniciarDialogo("Agott", 200);
+			}
+			else if (!monologoCruceActivado && col >= 85 && col <= 92 && fila >= 34 && fila <= 39) {
+				monologoCruceActivado = true;
+				mensajeTemporal = "Coco: ¡Vaya...! Tres caminos se abren ante mí... ¿Hacia dónde debería ir ahora?";
+				ticksMensajeTemporal = 140;
+			}
+			else if (misionMyrphonActiva && !myrphonRescatado && !myrphonHuyendo && !myrphonEscapado && col >= 115 && fila >= 56 && fila <= 65) {
+				vioMyrphon = true;
+				myrphonHuyendo = true;
+				ticksMyrphonHuyendo = 0;
+				mensajeTemporal = "¡Myrphon se asusta y corre hacia las sombras de Serpentback!";
+				ticksMensajeTemporal = 90;
+			}
+			else if (misionMyrphonActiva && !myrphonRescatado && myrphonEscapado && col >= 131 && fila >= 58 && fila <= 62) {
+				vioMyrphon = true;
+				vioEnemigos = true;
+				solicitaMinijuego = true;
+			}
+		}
+		if (myrphonObjeto != nullptr && myrphonObjeto->getVisible() && distanciaAlCentro(myrphonObjeto) <= 420) {
+			vioMyrphon = true;
 		}
 
 		int mundoAncho = viewW / zoom;
@@ -1771,28 +2267,30 @@ public:
 
 		if (enPozo) {
 			for (size_t i = 0; i < objetosPozo.size(); i++) objetosPozo[i]->dibujar(g, nullptr, camX, camY, zoom, ticksJuego);
-			if (richehPozo != nullptr) richehPozo->dibujar(g, bmpCoustas, camX, camY, zoom, ticksJuego);
-			Bitmap^ iconoMyrphon = nullptr;
-			if (myrphonObjeto != nullptr) iconoMyrphon = myrphonObjeto->getIcono();
-			if (iconoMyrphon != nullptr) {
-				int rx = (richehPozo != nullptr) ? richehPozo->getX() + 20 : 64 * 32;
-				int ry = (richehPozo != nullptr) ? richehPozo->getY() : 12 * 32;
-				if (myrphonCorriendo) {
-					float t = ticksMyrphonCorriendo / 50.0f;
-					int sx = mapaPozo->getPuntoInicioPozoX();
-					int sy = mapaPozo->getPuntoInicioPozoY();
-					int mx = (int)(sx + (rx - sx) * t);
-					int my = (int)(sy + (ry - sy) * t);
-					g->DrawImage(iconoMyrphon, Rectangle((mx - camX) * zoom, (my - camY) * zoom, 24 * zoom, 24 * zoom));
-				}
-				else if (myrphonConRicheh) {
-					g->DrawImage(iconoMyrphon, Rectangle((rx - camX) * zoom, (ry - camY) * zoom, 24 * zoom, 24 * zoom));
-				}
-				else if (myrphonRescatado) {
-					int mx = jugador->getX() + 18;
-					int my = jugador->getY() + 10;
-					g->DrawImage(iconoMyrphon, Rectangle((mx - camX) * zoom, (my - camY) * zoom, 24 * zoom, 24 * zoom));
-				}
+			if (richehPozo != nullptr) richehPozo->dibujar(g, bmpRicheh, camX, camY, zoom, ticksJuego);
+			int rx = (richehPozo != nullptr) ? richehPozo->getX() + 26 : 16 * 32;
+			int ry = (richehPozo != nullptr) ? richehPozo->getY() + 2 : 8 * 32;
+			if (myrphonCorriendo) {
+				float t = ticksMyrphonCorriendo / 50.0f;
+				int sx = mapaPozo->getPuntoInicioPozoX();
+				int sy = mapaPozo->getPuntoInicioPozoY();
+				int mx = (int)(sx + (rx - sx) * t);
+				int my = (int)(sy + (ry - sy) * t);
+				int dxP = rx - sx;
+				int dyP = ry - sy;
+				int dirP = (abs(dxP) >= abs(dyP)) ? ((dxP >= 0) ? 3 : 1) : ((dyP >= 0) ? 0 : 2);
+				DibujarMyrphonSpritesheetComun(g, bmpMyrphon, mx, my, dirP, true, ticksJuego, camX, camY, zoom, 32, 32);
+			}
+			else if (myrphonConRicheh) {
+				DibujarMyrphonSpritesheetComun(g, bmpMyrphon, rx, ry, 0, false, ticksJuego, camX, camY, zoom, 32, 32);
+			}
+			else if (myrphonRescatado) {
+				int mx = jugador->getX() + 22;
+				int my = jugador->getY() + 8;
+				DibujarMyrphonSpritesheetComun(g, bmpMyrphon, mx, my, jugador->getDireccion(), jugador->getEnMovimiento(), ticksJuego, camX, camY, zoom, 30, 30);
+			}
+			if (corriendo && jugador->getEnMovimiento()) {
+				DibujarPolvoCorrerComun(g, jugador->getX(), jugador->getY(), jugador->getAncho(), jugador->getAlto(), jugador->getDireccion(), ticksJuego, camX, camY, zoom);
 			}
 			jugador->dibujar(g, bmpCoco, camX, camY, zoom, ticksJuego);
 		}
@@ -1801,27 +2299,48 @@ public:
 			for (size_t i = 0; i < listaArboles.size(); i++) {
 				if (listaArboles[i]->getBaseY() <= baseJugador) listaArboles[i]->dibujar(g, nullptr, camX, camY, zoom, ticksJuego);
 			}
-			for (size_t i = 0; i < listaObjetos.size(); i++) listaObjetos[i]->dibujar(g, nullptr, camX, camY, zoom, ticksJuego);
+			for (size_t i = 0; i < listaObjetos.size(); i++) {
+				if (listaObjetos[i]->getTipo() == ObjetoMyrphon && listaObjetos[i]->getVisible()) {
+					DibujarMyrphonSpritesheetComun(g, bmpMyrphon, listaObjetos[i]->getX(), listaObjetos[i]->getY(), 3, myrphonHuyendo, ticksJuego, camX, camY, zoom, 32, 32);
+					continue;
+				}
+				listaObjetos[i]->dibujar(g, nullptr, camX, camY, zoom, ticksJuego);
+			}
 			for (size_t i = 0; i < listaCajas.size(); i++) listaCajas[i]->dibujar(g, camX, camY, zoom);
 			for (size_t i = 0; i < listaNPCs.size(); i++) {
-				Bitmap^ bmpNPC = (listaNPCs[i]->getIdPersonaje() == 1) ? bmpQifrey : bmpTartah;
-				listaNPCs[i]->dibujar(g, bmpNPC, camX, camY, zoom, ticksJuego);
-			}
-			if (myrphonRescatado && !myrphonConRicheh && myrphonObjeto != nullptr) {
-				Bitmap^ iconoMyrphon = myrphonObjeto->getIcono();
-				if (iconoMyrphon != nullptr) {
-					int mx = jugador->getX() + 18;
-					int my = jugador->getY() + 10;
-					g->DrawImage(iconoMyrphon, Rectangle((mx - camX) * zoom, (my - camY) * zoom, 24 * zoom, 24 * zoom));
+				if (listaNPCs[i]->getIdPersonaje() == 1) {
+					listaNPCs[i]->dibujarConGrid(g, bmpQifrey, camX, camY, zoom, ticksJuego, 4, 4, true);
+				}
+				else {
+					listaNPCs[i]->dibujar(g, bmpAgott, camX, camY, zoom, ticksJuego);
 				}
 			}
-			jugador->dibujar(g, bmpCoco, camX, camY, zoom, ticksJuego);
+			for (size_t i = 0; i < listaEnemigos.size(); i++) {
+				listaEnemigos[i]->dibujarEnemigo(g, bmpEnemigo, camX, camY, zoom);
+			}
+			for (size_t i = 0; i < proyectilesEnemigos.size(); i++) {
+				proyectilesEnemigos[i].dibujar(g, bmpDisparo, camX, camY, zoom, 24);
+			}
+			if (myrphonRescatado && !myrphonConRicheh) {
+				int mx = jugador->getX() + 22;
+				int my = jugador->getY() + 8;
+				DibujarMyrphonSpritesheetComun(g, bmpMyrphon, mx, my, jugador->getDireccion(), jugador->getEnMovimiento(), ticksJuego, camX, camY, zoom, 30, 30);
+			}
+			if (corriendo && jugador->getEnMovimiento()) {
+				DibujarPolvoCorrerComun(g, jugador->getX(), jugador->getY(), jugador->getAncho(), jugador->getAlto(), jugador->getDireccion(), ticksJuego, camX, camY, zoom);
+			}
+			if (invulnerableTicks == 0 || (invulnerableTicks % 3 != 0)) {
+				jugador->dibujar(g, bmpCoco, camX, camY, zoom, ticksJuego);
+			}
 			for (size_t i = 0; i < listaArboles.size(); i++) {
 				if (listaArboles[i]->getBaseY() > baseJugador) listaArboles[i]->dibujar(g, nullptr, camX, camY, zoom, ticksJuego);
 			}
 		}
 
-		if (!enPozo && !transicionPozoActiva) dibujarSombraZonas(g, viewW, viewH, camX, camY, zoom);
+		if (!enPozo && !transicionPozoActiva) {
+			dibujarSombraZonas(g, viewW, viewH, camX, camY, zoom);
+			dibujarLluvia(g, viewW, viewH, camX, camY, zoom);
+		}
 		actualizarObjetivoCercano();
 		dibujarHUD(g, viewW, viewH, ubicacion);
 		if (dialogoActivo) dibujarCuadroDialogo(g, viewW, viewH);
@@ -1832,64 +2351,77 @@ public:
 		return Rectangle((mundo.X - camX) * zoom, (mundo.Y - camY) * zoom, mundo.Width * zoom, mundo.Height * zoom);
 	}
 
-	Rectangle expandirRect(Rectangle r, int margen) {
-		return Rectangle(r.X - margen, r.Y - margen, r.Width + margen * 2, r.Height + margen * 2);
-	}
-
 	void dibujarSombraZonas(Graphics^ g, int viewW, int viewH, int camX, int camY, int zoom) {
 		if (enPozo) return;
 		int cx = jugador->getX() + jugador->getAncho() / 2;
 		int cy = jugador->getY() + jugador->getAlto() / 2;
-		int col = cx / Configuracion::TILE_SIZE;
-		int fila = cy / Configuracion::TILE_SIZE;
+		int cuarto = mapa->determinarCuarto(cx, cy);
+
 		Rectangle pantalla(0, 0, viewW, viewH);
-		Rectangle atelier(8 * 32, 8 * 32, 45 * 32, 33 * 32);
-		Rectangle despacho(12 * 32, 12 * 32, 15 * 32, 9 * 32);
-		Rectangle torre(34 * 32, 12 * 32, 15 * 32, 9 * 32);
-		Rectangle biblioteca(12 * 32, 28 * 32, 15 * 32, 9 * 32);
-		Rectangle almacen(34 * 32, 28 * 32, 15 * 32, 9 * 32);
-		Rectangle cueva(55 * 32, 4 * 32, 11 * 32, 7 * 32);
+		Rectangle chozaMuros(10 * 32, 6 * 32, 19 * 32, 13 * 32);
+		Rectangle chozaInterior(11 * 32, 7 * 32, 17 * 32, 11 * 32);
+		Rectangle despachoMuros(10 * 32, 52 * 32, 19 * 32, 15 * 32);
+		Rectangle despachoInterior(11 * 32, 53 * 32, 17 * 32, 13 * 32);
+		Rectangle torreMuros(112 * 32, 28 * 32, 23 * 32, 18 * 32);
+		Rectangle torreInterior(113 * 32, 29 * 32, 21 * 32, 16 * 32);
+		Rectangle cuevaMuros(106 * 32, 10 * 32, 21 * 32, 12 * 32);
+		Rectangle cuevaInterior(108 * 32, 11 * 32, 18 * 32, 10 * 32);
 
-		Rectangle jugadorRect = jugador->getRectangle();
-		Rectangle zonaDespacho = expandirRect(despacho, 32);
-		Rectangle zonaTorre = expandirRect(torre, 32);
-		Rectangle zonaBiblioteca = expandirRect(biblioteca, 32);
-		Rectangle zonaAlmacen = expandirRect(almacen, 32);
-		Rectangle zonaCueva = expandirRect(cueva, 32);
-
-		bool enDespacho = jugadorRect.IntersectsWith(zonaDespacho);
-		bool enTorre = jugadorRect.IntersectsWith(zonaTorre);
-		bool enBiblioteca = jugadorRect.IntersectsWith(zonaBiblioteca);
-		bool enAlmacen = jugadorRect.IntersectsWith(zonaAlmacen);
-		bool enCueva = jugadorRect.IntersectsWith(zonaCueva);
-		bool enSalon = !enDespacho && !enTorre && !enBiblioteca && !enAlmacen && !enCueva && col >= 9 && col <= 51 && fila >= 9 && fila <= 39;
-
-		Region^ visible = nullptr;
-		if (enDespacho) visible = gcnew Region(rectMundoAPantalla(zonaDespacho, camX, camY, zoom));
-		else if (enTorre) visible = gcnew Region(rectMundoAPantalla(zonaTorre, camX, camY, zoom));
-		else if (enBiblioteca) visible = gcnew Region(rectMundoAPantalla(zonaBiblioteca, camX, camY, zoom));
-		else if (enAlmacen) visible = gcnew Region(rectMundoAPantalla(zonaAlmacen, camX, camY, zoom));
-		else if (enCueva) visible = gcnew Region(rectMundoAPantalla(zonaCueva, camX, camY, zoom));
-		else if (enSalon) {
-			visible = gcnew Region(rectMundoAPantalla(atelier, camX, camY, zoom));
-			visible->Exclude(rectMundoAPantalla(despacho, camX, camY, zoom));
-			visible->Exclude(rectMundoAPantalla(torre, camX, camY, zoom));
-			visible->Exclude(rectMundoAPantalla(biblioteca, camX, camY, zoom));
-			visible->Exclude(rectMundoAPantalla(almacen, camX, camY, zoom));
+		if (cuarto == 0) {
+			SolidBrush^ sombraTecho = gcnew SolidBrush(Color::FromArgb(195, 4, 7, 12));
+			g->FillRectangle(sombraTecho, rectMundoAPantalla(chozaInterior, camX, camY, zoom));
+			g->FillRectangle(sombraTecho, rectMundoAPantalla(despachoInterior, camX, camY, zoom));
+			g->FillRectangle(sombraTecho, rectMundoAPantalla(torreInterior, camX, camY, zoom));
+			if (!paredRocaRota) {
+				g->FillRectangle(sombraTecho, rectMundoAPantalla(cuevaInterior, camX, camY, zoom));
+			}
+			delete sombraTecho;
+			return;
 		}
-		else {
-			visible = gcnew Region(pantalla);
-			visible->Exclude(rectMundoAPantalla(atelier, camX, camY, zoom));
-			visible->Exclude(rectMundoAPantalla(cueva, camX, camY, zoom));
-		}
+
+		Rectangle rectVisible;
+		if (cuarto == 1) rectVisible = chozaMuros;
+		else if (cuarto == 2) rectVisible = despachoMuros;
+		else if (cuarto == 3) rectVisible = torreMuros;
+		else rectVisible = cuevaMuros;
 
 		Region^ oscuro = gcnew Region(pantalla);
-		oscuro->Exclude(visible);
-		SolidBrush^ sombra = gcnew SolidBrush(Color::FromArgb(190, 2, 4, 8));
+		Region^ zonaClara = gcnew Region(rectMundoAPantalla(rectVisible, camX, camY, zoom));
+		oscuro->Exclude(zonaClara);
+		SolidBrush^ sombra = gcnew SolidBrush(Color::FromArgb(195, 2, 4, 8));
 		g->FillRegion(sombra, oscuro);
 		delete sombra;
+		delete zonaClara;
 		delete oscuro;
-		delete visible;
+	}
+
+	void dibujarLluvia(Graphics^ g, int viewW, int viewH, int camX, int camY, int zoom) {
+		Pen^ pincelLluvia = gcnew Pen(Color::FromArgb(120, 155, 200, 245), 1.4f);
+		Pen^ pincelSalpicadura = gcnew Pen(Color::FromArgb(115, 190, 230, 255), 1.0f);
+		int ts = Configuracion::TILE_SIZE;
+		for (size_t i = 0; i < gotasLluvia.size(); i++) {
+			float sx = gotasLluvia[i].x;
+			float sy = gotasLluvia[i].y;
+			if (sx < 0 || sx >= viewW || sy < 0 || sy >= viewH) continue;
+			int col = ((int)(sx / zoom) + camX) / ts;
+			int fila = ((int)(sy / zoom) + camY) / ts;
+			if (!mapa->esExteriorParaLluvia(col, fila)) continue;
+			g->DrawLine(pincelLluvia, sx, sy, sx - 3.0f, sy + (float)gotasLluvia[i].largo);
+			if (((ticksJuego + (int)i) % 19 == 0) && mapa->getCaracter(col, fila) == '~') {
+				g->DrawEllipse(pincelSalpicadura, sx - 4.0f, sy + 6.0f, 6.0f, 3.0f);
+			}
+		}
+		delete pincelLluvia;
+		delete pincelSalpicadura;
+	}
+
+	void dibujarPantallaIntro(Graphics^ g, int viewW, int viewH) {
+		String^ cuerpo =
+			"Tras el accidente que petrificó a su madre, Coco descubre\n"
+			"que la magia nace del trazo con tinta sobre pergamino.\n\n"
+			"Recorre el atelier de Qifrey, ayuda a tus compañeros y reúne:\n"
+			"Tinta mágica, Grimorio de Trazos y Fibra del Árbol de Plata.";
+		DibujarIntroActoComun(g, viewW, viewH, "ACTO I", "El Atelier de Qifrey", cuerpo, "Presiona Espacio para continuar");
 	}
 
 	void dibujarCorazon(Graphics^ g, int x, int y, Color color) {
@@ -1903,18 +2435,50 @@ public:
 	void dibujarHUD(Graphics^ g, int viewW, int viewH, String^ ubicacion) {
 		System::Drawing::Font^ fTexto = gcnew System::Drawing::Font("Segoe UI", 9.0f, FontStyle::Regular);
 		System::Drawing::Font^ fObjetivo = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Bold);
+		System::Drawing::Font^ fGuiaSub = gcnew System::Drawing::Font("Segoe UI", 8.5f, FontStyle::Regular);
 		System::Drawing::Font^ fTitulo = gcnew System::Drawing::Font("Segoe UI", 16.0f, FontStyle::Bold);
-		System::Drawing::Font^ fSub = gcnew System::Drawing::Font("Segoe UI", 11.0f, FontStyle::Italic);
+		System::Drawing::Font^ fSub = gcnew System::Drawing::Font("Segoe UI", 11.0f, FontStyle::Regular);
 		System::Drawing::Font^ fPrompt = gcnew System::Drawing::Font("Segoe UI", 10.0f, FontStyle::Bold);
 
-		SolidBrush^ panel = gcnew SolidBrush(Color::FromArgb(228, 8, 12, 18));
-		g->FillRectangle(panel, 16, 16, 420, 78);
+		std::string guiaTitulo;
+		std::string guiaDetalle;
+		int pasoNum = 1;
+		int totalPasos = 8;
+		int targetX = 0;
+		int targetY = 0;
+		bool mostrarFlecha = true;
+		obtenerGuiaPasoActual(guiaTitulo, guiaDetalle, pasoNum, totalPasos, targetX, targetY, mostrarFlecha);
+
+		if (guiaActiva && mostrarFlecha && !dialogoActivo && !transicionPozoActiva && !misionCompletada) {
+			int jSX = (jugador->getX() + jugador->getAncho() / 2 - camX) * Configuracion::ZOOM;
+			int jSY = (jugador->getY() + jugador->getAlto() / 2 - camY) * Configuracion::ZOOM;
+			int tSX = (targetX - camX) * Configuracion::ZOOM;
+			int tSY = (targetY - camY) * Configuracion::ZOOM;
+			DibujarFlechaGuiaComun(g, jSX, jSY, tSX, tSY, viewW, viewH, ticksJuego);
+		}
+
+		SolidBrush^ panel = gcnew SolidBrush(Color::FromArgb(228, 10, 16, 24));
+		g->FillRectangle(panel, 16, 16, 360, 42);
 		for (int i = 0; i < 3; i++) {
 			Color colorCorazon = (i < jugador->getVidas()) ? Color::FromArgb(220, 210, 58, 76) : Color::FromArgb(120, 70, 58, 62);
-			dibujarCorazon(g, 28 + i * 20, 24, colorCorazon);
+			dibujarCorazon(g, 28 + i * 20, 29, colorCorazon);
 		}
-		g->DrawString("INVENTARIO  " + inventario->getCantidad().ToString() + "/" + inventario->getCapacidad().ToString(), fTexto, Brushes::Gainsboro, PointF(102.0f, 26.0f));
-		g->DrawString("Objetivo: " + ToManaged(objetivoActual), fObjetivo, Brushes::Khaki, RectangleF(28.0f, 50.0f, 396.0f, 38.0f));
+		g->DrawString("INV " + inventario->getCantidad().ToString() + "/" + inventario->getCapacidad().ToString() + "  |  " + ubicacion, fTexto, Brushes::Gainsboro, PointF(100.0f, 29.0f));
+
+		if (guiaActiva) {
+			g->FillRectangle(panel, 16, 66, 292, 82);
+			SolidBrush^ barra = gcnew SolidBrush(Color::FromArgb(220, 214, 198, 166));
+			g->FillRectangle(barra, 16, 66, 3, 82);
+			delete barra;
+			g->DrawString("MISIÓN ACTUAL (" + pasoNum.ToString() + "/" + totalPasos.ToString() + ")", fGuiaSub, Brushes::Silver, PointF(28.0f, 72.0f));
+			g->DrawString(ToManaged(guiaTitulo), fObjetivo, Brushes::Khaki, RectangleF(28.0f, 89.0f, 270.0f, 20.0f));
+			String^ detalleFinal = ToManaged(guiaDetalle);
+			if (mostrarFlecha) {
+				int distM = (int)(std::sqrt((double)((targetX - jugador->getX()) * (targetX - jugador->getX()) + (targetY - jugador->getY()) * (targetY - jugador->getY()))) / 32.0);
+				detalleFinal += " (" + distM.ToString() + " m)";
+			}
+			g->DrawString(detalleFinal, fGuiaSub, Brushes::LightGray, RectangleF(28.0f, 110.0f, 270.0f, 34.0f));
+		}
 		delete panel;
 
 		std::string textoPrompt = "";
@@ -1926,7 +2490,7 @@ public:
 			int ancho = (int)tam.Width + 36;
 			int x = (viewW - ancho) / 2;
 			int y = viewH - 54;
-			SolidBrush^ fondoPrompt = gcnew SolidBrush(Color::FromArgb(175, 8, 12, 18));
+			SolidBrush^ fondoPrompt = gcnew SolidBrush(Color::FromArgb(185, 8, 12, 18));
 			g->FillRectangle(fondoPrompt, x, y, ancho, 32);
 			delete fondoPrompt;
 			g->DrawString(tp, fPrompt, Brushes::WhiteSmoke, PointF((float)(x + 18), (float)(y + 6)));
@@ -1963,6 +2527,7 @@ public:
 
 		delete fTexto;
 		delete fObjetivo;
+		delete fGuiaSub;
 		delete fTitulo;
 		delete fSub;
 		delete fPrompt;
@@ -2022,12 +2587,12 @@ public:
 		}
 
 		float yActual = (float)(y + 34);
-		for each (String^ linea in lineasVisibles) {
-			SizeF medida = g->MeasureString(linea, fTexto, anchoTexto);
+		for each (String^ lineaTexto in lineasVisibles) {
+			SizeF medida = g->MeasureString(lineaTexto, fTexto, anchoTexto);
 			int h = (int)Math::Ceiling(medida.Height);
 			int altoLinea = (int)Math::Ceiling(fTexto->GetHeight(g));
 			if (h < altoLinea) h = altoLinea;
-			g->DrawString(linea, fTexto, Brushes::WhiteSmoke, RectangleF((float)(x + 22), yActual, (float)anchoTexto, (float)h + 2.0f));
+			g->DrawString(lineaTexto, fTexto, Brushes::WhiteSmoke, RectangleF((float)(x + 22), yActual, (float)anchoTexto, (float)h + 2.0f));
 			yActual += h + 5;
 			if (yActual > y + 28 + altoTexto + 2) break;
 		}
@@ -2058,124 +2623,170 @@ public:
 	}
 
 	void dibujarTransicionPozo(Graphics^ g, int viewW, int viewH) {
-		System::Drawing::Drawing2D::LinearGradientBrush^ fondo = gcnew System::Drawing::Drawing2D::LinearGradientBrush(
-			Rectangle(0, 0, viewW, viewH),
-			Color::FromArgb(255, 22, 19, 16),
-			Color::FromArgb(255, 3, 5, 8),
-			System::Drawing::Drawing2D::LinearGradientMode::Vertical);
-		g->FillRectangle(fondo, 0, 0, viewW, viewH);
-		delete fondo;
+		int pxW = 240;
+		int pxH = 150;
+		Bitmap^ lienzo = gcnew Bitmap(pxW, pxH, PixelFormat::Format32bppArgb);
+		Graphics^ pg = Graphics::FromImage(lienzo);
+		pg->SmoothingMode = System::Drawing::Drawing2D::SmoothingMode::None;
 
-		int anchoPared = (int)(viewW * 0.20f);
-		SolidBrush^ piedra = gcnew SolidBrush(Color::FromArgb(255, 42, 44, 48));
-		g->FillRectangle(piedra, 0, 0, anchoPared, viewH);
-		g->FillRectangle(piedra, viewW - anchoPared, 0, anchoPared, viewH);
-		Pen^ junta = gcnew Pen(Color::FromArgb(255, 24, 26, 30), 2.0f);
-		for (int y = 0; y < viewH; y += 42) {
-			g->DrawLine(junta, 0, y, anchoPared, y);
-			g->DrawLine(junta, viewW - anchoPared, y, viewW, y);
-			int desfase = ((y / 42) % 2 == 0) ? 34 : 68;
-			g->DrawLine(junta, desfase, y, desfase, y + 42);
-			g->DrawLine(junta, viewW - desfase, y, viewW - desfase, y + 42);
+		SolidBrush^ oscuroFondo = gcnew SolidBrush(Color::FromArgb(255, 8, 10, 15));
+		SolidBrush^ sombraShaft = gcnew SolidBrush(Color::FromArgb(255, 13, 16, 23));
+		SolidBrush^ luzPasoA = gcnew SolidBrush(Color::FromArgb(255, 34, 30, 28));
+		SolidBrush^ luzPasoB = gcnew SolidBrush(Color::FromArgb(255, 76, 62, 42));
+		SolidBrush^ luzPasoC = gcnew SolidBrush(Color::FromArgb(255, 166, 128, 72));
+		SolidBrush^ muroBase = gcnew SolidBrush(Color::FromArgb(255, 22, 26, 35));
+		SolidBrush^ ladrilloA = gcnew SolidBrush(Color::FromArgb(255, 34, 40, 52));
+		SolidBrush^ ladrilloB = gcnew SolidBrush(Color::FromArgb(255, 44, 51, 66));
+		SolidBrush^ junta = gcnew SolidBrush(Color::FromArgb(255, 12, 15, 20));
+		SolidBrush^ bordeMadera = gcnew SolidBrush(Color::FromArgb(255, 52, 34, 18));
+		SolidBrush^ madera = gcnew SolidBrush(Color::FromArgb(255, 112, 74, 40));
+		SolidBrush^ maderaLuz = gcnew SolidBrush(Color::FromArgb(255, 168, 118, 66));
+
+		pg->FillRectangle(oscuroFondo, 0, 0, pxW, pxH);
+		pg->FillRectangle(sombraShaft, 74, 0, 92, pxH);
+
+		if (transicionBajandoPozo) {
+			pg->FillRectangle(luzPasoA, 82, 0, 76, 48);
+			pg->FillRectangle(luzPasoB, 92, 0, 56, 28);
+			pg->FillRectangle(luzPasoC, 100, 0, 40, 12);
 		}
-		delete junta;
-		delete piedra;
-
-		SolidBrush^ brillo = gcnew SolidBrush(Color::FromArgb(32, 244, 176, 86));
-		g->FillEllipse(brillo, viewW / 2 - 150, -120, 300, 260);
-		delete brillo;
-		SolidBrush^ fuego = gcnew SolidBrush(Color::FromArgb(210, 255, 200, 112));
-		g->FillEllipse(fuego, viewW / 2 - 9, 8, 18, 24);
-		g->FillEllipse(fuego, viewW / 2 - 5, 3, 10, 14);
-		delete fuego;
-
-		Pen^ soga = gcnew Pen(Color::FromArgb(210, 188, 158, 100), 3.0f);
-		Pen^ travesano = gcnew Pen(Color::FromArgb(180, 140, 108, 62), 2.0f);
-		g->DrawLine(soga, viewW / 2 - 58, 0, viewW / 2 - 58, viewH);
-		g->DrawLine(soga, viewW / 2 + 58, 0, viewW / 2 + 58, viewH);
-		for (int y = 24; y < viewH; y += 28) {
-			g->DrawLine(travesano, viewW / 2 - 58, y, viewW / 2 + 58, y);
+		else {
+			pg->FillRectangle(luzPasoA, 78, 0, 84, 72);
+			pg->FillRectangle(luzPasoB, 86, 0, 68, 42);
+			pg->FillRectangle(luzPasoC, 96, 0, 48, 18);
 		}
-		delete soga;
-		delete travesano;
+
+		pg->FillRectangle(muroBase, 0, 0, 76, pxH);
+		pg->FillRectangle(muroBase, 164, 0, 76, pxH);
+		for (int fila = 0; fila * 10 < pxH; fila++) {
+			int by = fila * 10;
+			int offset = (fila % 2 == 0) ? 0 : 10;
+			for (int bx = -offset; bx < 74; bx += 20) {
+				int drawX = Math::Max(0, bx);
+				int drawW = Math::Min(74 - drawX, (bx + 19) - drawX);
+				if (drawW > 1) {
+					pg->FillRectangle(((fila + bx / 20) % 2 == 0) ? ladrilloA : ladrilloB, drawX, by + 1, drawW, 8);
+				}
+				pg->FillRectangle(junta, 166 + drawX, by + 1, drawW, 8);
+				if (drawW > 1) {
+					pg->FillRectangle(((fila + bx / 20) % 2 == 0) ? ladrilloB : ladrilloA, 166 + drawX, by + 1, drawW, 8);
+				}
+			}
+			pg->FillRectangle(junta, 0, by + 9, 76, 1);
+			pg->FillRectangle(junta, 164, by + 9, 76, 1);
+		}
+		pg->FillRectangle(junta, 74, 0, 2, pxH);
+		pg->FillRectangle(junta, 164, 0, 2, pxH);
+
+		if (transicionBajandoPozo) {
+			pg->FillRectangle(ladrilloB, 70, 0, 100, 8);
+			pg->FillRectangle(ladrilloA, 74, 8, 92, 4);
+			pg->FillRectangle(junta, 70, 12, 100, 1);
+		}
+		else {
+			pg->FillRectangle(bordeMadera, 72, 0, 96, 6);
+			pg->FillRectangle(madera, 76, 1, 88, 4);
+			pg->FillRectangle(ladrilloA, 74, 138, 92, 12);
+			pg->FillRectangle(ladrilloB, 74, 138, 92, 3);
+		}
+
+		pg->FillRectangle(bordeMadera, 104, 0, 4, pxH);
+		pg->FillRectangle(bordeMadera, 132, 0, 4, pxH);
+		pg->FillRectangle(madera, 105, 0, 2, pxH);
+		pg->FillRectangle(madera, 133, 0, 2, pxH);
+		for (int ry = 8; ry < pxH; ry += 10) {
+			pg->FillRectangle(bordeMadera, 107, ry + 1, 26, 2);
+			pg->FillRectangle(maderaLuz, 107, ry, 26, 2);
+		}
 
 		float t = 1.0f - (ticksTransicionPozo / 60.0f);
-		int spriteY = transicionBajandoPozo ? (int)(80 + t * 360) : (int)(440 - t * 360);
-		g->DrawImage(bmpCoco, Rectangle(viewW / 2 - 44, spriteY, 72, 96), 0, 0, 24, 32, GraphicsUnit::Pixel);
-		if (myrphonRescatado && !dioVaraRicheh && myrphonObjeto != nullptr) {
-			Bitmap^ icono = myrphonObjeto->getIcono();
-			if (icono != nullptr) g->DrawImage(icono, Rectangle(viewW / 2 + 26, spriteY + 28, 54, 54));
+		int frame = (ticksJuego / 3) % Configuracion::cantZeldaWalking;
+		int cocoX = pxW / 2 - 12;
+		int cocoY = transicionBajandoPozo ? (int)(16 + t * 94) : (int)(108 - t * 94);
+		int pasoBob = ((ticksJuego / 3) % 2 == 0) ? 0 : -1;
+		pg->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::NearestNeighbor;
+		pg->PixelOffsetMode = System::Drawing::Drawing2D::PixelOffsetMode::Half;
+		pg->DrawImage(bmpCoco, Rectangle(cocoX, cocoY + pasoBob, 24, 32), frame * 24, 6 * 32, 24, 32, GraphicsUnit::Pixel);
+
+		if (myrphonRescatado && !dioVaraRicheh) {
+			Bitmap^ bm = bmpMyrphon;
+			if (bm != nullptr && bm->Width >= 6 && bm->Height >= 4) {
+				pg->DrawImage(bm, Rectangle(cocoX + 16, cocoY + 8, 16, 16), 0, 0, bm->Width / 6, bm->Height / 4, GraphicsUnit::Pixel);
+			}
 		}
 
-		System::Drawing::Font^ f = gcnew System::Drawing::Font("Segoe UI", 14.0f, FontStyle::Bold);
-		System::Drawing::Font^ fSub = gcnew System::Drawing::Font("Segoe UI", 9.0f, FontStyle::Regular);
-		String^ txt = transicionBajandoPozo ? "Descendiendo al pozo..." : "Subiendo a la torre...";
-		String^ sub = "Torre de Agott  ·  Sótano de Richeh";
+		delete oscuroFondo;
+		delete sombraShaft;
+		delete luzPasoA;
+		delete luzPasoB;
+		delete luzPasoC;
+		delete muroBase;
+		delete ladrilloA;
+		delete ladrilloB;
+		delete junta;
+		delete bordeMadera;
+		delete madera;
+		delete maderaLuz;
+		delete pg;
+
+		g->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::NearestNeighbor;
+		g->PixelOffsetMode = System::Drawing::Drawing2D::PixelOffsetMode::Half;
+		g->DrawImage(lienzo, Rectangle(0, 0, viewW, viewH), 0, 0, pxW, pxH, GraphicsUnit::Pixel);
+		delete lienzo;
+
+		System::Drawing::Font^ f = gcnew System::Drawing::Font("Segoe UI", 12.0f, FontStyle::Bold);
+		String^ txt = transicionBajandoPozo ? "Bajando al sótano de Richeh..." : "Subiendo hacia la Torre de Agott...";
 		SizeF tam = g->MeasureString(txt, f);
-		SizeF tamSub = g->MeasureString(sub, fSub);
-		g->DrawString(txt, f, Brushes::Gainsboro, PointF(viewW / 2.0f - tam.Width / 2.0f, 34.0f));
-		g->DrawString(sub, fSub, Brushes::Silver, PointF(viewW / 2.0f - tamSub.Width / 2.0f, 60.0f));
+		SolidBrush^ cajaTexto = gcnew SolidBrush(Color::FromArgb(200, 10, 14, 20));
+		int bx = (int)(viewW / 2.0f - tam.Width / 2.0f) - 16;
+		g->FillRectangle(cajaTexto, bx, viewH - 58, (int)tam.Width + 32, 34);
+		g->DrawString(txt, f, Brushes::Gainsboro, PointF(viewW / 2.0f - tam.Width / 2.0f, (float)(viewH - 51)));
+		delete cajaTexto;
 		delete f;
-		delete fSub;
 	}
 
 	void obtenerPersonajes(std::vector<PersonajeInfo>& personajes) {
 		personajes.clear();
-		PersonajeInfo coco;
-		coco.nombre = "Coco";
-		coco.rol = "Aprendiz de Maga";
-		coco.descripcion = "Protagonista del Nivel 1. Descubrió la verdad sobre el dibujo mágico.";
-		coco.confianza = "Amigos";
-		personajes.push_back(coco);
+		personajes.push_back(PersonajeInfo{ "Coco", "Aprendiz de Maga", "Protagonista del Nivel 1. Descubrió la verdad sobre el dibujo mágico.", "Protagonista", "Coco" });
 		if (habloQifrey) {
-			PersonajeInfo p;
-			p.nombre = "Qifrey";
-			p.rol = "Maestro Hechicero";
-			p.descripcion = "Tutor y protector del atelier. Especialista en trazos y magia de agua.";
-			p.confianza = textoConfianza(confianzaQifrey);
-			personajes.push_back(p);
+			personajes.push_back(PersonajeInfo{ "Qifrey", "Maestro Hechicero", "Tutor y protector del atelier. Especialista en trazos y magia de agua.", textoConfianza(confianzaQifrey), "Qifrey" });
 		}
 		if (habloAgott) {
-			PersonajeInfo p;
-			p.nombre = "Agott";
-			p.rol = "Aprendiz de Maga";
-			p.descripcion = "Compañera disciplinada y exigente. Aspira a la perfección del trazo.";
-			p.confianza = textoConfianza(confianzaAgott);
-			personajes.push_back(p);
+			personajes.push_back(PersonajeInfo{ "Agott", "Aprendiz de Maga", "Compañera disciplinada y exigente. Aspira a la perfección del trazo.", textoConfianza(confianzaAgott), "Agott" });
 		}
 		if (habloRicheh) {
-			PersonajeInfo p;
-			p.nombre = "Richeh";
-			p.rol = "Aprendiz de Maga";
-			p.descripcion = "Amiga reflexiva de Coco. Gran conocedora de runas antiguas.";
-			p.confianza = textoConfianza(confianzaRicheh);
-			personajes.push_back(p);
+			personajes.push_back(PersonajeInfo{ "Richeh", "Aprendiz de Maga", "Amiga reflexiva de Coco. Gran conocedora de runas antiguas.", textoConfianza(confianzaRicheh), "Richeh" });
 		}
-		if (misionMyrphonActiva || myrphonRescatado) {
-			PersonajeInfo p;
-			p.nombre = "Myrphon";
-			p.rol = "Mascota de Richeh";
-			p.descripcion = "Pingüino-grifo de cuatro patas propiedad de Richeh. Quedó atrapado en la oscuridad del laberinto Serpentback.";
-			p.confianza = myrphonRescatado ? "Amigos" : "Perdido";
-			personajes.push_back(p);
+		if (vioMyrphon || misionMyrphonActiva || myrphonHuyendo || myrphonEscapado || myrphonRescatado || myrphonConRicheh) {
+			personajes.push_back(PersonajeInfo{ "Myrphon", "Mascota de Richeh", "Pincelero fiel de Richeh. Se perdió entre las sombras del bosque de Serpentback.", myrphonRescatado ? "Amigos" : "Perdido", "Myrphon" });
+		}
+		if (vioEnemigos) {
+			personajes.push_back(PersonajeInfo{ "Sombrero de Ala Ancha", "Mago de la Magia Prohibida", "Hechicero misterioso que patrulla el bosque de Serpentback y lanza disparos de energía oscura.", "Hostil", "Sombrero" });
 		}
 	}
 
 	void pausarAudio() { audio.pausar(); }
-	void reanudarAudioNivel() {
+	void reproducirAudioNivel(int numNivel = 1) {
+		if (audioHabilitado) audio.reproducirNivel(numNivel);
+	}
+	void reanudarAudioNivel(int numNivel = 1) {
 		if (!audioHabilitado) return;
 		audio.reanudar();
-		if (!audio.estaCargado()) audio.reproducirNivel(1);
+		if (!audio.estaCargado()) audio.reproducirNivel(numNivel);
 	}
 	void reproducirAudioMinijuego() {
 		if (audioHabilitado) audio.reproducirMinijuego();
 	}
+	void actualizarAudio() {
+		if (audioHabilitado) audio.actualizar();
+	}
 	void detenerAudio() { audio.detener(); }
 	bool estaAudioHabilitado() { return audioHabilitado; }
-	void alternarAudio() {
+	void alternarAudio(int numNivel = 1) {
 		audioHabilitado = !audioHabilitado;
+		GestorAudio::SetSfxHabilitado(audioHabilitado);
 		if (audioHabilitado) {
-			audio.reproducirNivel(1);
+			audio.reproducirNivel(numNivel);
 			mensajeTemporal = "Música activada (M para silenciar)";
 		}
 		else {
@@ -2196,6 +2807,24 @@ public:
 		return resumen;
 	}
 
+	bool asegurarPartidaRegenerativa() {
+		std::ifstream prueba("partida_guardada.txt");
+		bool valido = false;
+		if (prueba.is_open()) {
+			bool tieneNivel = false;
+			bool tieneVidas = false;
+			std::string linea;
+			while (std::getline(prueba, linea)) {
+				if (linea.rfind("nivel=", 0) == 0) tieneNivel = true;
+				else if (linea.rfind("vidas=", 0) == 0) tieneVidas = true;
+			}
+			prueba.close();
+			valido = tieneNivel && tieneVidas;
+		}
+		if (valido) return true;
+		return guardarPartida();
+	}
+
 	bool guardarPartida() {
 		std::ofstream archivo("partida_guardada.txt", std::ios::out | std::ios::trunc);
 		if (!archivo.is_open()) return false;
@@ -2203,10 +2832,13 @@ public:
 		archivo << "vidas=" << jugador->getVidas() << "\n";
 		archivo << "x=" << jugador->getX() << "\n";
 		archivo << "y=" << jugador->getY() << "\n";
+		archivo << "posAtelierX=" << posAtelierX << "\n";
+		archivo << "posAtelierY=" << posAtelierY << "\n";
 		archivo << "enPozo=" << (enPozo ? 1 : 0) << "\n";
 		archivo << "habloQifrey=" << (habloQifrey ? 1 : 0) << "\n";
 		archivo << "habloAgott=" << (habloAgott ? 1 : 0) << "\n";
 		archivo << "habloRicheh=" << (habloRicheh ? 1 : 0) << "\n";
+		archivo << "pidioMantoQifrey=" << (pidioMantoQifrey ? 1 : 0) << "\n";
 		archivo << "confianzaQifrey=" << confianzaQifrey << "\n";
 		archivo << "confianzaAgott=" << confianzaAgott << "\n";
 		archivo << "confianzaRicheh=" << confianzaRicheh << "\n";
@@ -2214,18 +2846,28 @@ public:
 		archivo << "richehEnojada=" << (richehEnojada ? 1 : 0) << "\n";
 		archivo << "misionMyrphonActiva=" << (misionMyrphonActiva ? 1 : 0) << "\n";
 		archivo << "myrphonRescatado=" << (myrphonRescatado ? 1 : 0) << "\n";
+		archivo << "myrphonEscapado=" << (myrphonEscapado ? 1 : 0) << "\n";
+		archivo << "vioMyrphon=" << (vioMyrphon ? 1 : 0) << "\n";
+		archivo << "vioEnemigos=" << (vioEnemigos ? 1 : 0) << "\n";
 		archivo << "dioVaraRicheh=" << (dioVaraRicheh ? 1 : 0) << "\n";
 		archivo << "agottSabeMyrphon=" << (agottSabeMyrphon ? 1 : 0) << "\n";
 		archivo << "capaCrafteada=" << (capaCrafteada ? 1 : 0) << "\n";
 		archivo << "tintaMagicaEntregada=" << (tintaMagicaEntregada ? 1 : 0) << "\n";
+		archivo << "tintaSecundariaEntregada=" << (tintaSecundariaEntregada ? 1 : 0) << "\n";
+		archivo << "grimorioDescubierto=" << (grimorioDescubierto ? 1 : 0) << "\n";
 		archivo << "libroEncontrado=" << (libroEncontrado ? 1 : 0) << "\n";
 		archivo << "pozoDescubierto=" << (pozoDescubierto ? 1 : 0) << "\n";
 		archivo << "paredRocaRota=" << (paredRocaRota ? 1 : 0) << "\n";
 		archivo << "entroTorre=" << (entroTorre ? 1 : 0) << "\n";
+		archivo << "monologoCruceActivado=" << (monologoCruceActivado ? 1 : 0) << "\n";
 		archivo << "gatoAcariciado=" << (gatoAcariciado ? 1 : 0) << "\n";
 		archivo << "trollDescubierto=" << (trollDescubierto ? 1 : 0) << "\n";
 		archivo << "misionCompletada=" << (misionCompletada ? 1 : 0) << "\n";
 		archivo << "tiempo=" << ticksJuego << "\n";
+		archivo << "pozoX=" << (pozoObjeto != nullptr ? pozoObjeto->getX() : 0) << "\n";
+		archivo << "pozoY=" << (pozoObjeto != nullptr ? pozoObjeto->getY() : 0) << "\n";
+		archivo << "grimorioX=" << (grimorioObjeto != nullptr ? grimorioObjeto->getX() : 0) << "\n";
+		archivo << "grimorioY=" << (grimorioObjeto != nullptr ? grimorioObjeto->getY() : 0) << "\n";
 		archivo << "itemCount=" << inventario->getCantidad() << "\n";
 		for (int i = 0; i < inventario->getCantidad(); i++) {
 			ItemInventario it = inventario->getItem(i);
@@ -2237,7 +2879,11 @@ public:
 
 	bool cargarPartida() {
 		std::ifstream archivo("partida_guardada.txt");
-		if (!archivo.is_open()) return false;
+		if (!archivo.is_open()) {
+			iniciarNivel(1);
+			guardarPartida();
+			return true;
+		}
 		std::map<std::string, std::string> valores;
 		std::vector<ItemInventario> items;
 		std::string linea;
@@ -2263,14 +2909,18 @@ public:
 		archivo.close();
 		try {
 			iniciarNivel(1);
+			enIntro = false;
 			ticksTituloNivel = 0;
 			if (valores.find("vidas") != valores.end()) jugador->setVidas(ClampEntero(std::stoi(valores["vidas"]), 1, 3));
 			if (valores.find("x") != valores.end()) jugador->setX(std::stoi(valores["x"]));
 			if (valores.find("y") != valores.end()) jugador->setY(std::stoi(valores["y"]));
+			if (valores.find("posAtelierX") != valores.end()) posAtelierX = std::stoi(valores["posAtelierX"]);
+			if (valores.find("posAtelierY") != valores.end()) posAtelierY = std::stoi(valores["posAtelierY"]);
 			if (valores.find("enPozo") != valores.end()) enPozo = std::stoi(valores["enPozo"]) != 0;
 			if (valores.find("habloQifrey") != valores.end()) habloQifrey = std::stoi(valores["habloQifrey"]) != 0;
 			if (valores.find("habloAgott") != valores.end()) habloAgott = std::stoi(valores["habloAgott"]) != 0;
 			if (valores.find("habloRicheh") != valores.end()) habloRicheh = std::stoi(valores["habloRicheh"]) != 0;
+			if (valores.find("pidioMantoQifrey") != valores.end()) pidioMantoQifrey = std::stoi(valores["pidioMantoQifrey"]) != 0;
 			if (valores.find("confianzaQifrey") != valores.end()) confianzaQifrey = std::stoi(valores["confianzaQifrey"]);
 			if (valores.find("confianzaAgott") != valores.end()) confianzaAgott = std::stoi(valores["confianzaAgott"]);
 			if (valores.find("confianzaRicheh") != valores.end()) confianzaRicheh = std::stoi(valores["confianzaRicheh"]);
@@ -2278,14 +2928,20 @@ public:
 			if (valores.find("richehEnojada") != valores.end()) richehEnojada = std::stoi(valores["richehEnojada"]) != 0;
 			if (valores.find("misionMyrphonActiva") != valores.end()) misionMyrphonActiva = std::stoi(valores["misionMyrphonActiva"]) != 0;
 			if (valores.find("myrphonRescatado") != valores.end()) myrphonRescatado = std::stoi(valores["myrphonRescatado"]) != 0;
+			if (valores.find("myrphonEscapado") != valores.end()) myrphonEscapado = std::stoi(valores["myrphonEscapado"]) != 0;
+			if (valores.find("vioMyrphon") != valores.end()) vioMyrphon = std::stoi(valores["vioMyrphon"]) != 0;
+			if (valores.find("vioEnemigos") != valores.end()) vioEnemigos = std::stoi(valores["vioEnemigos"]) != 0;
 			if (valores.find("dioVaraRicheh") != valores.end()) dioVaraRicheh = std::stoi(valores["dioVaraRicheh"]) != 0;
 			if (valores.find("agottSabeMyrphon") != valores.end()) agottSabeMyrphon = std::stoi(valores["agottSabeMyrphon"]) != 0;
 			if (valores.find("capaCrafteada") != valores.end()) capaCrafteada = std::stoi(valores["capaCrafteada"]) != 0;
 			if (valores.find("tintaMagicaEntregada") != valores.end()) tintaMagicaEntregada = std::stoi(valores["tintaMagicaEntregada"]) != 0;
+			if (valores.find("tintaSecundariaEntregada") != valores.end()) tintaSecundariaEntregada = std::stoi(valores["tintaSecundariaEntregada"]) != 0;
+			if (valores.find("grimorioDescubierto") != valores.end()) grimorioDescubierto = std::stoi(valores["grimorioDescubierto"]) != 0;
 			if (valores.find("libroEncontrado") != valores.end()) libroEncontrado = std::stoi(valores["libroEncontrado"]) != 0;
 			if (valores.find("pozoDescubierto") != valores.end()) pozoDescubierto = std::stoi(valores["pozoDescubierto"]) != 0;
 			if (valores.find("paredRocaRota") != valores.end()) paredRocaRota = std::stoi(valores["paredRocaRota"]) != 0;
 			if (valores.find("entroTorre") != valores.end()) entroTorre = std::stoi(valores["entroTorre"]) != 0;
+			if (valores.find("monologoCruceActivado") != valores.end()) monologoCruceActivado = std::stoi(valores["monologoCruceActivado"]) != 0;
 			if (valores.find("gatoAcariciado") != valores.end()) gatoAcariciado = std::stoi(valores["gatoAcariciado"]) != 0;
 			if (valores.find("trollDescubierto") != valores.end()) trollDescubierto = std::stoi(valores["trollDescubierto"]) != 0;
 			if (valores.find("misionCompletada") != valores.end()) misionCompletada = std::stoi(valores["misionCompletada"]) != 0;
@@ -2295,11 +2951,25 @@ public:
 				inventario->agregarItem(items[i].nombre, items[i].descripcion, items[i].tipo);
 			}
 			if (paredRocaRota) mapa->romperParedRoca();
-			if (pozoObjeto != nullptr) pozoObjeto->setVisible(pozoDescubierto);
-			if (grimorioObjeto != nullptr) grimorioObjeto->setVisible(libroEncontrado && !tieneItem("Grimorio de Trazos"));
+			if (pozoObjeto != nullptr) {
+				if (valores.find("pozoX") != valores.end() && std::stoi(valores["pozoX"]) > 0) pozoObjeto->setX(std::stoi(valores["pozoX"]));
+				if (valores.find("pozoY") != valores.end() && std::stoi(valores["pozoY"]) > 0) pozoObjeto->setY(std::stoi(valores["pozoY"]));
+				pozoObjeto->setVisible(pozoDescubierto);
+			}
+			if (grimorioObjeto != nullptr) {
+				if (valores.find("grimorioX") != valores.end() && std::stoi(valores["grimorioX"]) > 0) grimorioObjeto->setX(std::stoi(valores["grimorioX"]));
+				if (valores.find("grimorioY") != valores.end() && std::stoi(valores["grimorioY"]) > 0) grimorioObjeto->setY(std::stoi(valores["grimorioY"]));
+				grimorioObjeto->setVisible(grimorioDescubierto && !tieneItem("Grimorio de Trazos") && !capaCrafteada);
+			}
 			if (enPozo) mapaActual = mapaPozo;
 			else mapaActual = mapa;
-			if (myrphonObjeto != nullptr) myrphonObjeto->setVisible(misionMyrphonActiva && !myrphonRescatado);
+			if (myrphonObjeto != nullptr) {
+				myrphonObjeto->setVisible(misionMyrphonActiva && !myrphonRescatado);
+				if (myrphonEscapado) {
+					myrphonObjeto->setX(131 * 32);
+					myrphonObjeto->setY(60 * 32);
+				}
+			}
 			if (dioVaraRicheh) myrphonConRicheh = true;
 			finMostrado = false;
 			cerrarDialogo();
@@ -2308,7 +2978,9 @@ public:
 			return true;
 		}
 		catch (...) {
-			return false;
+			iniciarNivel(1);
+			guardarPartida();
+			return true;
 		}
 	}
 };

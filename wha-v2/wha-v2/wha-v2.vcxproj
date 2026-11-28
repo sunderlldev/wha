@@ -114,6 +114,8 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies />
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -125,33 +127,46 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyForm.cpp" />
+    <ClCompile Include="AudioMotor.cpp">
+      <CompileAsManaged>false</CompileAsManaged>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioMotor.h" />
     <ClInclude Include="Enemigo.h" />
     <ClInclude Include="ItemMagico.h" />
     <ClInclude Include="MapaNivel2.h" />
-    <ClInclude Include="MyForm.h" />
+    <ClInclude Include="MyForm.h">
+      <FileType>CppForm</FileType>
+      <SubType>Form</SubType>
+    </ClInclude>
     <ClInclude Include="Arbol.h" />
     <ClInclude Include="BloqueMapa.h" />
     <ClInclude Include="CajaMovible.h" />
     <ClInclude Include="Configuracion.h" />
     <ClInclude Include="Inventario.h" />
-    <ClInclude Include="ControladorJuego.h" />
+    <ClInclude Include="Nivel1.h" />
     <ClInclude Include="Entidad.h" />
     <ClInclude Include="FormControles.h" />
     <ClInclude Include="FormCreditos.h" />
+    <ClInclude Include="FormEscenaCuarto.h" />
     <ClInclude Include="FormFinNivel.h" />
     <ClInclude Include="FormGuardarCargar.h" />
     <ClInclude Include="FormInventario.h" />
     <ClInclude Include="FormLore.h" />
     <ClInclude Include="FormMinijuego.h" />
+    <ClInclude Include="FormMisiones.h" />
     <ClInclude Include="FormPausa.h" />
     <ClInclude Include="FormPersonajes.h" />
     <ClInclude Include="FormTrollface.h" />
     <ClInclude Include="GestorAudio.h" />
     <ClInclude Include="GestorDialogos.h" />
-    <ClInclude Include="MapaTileMatrix.h" />
+    <ClInclude Include="MapaNivel1.h" />
+    <ClInclude Include="MapaNivel3.h" />
     <ClInclude Include="Nivel2.h" />
+    <ClInclude Include="Nivel3.h" />
+    <ClInclude Include="FormReflexion.h" />
+    <ClInclude Include="FormSelectorNivel.h" />
     <ClInclude Include="NPC.h" />
     <ClInclude Include="Protagonista.h" />
     <ClInclude Include="Utilidades.h" />
