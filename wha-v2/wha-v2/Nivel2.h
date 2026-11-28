@@ -25,6 +25,12 @@ struct LibretaRecargaN2 {
 	bool esInicial;
 };
 
+struct CorazonN2 {
+	int x;
+	int y;
+	bool recogido;
+};
+
 struct AldeanoN2 {
 	int x;
 	int y;
@@ -50,6 +56,7 @@ private:
 	std::vector<Enemigo*> enemigos;
 	std::vector<Arbol*> arboles;
 	std::vector<LibretaRecargaN2> libretas;
+	std::vector<CorazonN2> corazones;
 	std::vector<AldeanoN2> aldeanos;
 	std::vector<ProyectilN2> proyectiles;
 	std::vector<std::vector<int>> mapaPasto;
@@ -101,6 +108,7 @@ private:
 		}
 		arboles.clear();
 		libretas.clear();
+		corazones.clear();
 		aldeanos.clear();
 		proyectiles.clear();
 	}
@@ -156,6 +164,14 @@ private:
 		libretas.push_back(LibretaRecargaN2{ 80 * 32, 33 * 32, false, false });
 		libretas.push_back(LibretaRecargaN2{ 12 * 32, 49 * 32, false, false });
 		libretas.push_back(LibretaRecargaN2{ 60 * 32, 50 * 32, false, false });
+	}
+
+	void inicializarCorazones() {
+		corazones.clear();
+		corazones.push_back(CorazonN2{ 44 * 32, 16 * 32, false });
+		corazones.push_back(CorazonN2{ 56 * 32, 31 * 32, false });
+		corazones.push_back(CorazonN2{ 75 * 32, 34 * 32, false });
+		corazones.push_back(CorazonN2{ 46 * 32, 51 * 32, false });
 	}
 
 	void inicializarAldeanos() {
@@ -294,6 +310,7 @@ private:
 		puntaje = 100;
 
 		inicializarLibretas();
+		inicializarCorazones();
 		inicializarAldeanos();
 		generarArbolesAleatorios();
 		actualizarCamara();
@@ -690,6 +707,19 @@ public:
 					ticksMensaje = 90;
 				}
 			}
+			for (size_t i = 0; i < corazones.size(); i++) {
+				if (corazones[i].recogido) continue;
+				Rectangle rectCor(corazones[i].x + 2, corazones[i].y + 2, 24, 24);
+				if (rectPlayer.IntersectsWith(rectCor)) {
+					if (protagonista->getVidas() < 3) {
+						corazones[i].recogido = true;
+						protagonista->sumarVida();
+						GestorAudio::ReproducirSfxCorazon();
+						mensajeTemporal = "[VIDA] ¡Corazón recuperado! (" + std::to_string(protagonista->getVidas()) + "/3)";
+						ticksMensaje = 75;
+					}
+				}
+			}
 		}
 
 		persecucionEnemigos();
@@ -748,6 +778,7 @@ public:
 		dibujarMapa(g);
 		dibujarPortalSalida(g);
 		dibujarLibretas(g);
+		dibujarCorazonesMapa(g);
 		dibujarAldeanos(g);
 		dibujarEnemigos(g);
 		dibujarProtagonista(g);
@@ -895,6 +926,48 @@ private:
 				delete pincelLibro;
 			}
 		}
+	}
+
+	void dibujarCorazonesMapa(Graphics^ g) {
+		SolidBrush^ sombra = gcnew SolidBrush(Color::FromArgb(95, 8, 12, 18));
+		SolidBrush^ borde = gcnew SolidBrush(Color::FromArgb(255, 68, 18, 28));
+		SolidBrush^ rojo = gcnew SolidBrush(Color::FromArgb(255, 224, 54, 78));
+		SolidBrush^ brillo = gcnew SolidBrush(Color::FromArgb(255, 255, 196, 206));
+
+		for (size_t i = 0; i < corazones.size(); i++) {
+			if (corazones[i].recogido) continue;
+			int hx = corazones[i].x - camX;
+			int hy = corazones[i].y - camY;
+			if (hx < -48 || hx > 992 || hy < -48 || hy > 648) continue;
+
+			double fase = (double)ticksJuego * 0.14 + (double)i * 1.4;
+			int flot = (int)Math::Round(Math::Sin(fase) * 4.0);
+			int somW = 16 - flot / 2;
+			g->FillEllipse(sombra, hx + 16 - somW / 2, hy + 24, somW, 6);
+
+			int px = hx + 5;
+			int py = hy + 4 - flot;
+			g->FillRectangle(borde, px + 2, py, 6, 4);
+			g->FillRectangle(borde, px + 12, py, 6, 4);
+			g->FillRectangle(borde, px, py + 2, 20, 8);
+			g->FillRectangle(borde, px + 2, py + 10, 16, 4);
+			g->FillRectangle(borde, px + 5, py + 14, 10, 3);
+			g->FillRectangle(borde, px + 8, py + 17, 4, 2);
+
+			g->FillRectangle(rojo, px + 3, py + 2, 4, 3);
+			g->FillRectangle(rojo, px + 13, py + 2, 4, 3);
+			g->FillRectangle(rojo, px + 2, py + 4, 16, 5);
+			g->FillRectangle(rojo, px + 4, py + 9, 12, 4);
+			g->FillRectangle(rojo, px + 7, py + 13, 6, 3);
+			g->FillRectangle(rojo, px + 9, py + 16, 2, 1);
+
+			g->FillRectangle(brillo, px + 4, py + 3, 3, 3);
+		}
+
+		delete sombra;
+		delete borde;
+		delete rojo;
+		delete brillo;
 	}
 
 	void dibujarAldeanos(Graphics^ g) {

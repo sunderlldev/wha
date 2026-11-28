@@ -37,6 +37,10 @@ private:
 		static std::vector<unsigned char> buf;
 		return buf;
 	}
+	static std::vector<unsigned char>& BufferCorazon() {
+		static std::vector<unsigned char> buf;
+		return buf;
+	}
 	static bool& SfxHabilitadoFlag() {
 		static bool flag = true;
 		return flag;
@@ -54,6 +58,10 @@ private:
 		return ultimo;
 	}
 	static ULONGLONG& UltimoAccionMs() {
+		static ULONGLONG ultimo = 0;
+		return ultimo;
+	}
+	static ULONGLONG& UltimoCorazonMs() {
 		static ULONGLONG ultimo = 0;
 		return ultimo;
 	}
@@ -118,21 +126,17 @@ private:
 
 	static void ConstruirSfxDialogo(std::vector<unsigned char>& out) {
 		int sr = 22050;
-		int n = (sr * 22) / 1000;
+		int n = (sr * 42) / 1000;
 		std::vector<short> m(n, 0);
 		double fase = 0.0;
-		double filtro = 0.0;
-		unsigned int rng = 135791u;
 		for (int i = 0; i < n; i++) {
 			double t = (double)i / (double)n;
-			double freq = 185.0 - 55.0 * t;
+			double freq = 410.0 - 80.0 * t;
 			fase += (2.0 * 3.14159265358979 * freq) / (double)sr;
-			rng = rng * 1664525u + 1013904223u;
-			double r = ((double)(rng % 2000) / 1000.0) - 1.0;
-			filtro = filtro * 0.75 + r * 0.25;
-			double env = std::exp(-5.0 * t) * (1.0 - t);
-			if (i < 35) env *= (double)i / 35.0;
-			double s = (std::sin(fase) * 0.72 + filtro * 0.28) * env * 0.18;
+			double env = std::exp(-3.4 * t) * (1.0 - t);
+			if (i < 45) env *= (double)i / 45.0;
+			if (i > n - 60) env *= (double)(n - i) / 60.0;
+			double s = (std::sin(fase) * 0.85 + std::sin(fase * 2.0) * 0.15) * env * 0.34;
 			m[i] = (short)(s * 32767.0);
 		}
 		FinalizarWav(out, m, sr);
@@ -156,12 +160,34 @@ private:
 		FinalizarWav(out, m, sr);
 	}
 
+	static void ConstruirSfxCorazon(std::vector<unsigned char>& out) {
+		int sr = 22050;
+		int n = (sr * 170) / 1000;
+		std::vector<short> m(n, 0);
+		double f1 = 0.0;
+		double f2 = 0.0;
+		for (int i = 0; i < n; i++) {
+			double t = (double)i / (double)n;
+			double freqBase = (t < 0.42) ? 523.25 : 659.25;
+			double freqArm = freqBase * 1.5;
+			f1 += (2.0 * 3.14159265358979 * freqBase) / (double)sr;
+			f2 += (2.0 * 3.14159265358979 * freqArm) / (double)sr;
+			double env = (1.0 - t) * std::exp(-2.2 * t);
+			if (i < 60) env *= (double)i / 60.0;
+			if (i > n - 120) env *= (double)(n - i) / 120.0;
+			double s = (std::sin(f1) * 0.72 + std::sin(f2) * 0.28) * env * 0.32;
+			m[i] = (short)(s * 32767.0);
+		}
+		FinalizarWav(out, m, sr);
+	}
+
 	static void AsegurarSfx() {
 		if (SfxInicializadoFlag()) return;
 		SfxInicializadoFlag() = true;
 		ConstruirSfxPaso(BufferPaso());
 		ConstruirSfxDialogo(BufferDialogo());
 		ConstruirSfxAccion(BufferAccion());
+		ConstruirSfxCorazon(BufferCorazon());
 	}
 
 	void cerrarStream() {
@@ -228,7 +254,7 @@ public:
 #ifdef _WIN32
 		if (!SfxHabilitadoFlag()) return;
 		ULONGLONG ahora = GetTickCount64();
-		if (ahora - UltimoDialogoMs() < 85) return;
+		if (ahora - UltimoDialogoMs() < 75) return;
 		AsegurarSfx();
 		if (!BufferDialogo().empty()) {
 			UltimoDialogoMs() = ahora;
@@ -246,6 +272,19 @@ public:
 		if (!BufferAccion().empty()) {
 			UltimoAccionMs() = ahora;
 			PlaySoundA((LPCSTR)&BufferAccion()[0], NULL, SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
+		}
+#endif
+	}
+
+	static void ReproducirSfxCorazon() {
+#ifdef _WIN32
+		if (!SfxHabilitadoFlag()) return;
+		ULONGLONG ahora = GetTickCount64();
+		if (ahora - UltimoCorazonMs() < 90) return;
+		AsegurarSfx();
+		if (!BufferCorazon().empty()) {
+			UltimoCorazonMs() = ahora;
+			PlaySoundA((LPCSTR)&BufferCorazon()[0], NULL, SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
 		}
 #endif
 	}

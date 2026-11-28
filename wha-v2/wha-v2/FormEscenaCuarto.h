@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utilidades.h"
+#include "GestorAudio.h"
 
 namespace whav2 {
 
@@ -12,7 +13,10 @@ namespace whav2 {
 	public ref class FormEscenaCuarto : public Form {
 	private:
 		int indiceActual;
+		int charsVisibles;
+		int ticksTexto;
 		String^ tituloEscena;
+		String^ textoCompleto;
 		array<String^>^ rutas;
 		array<String^>^ textos;
 		Bitmap^ bmpActual;
@@ -21,8 +25,27 @@ namespace whav2 {
 		Label^ lblProgreso;
 		Label^ lblTexto;
 		Button^ btnSiguiente;
+		Timer^ tmrTexto;
+
+		void tmrTexto_Tick(Object^ sender, EventArgs^ e) {
+			if (textoCompleto == nullptr || charsVisibles >= textoCompleto->Length) {
+				tmrTexto->Stop();
+				return;
+			}
+			charsVisibles++;
+			ticksTexto++;
+			lblTexto->Text = textoCompleto->Substring(0, charsVisibles);
+			wchar_t ch = textoCompleto[charsVisibles - 1];
+			if (!Char::IsWhiteSpace(ch) && ticksTexto % 3 == 1) {
+				GestorAudio::ReproducirSfxDialogo();
+			}
+			if (charsVisibles >= textoCompleto->Length) {
+				tmrTexto->Stop();
+			}
+		}
 
 		void CargarSlideActual() {
+			if (tmrTexto != nullptr) tmrTexto->Stop();
 			if (bmpActual != nullptr) {
 				delete bmpActual;
 				bmpActual = nullptr;
@@ -30,10 +53,14 @@ namespace whav2 {
 			if (rutas != nullptr && indiceActual >= 0 && indiceActual < rutas->Length) {
 				bmpActual = CargarBitmapSeguroComun(rutas[indiceActual], false);
 				lblProgreso->Text = "Escena " + (indiceActual + 1).ToString() + " / " + rutas->Length.ToString();
-				if (textos != nullptr && indiceActual < textos->Length) {
-					lblTexto->Text = textos[indiceActual];
-				}
+				textoCompleto = (textos != nullptr && indiceActual < textos->Length && textos[indiceActual] != nullptr) ? textos[indiceActual] : "";
+				charsVisibles = 0;
+				ticksTexto = 0;
+				lblTexto->Text = "";
 				btnSiguiente->Text = (indiceActual + 1 < rutas->Length) ? "Siguiente [Espacio]" : "Continuar [Espacio]";
+				if (textoCompleto->Length > 0 && tmrTexto != nullptr) {
+					tmrTexto->Start();
+				}
 			}
 			pnlEscena->Invalidate();
 		}
@@ -79,6 +106,12 @@ namespace whav2 {
 		}
 
 		void Avanzar() {
+			if (textoCompleto != nullptr && charsVisibles < textoCompleto->Length) {
+				if (tmrTexto != nullptr) tmrTexto->Stop();
+				charsVisibles = textoCompleto->Length;
+				lblTexto->Text = textoCompleto;
+				return;
+			}
 			if (rutas == nullptr || indiceActual + 1 >= rutas->Length) {
 				this->DialogResult = System::Windows::Forms::DialogResult::OK;
 				this->Close();
@@ -168,11 +201,20 @@ namespace whav2 {
 			btnSiguiente->Click += gcnew EventHandler(this, &FormEscenaCuarto::btnSiguiente_Click);
 			this->Controls->Add(btnSiguiente);
 
+			tmrTexto = gcnew Timer();
+			tmrTexto->Interval = 30;
+			tmrTexto->Tick += gcnew EventHandler(this, &FormEscenaCuarto::tmrTexto_Tick);
+
 			CargarSlideActual();
 			this->ActiveControl = btnSiguiente;
 		}
 
 		~FormEscenaCuarto() {
+			if (tmrTexto != nullptr) {
+				tmrTexto->Stop();
+				delete tmrTexto;
+				tmrTexto = nullptr;
+			}
 			if (bmpActual != nullptr) {
 				delete bmpActual;
 				bmpActual = nullptr;

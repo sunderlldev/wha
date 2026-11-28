@@ -809,13 +809,14 @@ public:
 			}
 			std::string nom = objetos[i]->getNombre();
 			objetos[i]->recolectar();
-			GestorAudio::ReproducirSfxAccion();
 			if (nom == "Hierbas de Plata" || nom == "Tónico de Plata") {
 				protagonista->sumarVida();
+				GestorAudio::ReproducirSfxCorazon();
 				inventario->agregarItem(nom, objetos[i]->getDescripcion(), "Curación");
 				mensajeTemporal = "[" + nom + "] +1 Corazón restaurado";
 			}
 			else {
+				GestorAudio::ReproducirSfxAccion();
 				runasReunidas++;
 				inventario->agregarItem(nom, objetos[i]->getDescripcion(), "Pergamino del Sello");
 				actualizarObjetivo();
