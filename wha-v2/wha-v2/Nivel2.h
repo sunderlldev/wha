@@ -490,6 +490,8 @@ public:
 	void interactuar() {
 		if (enIntro) {
 			enIntro = false;
+			solicitaEscenaCuarto = true;
+			cuartoEscenaPendiente = 5;
 			return;
 		}
 		activarHechizoAire();
@@ -1095,9 +1097,23 @@ private:
 				}
 				cuartosExplorados = cont;
 				puntaje = cuartosExplorados * 100;
-				solicitaEscenaCuarto = true;
-				cuartoEscenaPendiente = nuevoCuarto;
-				mensajeTemporal = "[CUARTO " + std::to_string(nuevoCuarto) + "] +100 pts (" + std::to_string(cuartosExplorados) + "/9)";
+				if (nuevoCuarto != 1) {
+					solicitaEscenaCuarto = true;
+					cuartoEscenaPendiente = nuevoCuarto;
+				}
+				static const char* nombresCuartos[10] = {
+					"Pueblo de Kaln",
+					"Hogar Abandonado",
+					"Casa del Panadero",
+					"Casa Sospechosa",
+					"Refugio de Mago",
+					"Baños del Pueblo",
+					"Cuartel Moralis",
+					"Choza del Pueblo",
+					"Taberna de Kaln",
+					"Botica del Pueblo"
+				};
+				mensajeTemporal = std::string("[") + nombresCuartos[nuevoCuarto] + "] +100 pts (" + std::to_string(cuartosExplorados) + "/9)";
 				ticksMensaje = 95;
 			}
 		}

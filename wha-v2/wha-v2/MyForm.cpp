@@ -367,7 +367,7 @@ namespace whav2 {
 	}
 
 	void MyForm::CargarProgresoNiveles() {
-		std::ifstream arch("progreso_niveles.txt");
+		std::ifstream arch(ObtenerRutaGuardadoStdComun("progreso_niveles.txt"));
 		if (!arch.is_open()) {
 			GuardarProgresoNiveles();
 			return;
@@ -382,7 +382,7 @@ namespace whav2 {
 	}
 
 	void MyForm::GuardarProgresoNiveles() {
-		std::ofstream arch("progreso_niveles.txt", std::ios::out | std::ios::trunc);
+		std::ofstream arch(ObtenerRutaGuardadoStdComun("progreso_niveles.txt"), std::ios::out | std::ios::trunc);
 		if (!arch.is_open()) return;
 		arch << "n1=" << (nivel1Completado ? 1 : 0) << "\n";
 		arch << "n2=" << (nivel2Completado ? 1 : 0) << "\n";
@@ -781,26 +781,110 @@ namespace whav2 {
 				teclaShift = false;
 				N2(ptrNivel2)->detenerJugador();
 				array<String^>^ nombres = gcnew array<String^>{
-					"",
-					"Botica del Norte",
-					"Taller del Canal",
-					"Mirador de Kaln",
-					"Atrio del Portal",
-					"Casa de Tartah",
-					"Plaza de las Fuentes",
-					"Hostería Vieja",
-					"Almacén del Sur",
-					"Paseo Cercado del Sur"
+					"Pueblo de Kaln",
+					"Hogar Abandonado",
+					"Casa del Panadero",
+					"Casa Sospechosa",
+					"Refugio de Mago",
+					"Baños del Pueblo",
+					"Cuartel Moralis",
+					"Choza del Pueblo",
+					"Taberna de Kaln",
+					"Botica del Pueblo"
 				};
-				String^ nom = (cuartoEsc >= 1 && cuartoEsc <= 9) ? nombres[cuartoEsc] : "Sector de Kaln";
-				array<String^>^ imgs = gcnew array<String^>{
-					"sprites/escena_cuarto_" + cuartoEsc.ToString() + "_1.png",
-					"sprites/escena_cuarto_" + cuartoEsc.ToString() + "_2.png"
-				};
-				array<String^>^ desc = gcnew array<String^>{
-					"Tartah entra en " + nom + ". Los habitantes buscan refugio ante el avance de las sombras.",
-					"El eco del viento nocturno revela una nueva ruta y suministros para seguir avanzando."
-				};
+				String^ nom = (cuartoEsc >= 1 && cuartoEsc <= 9) ? nombres[cuartoEsc] : "Pueblo de Kaln";
+				array<String^>^ imgs = nullptr;
+				array<String^>^ desc = nullptr;
+				if (cuartoEsc == 2) {
+					imgs = gcnew array<String^>{
+						"sprites/Nivel2_Panaderia01.png",
+						"sprites/Nivel2_Panaderia02.png",
+						"sprites/Nivel2_Panaderia03.png",
+						"sprites/Nivel2_Panaderia04.png",
+						"sprites/Nivel2_Panaderia05.png"
+					};
+					desc = gcnew array<String^>{
+						"¡Un mago de sombrero puntiagudo!",
+						"¡El gato fue atrapado por los escombros!",
+						"¡Magia prohibida!",
+						"¿Está ayudándolo?",
+						"¿La magia se puede utilizar para curar?"
+					};
+				}
+				else if (cuartoEsc == 3) {
+					imgs = gcnew array<String^>{ "sprites/Nivel2_Abuelita01.png" };
+					desc = gcnew array<String^>{ "Casa de la viejita nada sospechosa..." };
+				}
+				else if (cuartoEsc == 4) {
+					imgs = gcnew array<String^>{ "sprites/Nivel2_Inicio04.png" };
+					desc = gcnew array<String^>{ "Casa alquilada usada por un mago." };
+				}
+				else if (cuartoEsc == 5) {
+					imgs = gcnew array<String^>{
+						"sprites/Nivel2_Inicio01.png",
+						"sprites/Nivel2_Inicio02.png",
+						"sprites/Nivel2_Inicio03.png",
+						"sprites/Nivel2_Inicio04.png"
+					};
+					desc = gcnew array<String^>{
+						"Coco avanza entre la niebla nocturna de Kaln.",
+						"Tartah observa los callejones antes de separarse.",
+						"Las puertas del pueblo permanecen cerradas ante el peligro.",
+						"Las sanguijuelas sombrías comienzan a rodear las casas."
+					};
+				}
+				else if (cuartoEsc == 6) {
+					imgs = gcnew array<String^>{
+						"sprites/Nivel2_Moralis01.png",
+						"sprites/Nivel2_Moralis02.png"
+					};
+					desc = gcnew array<String^>{
+						"Hagan aviso.",
+						"El pueblo está siendo invadido por una sanguijuela mágica."
+					};
+				}
+				else if (cuartoEsc == 7) {
+					imgs = gcnew array<String^>{
+						"sprites/Nivel2_ChozaPueblo01.png",
+						"sprites/Nivel2_ChozaPueblo02.png",
+						"sprites/Nivel2_ChozaPueblo03.png"
+					};
+					desc = gcnew array<String^>{
+						"Verás, Tartah...",
+						"La razón por la que Coustas puede caminar...",
+						"...es por la semilla del árbol de plata."
+					};
+				}
+				else if (cuartoEsc == 8) {
+					imgs = gcnew array<String^>{
+						"sprites/Nivel2_Taberna01.png",
+						"sprites/Nivel2_Taberna02.png",
+						"sprites/Nivel2_Taberna03.png",
+						"sprites/Nivel2_Taberna03.png"
+					};
+					desc = gcnew array<String^>{
+						"Tipo1: Sí, como te decía...",
+						"Tipo2: ¡Corran!",
+						"Tipo2: No sé qué sea esa cosa pero nos va a matar",
+						"Tipo1: ah"
+					};
+				}
+				else if (cuartoEsc == 9) {
+					imgs = gcnew array<String^>{
+						"sprites/Nivel2_Botica03.png",
+						"sprites/Nivel2_Botica03.png",
+						"sprites/Nivel2_Botica03.png"
+					};
+					desc = gcnew array<String^>{
+						"Tipo1: ¡Ayuda! Mi amigo está herido",
+						"Medico1: Hay muchos heridos",
+						"Medico2: No hay suficientes médicos y siguen llegando más personas"
+					};
+				}
+				else {
+					imgs = gcnew array<String^>{ "sprites/Nivel2_Inicio04.png" };
+					desc = gcnew array<String^>{ "Tartah recorre " + nom + " en busca de los habitantes." };
+				}
 				FormEscenaCuarto^ frmEsc = gcnew FormEscenaCuarto(cuartoEsc, nom, imgs, desc);
 				frmEsc->ShowDialog(this);
 				this->ActiveControl = nullptr;
