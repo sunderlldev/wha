@@ -302,13 +302,38 @@ private:
 
 	void generarOleadaCercana() {
 		if (protagonista == nullptr) return;
-		const int MAX_ACTIVOS = 45;
-		int activos = (int)enemigos.size();
-		if (activos >= MAX_ACTIVOS) return;
-
 		System::Random^ rng = gcnew System::Random((int)((System::DateTime::Now.Ticks + ticksJuego * 131) & 0x7FFFFFFF));
-		int cantidadLote = rng->Next(25, 31);
-		int porGenerar = Math::Min(cantidadLote, MAX_ACTIVOS - activos);
+
+		int minLote = 25;
+		int maxLote = 30;
+		int capActivos = 45;
+		if (cuartosExplorados <= 1) {
+			minLote = 4; maxLote = 6; capActivos = 8;
+		}
+		else if (cuartosExplorados == 2) {
+			minLote = 7; maxLote = 10; capActivos = 12;
+		}
+		else if (cuartosExplorados == 3) {
+			minLote = 10; maxLote = 13; capActivos = 16;
+		}
+		else if (cuartosExplorados == 4) {
+			minLote = 13; maxLote = 17; capActivos = 22;
+		}
+		else if (cuartosExplorados == 5) {
+			minLote = 16; maxLote = 20; capActivos = 28;
+		}
+		else if (cuartosExplorados == 6) {
+			minLote = 20; maxLote = 24; capActivos = 35;
+		}
+		else if (cuartosExplorados == 7) {
+			minLote = 22; maxLote = 26; capActivos = 40;
+		}
+
+		int activos = (int)enemigos.size();
+		if (activos >= capActivos) return;
+
+		int cantidadLote = rng->Next(minLote, maxLote + 1);
+		int porGenerar = Math::Min(cantidadLote, capActivos - activos);
 
 		int px = protagonista->getX();
 		int py = protagonista->getY();
@@ -328,7 +353,19 @@ private:
 
 			Enemigo* nuevo = new Enemigo(ex, ey, "Sanguijuela", 2, 1, 4, idCuartoActual);
 			int tirada = rng->Next(0, 100);
-			int vel = (tirada < 45) ? 2 : ((tirada < 80) ? rng->Next(3, 5) : rng->Next(5, 7));
+			int vel = 2;
+			if (cuartosExplorados <= 3) {
+				vel = (tirada < 75) ? 2 : 3;
+			}
+			else if (cuartosExplorados <= 5) {
+				vel = (tirada < 30) ? 2 : ((tirada < 75) ? rng->Next(3, 5) : 5);
+			}
+			else if (cuartosExplorados <= 7) {
+				vel = (tirada < 15) ? 3 : ((tirada < 60) ? 4 : rng->Next(5, 7));
+			}
+			else {
+				vel = (tirada < 10) ? 3 : ((tirada < 45) ? 4 : rng->Next(5, 7));
+			}
 			nuevo->setVelocidad(vel);
 			enemigos.push_back(nuevo);
 			generados++;
@@ -583,19 +620,26 @@ public:
 				else if (pr.dir == 'D') pr.x += 12;
 
 				bool impacto = false;
+				int eliminados = 0;
 				for (size_t i = 0; i < enemigos.size(); i++) {
 					Enemigo* en = enemigos[i];
 					if (en != nullptr && en->getActivo()) {
-						if (pr.x < en->getX() + en->getAncho() && pr.x + 32 > en->getX() &&
-							pr.y < en->getY() + en->getAlto() && pr.y + 32 > en->getY()) {
+						if (pr.x - 4 < en->getX() + en->getAncho() && pr.x + 36 > en->getX() &&
+							pr.y - 4 < en->getY() + en->getAlto() && pr.y + 36 > en->getY()) {
 							en->setActivo(false);
-							puntaje += 15;
+							eliminados++;
 							impacto = true;
-							mensajeTemporal = "[HECHIZO] ¡Sanguijuela repelida! (+15 pts)";
-							ticksMensaje = 55;
-							break;
+							if (eliminados >= 2) break;
 						}
 					}
+				}
+				if (eliminados > 0) {
+					int ptsGanados = eliminados * 15;
+					puntaje += ptsGanados;
+					mensajeTemporal = (eliminados > 1)
+						? ("[HECHIZO] ¡" + std::to_string(eliminados) + " sanguijuelas repelidas! (+" + std::to_string(ptsGanados) + " pts)")
+						: "[HECHIZO] ¡Sanguijuela repelida! (+15 pts)";
+					ticksMensaje = 55;
 				}
 				if (!impacto && hayColision(pr.x + 6, pr.y + 6, 20, 20)) {
 					impacto = true;
@@ -1088,9 +1132,15 @@ private:
 
 			int ex = en->getX();
 			int ey = en->getY();
+			int objX = px;
+			int objY = py;
+			if (abs(px - ex) > 28 || abs(py - ey) > 28) {
+				objX += ((int)(i % 5) - 2) * 8;
+				objY += ((int)((i / 5) % 3) - 1) * 8;
+			}
 			int dx = 0, dy = 0;
-			if (px > ex) dx = 1; else if (px < ex) dx = -1;
-			if (py > ey) dy = 1; else if (py < ey) dy = -1;
+			if (objX > ex) dx = 1; else if (objX < ex) dx = -1;
+			if (objY > ey) dy = 1; else if (objY < ey) dy = -1;
 
 			int vel = en->getVelocidad();
 			if (vel < 1) vel = 1;
@@ -1117,6 +1167,19 @@ private:
 						en->setY(ey + dy * s);
 						break;
 					}
+				}
+			}
+
+			for (size_t j = 0; j < i; j++) {
+				Enemigo* otro = enemigos[j];
+				if (otro == nullptr || !otro->getActivo()) continue;
+				int sx = en->getX() - otro->getX();
+				int sy = en->getY() - otro->getY();
+				if (abs(sx) < 12 && abs(sy) < 12) {
+					int rx = (sx >= 0) ? 2 : -2;
+					int ry = (sy >= 0) ? 2 : -2;
+					if (!hayColision(en->getX() + rx, en->getY(), en->getAncho(), en->getAlto())) en->setX(en->getX() + rx);
+					if (!hayColision(en->getX(), en->getY() + ry, en->getAncho(), en->getAlto())) en->setY(en->getY() + ry);
 				}
 			}
 		}
