@@ -104,6 +104,23 @@ private:
 		proyectiles.clear();
 	}
 
+	static const char* obtenerNombreCuarto(int id) {
+		static const char* nombres[10] = {
+			"Pueblo de Kaln",
+			"Hogar Abandonado",
+			"Casa del Panadero",
+			"Casa Sospechosa",
+			"Refugio de Mago",
+			"Baños del Pueblo",
+			"Cuartel Moralis",
+			"Choza del Pueblo",
+			"Taberna de Kaln",
+			"Botica del Pueblo"
+		};
+		if (id < 0 || id > 9) return nombres[0];
+		return nombres[id];
+	}
+
 	bool esCeldaTransitable(int col, int fila) {
 		if (fila < 0 || fila >= (int)mapa.size() || col < 0 || col >= (int)mapa[fila].length()) return false;
 		char ch = mapa[fila][col];
@@ -256,7 +273,7 @@ private:
 		camX = 0;
 		camY = 0;
 		ticksJuego = 0;
-		ticksOleada = 0;
+		ticksOleada = 320;
 		ticksCooldownDisparo = 0;
 		ticksCooldownDanio = 0;
 		cargasHechizoAire = 0;
@@ -435,7 +452,7 @@ public:
 	}
 
 	void obtenerGuiaPasoActual(std::string& titulo, std::string& detalle, int& pasoNum, int& totalPasos, int& targetX, int& targetY) {
-		totalPasos = 2;
+		totalPasos = 3;
 		if (!tieneLibretaInicial && !libretas.empty()) {
 			pasoNum = 1;
 			titulo = "Recoge la Libreta de Aire";
@@ -444,9 +461,37 @@ public:
 			targetY = libretas[0].y + 16;
 			return;
 		}
-		pasoNum = 2;
-		titulo = "Explora cuartos y ve al portal";
-		detalle = "Visita cuartos por puntaje y sal al noreste";
+		if (cuartosExplorados < 9 && protagonista != nullptr) {
+			static const int centros[10][2] = {
+				{ 0, 0 }, { 18, 9 }, { 50, 15 }, { 81, 15 }, { 107, 22 },
+				{ 13, 29 }, { 50, 32 }, { 80, 33 }, { 18, 49 }, { 61, 50 }
+			};
+			int px = protagonista->getX();
+			int py = protagonista->getY();
+			int mejorC = 0;
+			int mejorDistSq = 0x7FFFFFFF;
+			for (int k = 1; k <= 9; k++) {
+				if (cuartosVisitados[k]) continue;
+				int cx = centros[k][0] * 32;
+				int cy = centros[k][1] * 32;
+				int dSq = (cx - px) * (cx - px) + (cy - py) * (cy - py);
+				if (dSq < mejorDistSq) {
+					mejorDistSq = dSq;
+					mejorC = k;
+				}
+			}
+			if (mejorC > 0) {
+				pasoNum = 2;
+				titulo = std::string("Explora: ") + obtenerNombreCuarto(mejorC);
+				detalle = "Cuartos " + std::to_string(cuartosExplorados) + "/9 (portal da menos puntaje)";
+				targetX = centros[mejorC][0] * 32;
+				targetY = centros[mejorC][1] * 32;
+				return;
+			}
+		}
+		pasoNum = 3;
+		titulo = "Cruza el portal noreste";
+		detalle = "¡9/9 cuartos explorados! Sal por el portal";
 		targetX = 107 * 32 + 24;
 		targetY = 8 * 32 + 24;
 	}
@@ -454,18 +499,21 @@ public:
 	void obtenerMisiones(std::vector<MisionInfo>& lista, int& indiceActual) {
 		lista.clear();
 		bool paso1 = tieneLibretaInicial;
-		bool paso2 = (cuartosExplorados >= 5) || completado;
+		bool paso2 = (cuartosExplorados >= 9);
 		bool paso3 = completado;
 		lista.push_back(MisionInfo{ "1. Recoger Libreta de Hechizos", "Encuentra tu primera Libreta de Hechizos de Aire.", paso1 });
-		lista.push_back(MisionInfo{ "2. Explorar los cuartos de Kaln", "Recorre habitaciones (" + std::to_string(cuartosExplorados) + "/9) para recargar hechizos y sumar puntaje.", paso2 });
+		lista.push_back(MisionInfo{ "2. Explorar los 9 cuartos de Kaln", "Visita todas las zonas (" + std::to_string(cuartosExplorados) + "/9) para cinemáticas y máximo puntaje.", paso2 });
 		lista.push_back(MisionInfo{ "3. Alcanzar el portal noreste", "Esquiva las oleadas de sanguijuelas y cruza la salida.", paso3 });
-		indiceActual = paso3 ? 2 : (paso1 ? 1 : 0);
+		indiceActual = paso3 ? 2 : ((paso1 && paso2) ? 2 : (paso1 ? 1 : 0));
 	}
 
 	void obtenerPersonajes(std::vector<PersonajeInfo>& lista) {
 		lista.clear();
 		lista.push_back(PersonajeInfo{ "Tartah", "Habitante de Kaln (Ojos de Plata)", "Joven ingenioso del pueblo de Kaln. Recorre las calles nocturnas protegiendo a los aldeanos.", "Protagonista", "Tartah" });
 		lista.push_back(PersonajeInfo{ "Coco", "Aprendiz de Maga", "Amiga de Tartah en su paso por Kaln. Compartió hechizos básicos de viento para defenderse.", "Amigos", "Coco" });
+		lista.push_back(PersonajeInfo{ "Aldeano Dorado", "Habitante de Kaln", "Poblador de túnica dorada que huye despavorido cuando las sanguijuelas se acercan.", "Aliado", "aldeano_1" });
+		lista.push_back(PersonajeInfo{ "Aldeano Lila", "Habitante de Kaln", "Vecino de túnica lila que busca refugio entre las casas al escuchar las oleadas.", "Aliado", "aldeano_2" });
+		lista.push_back(PersonajeInfo{ "Aldeano Verde", "Habitante de Kaln", "Residente de túnica verde que corre a resguardarse durante el ataque nocturno.", "Aliado", "aldeano_3" });
 		lista.push_back(PersonajeInfo{ "Sanguijuelas Sombrías", "Criaturas de la Sombra", "Entidades oscuras que atacan en oleadas con velocidades variadas.", "Hostil", "Sanguijuela" });
 	}
 
@@ -601,10 +649,10 @@ public:
 		for (size_t i = 0; i < enemigos.size(); ) {
 			Enemigo* en = enemigos[i];
 			bool fuera = (en == nullptr || !en->getActivo() ||
-				en->getX() + en->getAncho() < camX - 32 ||
-				en->getX() > camX + 960 + 32 ||
-				en->getY() + en->getAlto() < camY - 32 ||
-				en->getY() > camY + 600 + 32);
+				en->getX() + en->getAncho() < camX - 260 ||
+				en->getX() > camX + 960 + 260 ||
+				en->getY() + en->getAlto() < camY - 260 ||
+				en->getY() > camY + 600 + 260);
 			if (fuera) {
 				if (en != nullptr) delete en;
 				enemigos.erase(enemigos.begin() + i);
@@ -612,6 +660,10 @@ public:
 			else {
 				i++;
 			}
+		}
+
+		if (enemigos.empty() && ticksJuego >= 60 && ticksOleada < 340) {
+			ticksOleada = 340;
 		}
 
 		if (ticksCooldownDanio > 0) {
@@ -625,7 +677,7 @@ public:
 			int cx = (protagonista->getX() + protagonista->getAncho() / 2) / 32;
 			int cy = (protagonista->getY() + protagonista->getAlto() / 2) / 32;
 			if (cx >= 105 && cx <= 109 && cy >= 6 && cy <= 10) {
-				puntaje = cuartosExplorados * 100 + (cuartosExplorados >= 9 ? 300 : 100);
+				puntaje += (cuartosExplorados >= 9 ? 400 : 50);
 				completado = true;
 				solicitaFinNivel = true;
 			}
@@ -1042,6 +1094,8 @@ private:
 
 			int vel = en->getVelocidad();
 			if (vel < 1) vel = 1;
+			bool fueraVista = (ex + en->getAncho() < camX || ex > camX + 960 || ey + en->getAlto() < camY || ey > camY + 600);
+			if (fueraVista) vel += 2;
 			int paso = (dx != 0 && dy != 0 && vel >= 4) ? (vel * 3) / 4 : vel;
 
 			if (dx > 0) en->setIdY(2);
@@ -1112,24 +1166,12 @@ private:
 					if (cuartosVisitados[k]) cont++;
 				}
 				cuartosExplorados = cont;
-				puntaje = cuartosExplorados * 100;
+				puntaje += 100;
 				if (nuevoCuarto != 1) {
 					solicitaEscenaCuarto = true;
 					cuartoEscenaPendiente = nuevoCuarto;
 				}
-				static const char* nombresCuartos[10] = {
-					"Pueblo de Kaln",
-					"Hogar Abandonado",
-					"Casa del Panadero",
-					"Casa Sospechosa",
-					"Refugio de Mago",
-					"Baños del Pueblo",
-					"Cuartel Moralis",
-					"Choza del Pueblo",
-					"Taberna de Kaln",
-					"Botica del Pueblo"
-				};
-				mensajeTemporal = std::string("[") + nombresCuartos[nuevoCuarto] + "] +100 pts (" + std::to_string(cuartosExplorados) + "/9)";
+				mensajeTemporal = std::string("[") + obtenerNombreCuarto(nuevoCuarto) + "] +100 pts (" + std::to_string(cuartosExplorados) + "/9)";
 				ticksMensaje = 95;
 			}
 		}

@@ -377,6 +377,7 @@ static Bitmap^ CargarRetratoPersonajeComun(String^ clave) {
 	int cols = 10;
 	int rows = 8;
 	int modoVariante = 0;
+	int colQuieto = 0;
 
 	if (k->Contains("coco")) {
 		archivo = "sprites/Coco_Spritesheet.png";
@@ -414,6 +415,21 @@ static Bitmap^ CargarRetratoPersonajeComun(String^ clave) {
 		archivo = "sprites/Coustas_Spritesheet.png";
 		cols = 10; rows = 8;
 	}
+	else if (k->Contains("aldeano_2") || k->Contains("lila") || k->Contains("morado")) {
+		archivo = "sprites/aldeano_2.png";
+		cols = 4; rows = 4;
+		colQuieto = 1;
+	}
+	else if (k->Contains("aldeano_3") || k->Contains("verde")) {
+		archivo = "sprites/aldeano_3.png";
+		cols = 4; rows = 4;
+		colQuieto = 1;
+	}
+	else if (k->Contains("aldeano")) {
+		archivo = "sprites/aldeano_1.png";
+		cols = 4; rows = 4;
+		colQuieto = 1;
+	}
 	else if (k->Contains("dagda")) {
 		archivo = "sprites/Qifrey_Spritesheet.png";
 		cols = 4; rows = 4;
@@ -448,7 +464,7 @@ static Bitmap^ CargarRetratoPersonajeComun(String^ clave) {
 	gr->Clear(Color::Transparent);
 	gr->InterpolationMode = InterpolationMode::NearestNeighbor;
 	gr->PixelOffsetMode = PixelOffsetMode::Half;
-	gr->DrawImage(origen, Rectangle(0, 0, fw, fh), Rectangle(0, filaQuieto * fh, fw, fh), GraphicsUnit::Pixel);
+	gr->DrawImage(origen, Rectangle(0, 0, fw, fh), Rectangle(colQuieto * fw, filaQuieto * fh, fw, fh), GraphicsUnit::Pixel);
 	delete gr;
 	delete origen;
 	return quieto;
