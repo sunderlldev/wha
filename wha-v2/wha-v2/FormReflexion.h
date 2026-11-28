@@ -59,7 +59,7 @@ namespace whav2 {
 			this->Controls->Add(pnlContenedor);
 
 			lblTitulo = gcnew Label();
-			lblTitulo->Text = "R E F L E X I Ó N   F I N A L   D E   L A   H I S T O R I A";
+			lblTitulo->Text = "Reflexión Final de la Historia";
 			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 14, FontStyle::Bold);
 			lblTitulo->ForeColor = Color::FromArgb(235, 195, 105);
 			lblTitulo->Location = Point(20, 16);

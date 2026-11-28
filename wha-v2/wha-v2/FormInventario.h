@@ -28,7 +28,7 @@ namespace whav2 {
 		FormInventario(array<String^>^ nombres, array<String^>^ descs) {
 			descripciones = descs;
 
-			this->Text = "Inventario Arcano - Witch Hat Atelier";
+			this->Text = "Inventario - Witch Hat Atelier";
 			this->ClientSize = System::Drawing::Size(620, 440);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
@@ -44,7 +44,7 @@ namespace whav2 {
 			this->Controls->Add(panel);
 
 			Label^ lblTitulo = gcnew Label();
-			lblTitulo->Text = "I N V E N T A R I O   A R C A N O";
+			lblTitulo->Text = "Inventario";
 			lblTitulo->Font = gcnew System::Drawing::Font("Segoe UI", 15.0f, FontStyle::Bold);
 			lblTitulo->ForeColor = Color::FromArgb(235, 195, 105);
 			lblTitulo->Location = Point(20, 14);

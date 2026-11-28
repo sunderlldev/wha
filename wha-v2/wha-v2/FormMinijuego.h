@@ -438,7 +438,7 @@ namespace whav2 {
 			System::Drawing::Font^ fTitulo = gcnew System::Drawing::Font("Segoe UI", 13.0f, FontStyle::Bold);
 			System::Drawing::Font^ fTexto = gcnew System::Drawing::Font("Segoe UI", 9.5f, FontStyle::Regular);
 			System::Drawing::Font^ fTiempo = gcnew System::Drawing::Font("Consolas", 16.0f, FontStyle::Bold);
-			g->DrawString("L A B E R I N T O   S E R P E N T B A C K", fTitulo, Brushes::Gold, PointF(34, 22));
+			g->DrawString("Laberinto Serpentback", fTitulo, Brushes::Gold, PointF(34, 22));
 			g->DrawString("Atrapa a Myrphon antes de que las sombras te alcancen.", fTexto, Brushes::Gainsboro, PointF(34, 50));
 			int segundos = ticksRestantes / 40;
 			Brush^ colorTiempo = (segundos <= 8) ? Brushes::Tomato : Brushes::LightGoldenrodYellow;

@@ -2500,7 +2500,7 @@ public:
 			int alpha = Math::Min(230, ticksTituloNivel * 4);
 			SolidBrush^ tituloColor = gcnew SolidBrush(Color::FromArgb(alpha, 235, 200, 158));
 			SolidBrush^ linea = gcnew SolidBrush(Color::FromArgb(alpha, 200, 158, 78));
-			String^ t1 = "N I V E L   1";
+			String^ t1 = "Nivel 1";
 			String^ t2 = "El Atelier de Qifrey";
 			SizeF s1 = g->MeasureString(t1, fTitulo);
 			SizeF s2 = g->MeasureString(t2, fSub);

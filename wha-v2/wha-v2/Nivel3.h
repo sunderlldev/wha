@@ -1327,7 +1327,7 @@ private:
 			System::Drawing::Font^ fSubT = gcnew System::Drawing::Font("Segoe UI", 11.0f, FontStyle::Italic);
 			int alpha = Math::Min(230, ticksTituloNivel * 4);
 			SolidBrush^ titCol = gcnew SolidBrush(Color::FromArgb(alpha, 210, 226, 248));
-			String^ t1 = "N I V E L   3";
+			String^ t1 = "Nivel 3";
 			String^ t2 = "La Emboscada y el Gran Árbol de Plata";
 			SizeF s1 = g->MeasureString(t1, fTit);
 			SizeF s2 = g->MeasureString(t2, fSubT);
