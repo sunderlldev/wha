@@ -143,13 +143,13 @@ private:
 			{ 18, 9, 0 },
 			{ 46, 16, 1 },
 			{ 78, 14, 2 },
-			{ 104, 24, 3 },
-			{ 46, 30, 0 },
-			{ 56, 34, 1 },
-			{ 76, 31, 2 },
-			{ 22, 48, 3 },
-			{ 52, 48, 0 },
-			{ 68, 51, 1 }
+			{ 104, 24, 0 },
+			{ 46, 30, 1 },
+			{ 56, 34, 2 },
+			{ 76, 31, 0 },
+			{ 22, 48, 1 },
+			{ 52, 48, 2 },
+			{ 68, 51, 0 }
 		};
 		for (int i = 0; i < 10; i++) {
 			AldeanoN2 a;
@@ -361,9 +361,9 @@ public:
 		bmpEnemigo = CargarBitmapSeguro("sprites/sanguijuela.png");
 		bmpHechizo = CargarBitmapSeguro("sprites/Disparo_Cueva_Spritesheet.png");
 		bmpLibreta = CargarBitmapSeguro("sprites/libreta.png");
-		array<Bitmap^>^ arrAld = gcnew array<Bitmap^>(4);
-		for (int i = 0; i < 4; i++) {
-			arrAld[i] = CargarBitmapSeguro("sprites/aldeano_" + i.ToString() + ".png");
+		array<Bitmap^>^ arrAld = gcnew array<Bitmap^>(3);
+		for (int i = 0; i < 3; i++) {
+			arrAld[i] = CargarBitmapSeguro("sprites/aldeano_" + (i + 1).ToString() + ".png");
 		}
 		bmpsAldeanos = arrAld;
 		inicializarNivel();
@@ -794,9 +794,11 @@ private:
 				int rows = (sprite->Height >= 240) ? 8 : 4;
 				int fw = Math::Max(1, sprite->Width / cols);
 				int fh = Math::Max(1, sprite->Height / rows);
-				int colF = (al.huyendo ? ((al.ticksAnim / 5) % cols) : 0);
-				int rowF = al.dir % rows;
+				int colF = al.huyendo ? ((al.ticksAnim / 5) % cols) : ((cols >= 4) ? 1 : 0);
+				static const int filaPorDir[4] = { 0, 2, 3, 1 };
+				int rowF = filaPorDir[al.dir & 3] % rows;
 				g->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::NearestNeighbor;
+				g->PixelOffsetMode = System::Drawing::Drawing2D::PixelOffsetMode::Half;
 				g->DrawImage(sprite, Rectangle(ax - 6, ay - 16, fw * 2, fh * 2), Rectangle(colF * fw, rowF * fh, fw, fh), GraphicsUnit::Pixel);
 			}
 			else {
@@ -812,8 +814,8 @@ private:
 			}
 
 			if (al.huyendo) {
-				g->FillRectangle(panico, ax + 8, ay - 16, 4, 6);
-				g->FillRectangle(panico, ax + 8, ay - 9, 4, 2);
+				g->FillRectangle(panico, ax + 8, ay - 25, 4, 6);
+				g->FillRectangle(panico, ax + 8, ay - 18, 4, 2);
 			}
 		}
 
