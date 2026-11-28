@@ -13,6 +13,7 @@
 #include "FormFinNivel.h"
 #include "FormTrollface.h"
 #include "FormMinijuego.h"
+#include "Nivel2.h"
 
 namespace whav2 {
 
@@ -31,6 +32,8 @@ namespace whav2 {
 	};
 
 	public ref class MyForm : public System::Windows::Forms::Form {
+	private:
+		Nivel2* nivel2;
 	private:
 		EstadoApp estadoActual;
 		ControladorJuego* controlador;
@@ -576,7 +579,19 @@ namespace whav2 {
 		void AbrirInventarioRapido() {
 			timerJuego->Stop();
 			controlador->pausarAudio();
-			AbrirInventarioModal();
+
+			int cantidad = nivel2->getCantidadInventario();
+			array<String^>^ nombres = gcnew array<String^>(cantidad);
+			array<String^>^ descripciones = gcnew array<String^>(cantidad);
+
+			for (int i = 0; i < cantidad; i++) {
+				nombres[i] = ToManaged(nivel2->getInventarioNombre(i));
+				descripciones[i] = ToManaged(nivel2->getInventarioDescripcion(i));
+			}
+
+			FormInventario^ frm = gcnew FormInventario(nombres, descripciones);
+			frm->ShowDialog(this);
+
 			this->ActiveControl = nullptr;
 			this->Focus();
 			controlador->reanudarAudioNivel();
@@ -676,35 +691,28 @@ namespace whav2 {
 
 			int dx = (teclaDerecha ? 1 : 0) - (teclaIzquierda ? 1 : 0);
 			int dy = (teclaAbajo ? 1 : 0) - (teclaArriba ? 1 : 0);
+
 			if (dx != 0 || dy != 0) {
-				controlador->moverJugador(dx, dy);
+				nivel2->moverJugador(dx, dy);
 			}
 			else {
-				controlador->detenerJugador();
+				nivel2->detenerJugador();
 			}
+
+			nivel2->procesarTick();
 
 			if (bufferGrafico == nullptr) return;
 			bufferGrafico->Graphics->Clear(Color::FromArgb(7, 11, 17));
-			controlador->procesarTick(bufferGrafico->Graphics, this->ClientSize.Width, this->ClientSize.Height, Configuracion::ZOOM);
+
+			nivel2->dibujar(bufferGrafico->Graphics);
+
 			bufferGrafico->Render(gPantalla);
 			bufferListo = true;
 
-			bool mostrarHud = !controlador->getEnTransicionPozo();
+			// Aquí está el resto del código de los botones HUD
+			bool mostrarHud = true;
 			if (btnHudControles != nullptr) btnHudControles->Visible = mostrarHud;
 			if (btnHudInventario != nullptr) btnHudInventario->Visible = mostrarHud;
-
-			if (controlador->consumirSolicitudMinijuego()) {
-				AbrirMinijuego();
-				return;
-			}
-			if (controlador->consumirSolicitudTrollface()) {
-				AbrirTrollface();
-				return;
-			}
-			if (controlador->consumirSolicitudFinNivel()) {
-				AbrirFinNivel();
-				return;
-			}
 		}
 
 		void MyForm_PreviewKeyDown(Object^ sender, PreviewKeyDownEventArgs^ e) {
@@ -780,7 +788,7 @@ namespace whav2 {
 			case Keys::Z:
 				if (!teclaAccion) {
 					teclaAccion = true;
-					controlador->interactuar();
+					nivel2->interactuar(); // <--- SE LLAMA AQUÍ, NO EN EL DIÁLOGO
 				}
 				break;
 			case Keys::I:
@@ -856,6 +864,7 @@ namespace whav2 {
 	public:
 		MyForm(void) {
 			InitializeComponent();
+			nivel2 = new Nivel2();
 
 			this->Text = "Witch Hat Atelier · El Árbol de Plata";
 			this->ClientSize = System::Drawing::Size(960, 600);
@@ -925,6 +934,10 @@ namespace whav2 {
 			}
 			if (components) {
 				delete components;
+			}
+			if (nivel2 != nullptr) {
+				delete nivel2;
+				nivel2 = nullptr;
 			}
 		}
 

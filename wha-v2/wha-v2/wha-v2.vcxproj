@@ -127,6 +127,9 @@
     <ClCompile Include="MyForm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Enemigo.h" />
+    <ClInclude Include="ItemMagico.h" />
+    <ClInclude Include="MapaNivel2.h" />
     <ClInclude Include="MyForm.h" />
     <ClInclude Include="Arbol.h" />
     <ClInclude Include="BloqueMapa.h" />
@@ -148,6 +151,7 @@
     <ClInclude Include="GestorAudio.h" />
     <ClInclude Include="GestorDialogos.h" />
     <ClInclude Include="MapaTileMatrix.h" />
+    <ClInclude Include="Nivel2.h" />
     <ClInclude Include="NPC.h" />
     <ClInclude Include="Protagonista.h" />
     <ClInclude Include="Utilidades.h" />
