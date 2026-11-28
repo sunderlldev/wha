@@ -860,7 +860,7 @@ namespace whav2 {
 						"sprites/Nivel2_Taberna01.png",
 						"sprites/Nivel2_Taberna02.png",
 						"sprites/Nivel2_Taberna03.png",
-						"sprites/Nivel2_Taberna03.png"
+						"sprites/Nivel2_Taberna04.png"
 					};
 					desc = gcnew array<String^>{
 						"Tipo1: Sí, como te decía...",
@@ -871,8 +871,8 @@ namespace whav2 {
 				}
 				else if (cuartoEsc == 9) {
 					imgs = gcnew array<String^>{
-						"sprites/Nivel2_Botica03.png",
-						"sprites/Nivel2_Botica03.png",
+						"sprites/Nivel2_Botica01.png",
+						"sprites/Nivel2_Botica02.png",
 						"sprites/Nivel2_Botica03.png"
 					};
 					desc = gcnew array<String^>{

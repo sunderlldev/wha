@@ -168,26 +168,27 @@ private:
 
 	void generarArbolesAleatorios() {
 		System::Random^ rng = gcnew System::Random((int)(System::DateTime::Now.Ticks & 0x7FFFFFFF));
+		int maxCols = (int)mapa[0].length();
+		int maxFilas = (int)mapa.size();
 		int intentos = 0;
-		while ((int)arboles.size() < 22 && intentos < 600) {
+		while ((int)arboles.size() < 55 && intentos < 3000) {
 			intentos++;
-			int col = rng->Next(3, (int)mapa[0].length() - 3);
-			int fila = rng->Next(3, (int)mapa.size() - 3);
-			if (mapa[fila][col] != ' ') continue;
-			if (col >= 103 && col <= 112 && fila >= 4 && fila <= 13) continue;
-			if (determinarCuarto(col * 32, fila * 32) > 0) continue;
+			int col = rng->Next(3, maxCols - 5);
+			int fila = rng->Next(3, maxFilas - 4);
 
-			bool cercaPuerta = false;
-			for (int dr = -1; dr <= 1 && !cercaPuerta; dr++) {
-				for (int dc = -1; dc <= 1; dc++) {
-					char adj = mapa[fila + dr][col + dc];
-					if (adj != ' ') {
-						cercaPuerta = true;
+			bool librePasto = true;
+			for (int dr = -1; dr <= 2 && librePasto; dr++) {
+				for (int dc = -1; dc <= 3; dc++) {
+					int rf = fila + dr;
+					int rc = col + dc;
+					if (rf < 0 || rf >= maxFilas || rc < 0 || rc >= maxCols ||
+						mapa[rf][rc] != ' ' || determinarCuarto(rc * 32, rf * 32) > 0) {
+						librePasto = false;
 						break;
 					}
 				}
 			}
-			if (cercaPuerta) continue;
+			if (!librePasto) continue;
 
 			int px = col * 32;
 			int py = fila * 32;
@@ -195,11 +196,26 @@ private:
 			int dyP = py - protagonista->getY();
 			if (dxP * dxP + dyP * dyP < 120 * 120) continue;
 
+			int dxSal = px - 107 * 32;
+			int dySal = py - 8 * 32;
+			if (dxSal * dxSal + dySal * dySal < 150 * 150) continue;
+
+			bool cercaAld = false;
+			for (size_t i = 0; i < aldeanos.size(); i++) {
+				int dxA = (px + 39) - aldeanos[i].x;
+				int dyA = (py + 44) - aldeanos[i].y;
+				if (dxA * dxA + dyA * dyA < 64 * 64) {
+					cercaAld = true;
+					break;
+				}
+			}
+			if (cercaAld) continue;
+
 			bool muyCerca = false;
 			for (size_t i = 0; i < arboles.size(); i++) {
 				int dx = px - arboles[i]->getX();
 				int dy = py - arboles[i]->getY();
-				if (dx * dx + dy * dy < 108 * 108) {
+				if (dx * dx + dy * dy < 84 * 84) {
 					muyCerca = true;
 					break;
 				}
