@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Utilidades.h"
+
 namespace whav2 {
 
 	using namespace System;
@@ -22,7 +24,8 @@ namespace whav2 {
 			}
 			StreamWriter^ sw = nullptr;
 			try {
-				sw = gcnew StreamWriter("reflexion_final.txt", false, System::Text::Encoding::UTF8);
+				String^ rutaRef = ObtenerRutaGuardadoComun("reflexion_final.txt");
+				sw = gcnew StreamWriter(rutaRef, false, System::Text::Encoding::UTF8);
 				sw->WriteLine("=== PREGUNTA REFLEXIVA - WITCH HAT ATELIER (HITO 3) ===");
 				sw->WriteLine("Fecha: " + DateTime::Now.ToString("dd/MM/yyyy HH:mm:ss"));
 				sw->WriteLine();
@@ -32,7 +35,7 @@ namespace whav2 {
 				sw->WriteLine(txtRespuesta->Text);
 				sw->Close();
 				sw = nullptr;
-				MessageBox::Show("¡Tu reflexión ha sido guardada exitosamente en 'reflexion_final.txt'!\n\nHas completado los tres niveles de Witch Hat Atelier.", "Fin de la Historia", MessageBoxButtons::OK, MessageBoxIcon::Information);
+				MessageBox::Show("¡Tu reflexión ha sido guardada exitosamente!\n\nHas completado los tres niveles de Witch Hat Atelier.", "Fin de la Historia", MessageBoxButtons::OK, MessageBoxIcon::Information);
 				this->Close();
 			}
 			catch (Exception^ ex) {

@@ -47,6 +47,35 @@ static float ClampFlotante(float valor, float minimo, float maximo) {
 	return valor;
 }
 
+static String^ ObtenerRutaGuardadoComun(String^ nombreArchivo) {
+	String^ carpeta = ".wha_datos";
+	try {
+		if (!System::IO::Directory::Exists(carpeta)) {
+			System::IO::Directory::CreateDirectory(carpeta);
+		}
+		System::IO::FileAttributes attrs = System::IO::File::GetAttributes(carpeta);
+		if ((attrs & System::IO::FileAttributes::Hidden) != System::IO::FileAttributes::Hidden) {
+			System::IO::File::SetAttributes(carpeta, attrs | System::IO::FileAttributes::Hidden);
+		}
+		String^ destino = System::IO::Path::Combine(carpeta, nombreArchivo);
+		if (!System::IO::File::Exists(destino) && System::IO::File::Exists(nombreArchivo)) {
+			System::IO::File::Move(nombreArchivo, destino);
+		}
+		return destino;
+	}
+	catch (...) {
+		return nombreArchivo;
+	}
+}
+
+static std::string ObtenerRutaGuardadoStdComun(const char* nombreArchivo) {
+	ObtenerRutaGuardadoComun(ToManaged(nombreArchivo));
+	if (System::IO::Directory::Exists(".wha_datos")) {
+		return std::string(".wha_datos/") + nombreArchivo;
+	}
+	return std::string(nombreArchivo);
+}
+
 static Bitmap^ CargarBitmapSeguroComun(String^ nombreArchivo, bool crearVacioSiFalta) {
 	if (System::IO::File::Exists(nombreArchivo)) return gcnew Bitmap(nombreArchivo);
 	String^ baseDir = AppDomain::CurrentDomain->BaseDirectory;

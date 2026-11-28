@@ -22,9 +22,10 @@ namespace whav2 {
 		void ActualizarInfo() {
 			if (controlador != nullptr) controlador->asegurarPartidaRegenerativa();
 			lblInfo->Text = controlador->getResumenPartida();
-			if (File::Exists("partida_guardada.txt")) {
-				DateTime fecha = File::GetLastWriteTime("partida_guardada.txt");
-				lblArchivo->Text = "Archivo disponible: partida_guardada.txt  (" + fecha.ToString("dd/MM/yyyy HH:mm") + ")";
+			String^ rutaGuardado = ObtenerRutaGuardadoComun("partida_guardada.txt");
+			if (File::Exists(rutaGuardado)) {
+				DateTime fecha = File::GetLastWriteTime(rutaGuardado);
+				lblArchivo->Text = "Archivo disponible: " + rutaGuardado + "  (" + fecha.ToString("dd/MM/yyyy HH:mm") + ")";
 				lblArchivo->ForeColor = Color::FromArgb(182, 214, 188);
 			}
 			else {
@@ -35,7 +36,7 @@ namespace whav2 {
 
 		void btnGuardar_Click(Object^ sender, EventArgs^ e) {
 			if (controlador->guardarPartida()) {
-				MessageBox::Show("Partida guardada en 'partida_guardada.txt'.\n\n" + controlador->getResumenPartida(), "Guardar partida", MessageBoxButtons::OK, MessageBoxIcon::Information);
+				MessageBox::Show("Partida guardada correctamente.\n\n" + controlador->getResumenPartida(), "Guardar partida", MessageBoxButtons::OK, MessageBoxIcon::Information);
 				ActualizarInfo();
 			}
 			else {
@@ -45,7 +46,7 @@ namespace whav2 {
 
 		void btnCargar_Click(Object^ sender, EventArgs^ e) {
 			if (controlador != nullptr) controlador->asegurarPartidaRegenerativa();
-			if (!File::Exists("partida_guardada.txt")) {
+			if (!File::Exists(ObtenerRutaGuardadoComun("partida_guardada.txt"))) {
 				MessageBox::Show("No se pudo regenerar el archivo de partida.", "Cargar partida", MessageBoxButtons::OK, MessageBoxIcon::Warning);
 				return;
 			}

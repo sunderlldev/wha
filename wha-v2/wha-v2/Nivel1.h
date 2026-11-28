@@ -2808,7 +2808,7 @@ public:
 	}
 
 	bool asegurarPartidaRegenerativa() {
-		std::ifstream prueba("partida_guardada.txt");
+		std::ifstream prueba(ObtenerRutaGuardadoStdComun("partida_guardada.txt"));
 		bool valido = false;
 		if (prueba.is_open()) {
 			bool tieneNivel = false;
@@ -2826,7 +2826,7 @@ public:
 	}
 
 	bool guardarPartida() {
-		std::ofstream archivo("partida_guardada.txt", std::ios::out | std::ios::trunc);
+		std::ofstream archivo(ObtenerRutaGuardadoStdComun("partida_guardada.txt"), std::ios::out | std::ios::trunc);
 		if (!archivo.is_open()) return false;
 		archivo << "nivel=1\n";
 		archivo << "vidas=" << jugador->getVidas() << "\n";
@@ -2878,7 +2878,7 @@ public:
 	}
 
 	bool cargarPartida() {
-		std::ifstream archivo("partida_guardada.txt");
+		std::ifstream archivo(ObtenerRutaGuardadoStdComun("partida_guardada.txt"));
 		if (!archivo.is_open()) {
 			iniciarNivel(1);
 			guardarPartida();
